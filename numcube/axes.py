@@ -1,7 +1,7 @@
 from .series import Series
 
 
-class Axes:
+class Axes(object):
     """
     Ordered collection of axes.
     Axis is either a Series or an Index.

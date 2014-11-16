@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class Series:
+class Series(object):
     """
     A named wrapper around numpy array.
     """

@@ -5,7 +5,7 @@ from .axes import Axes
 from .exceptions import AxisAlignError
 
 
-class Cube:
+class Cube(object):
     """
     Wrapper around numpy.ndarray with named axes.
     Axes in numpy.ndarray are identified by their index. Cube allows any hashable value to identify the axes.
