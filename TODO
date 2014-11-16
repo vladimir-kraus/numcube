@@ -1,0 +1,11 @@
+1) add version
+
+2) implement cube.overlay(cube)
+
+3) implement cube.filter(cube)
+
+4) implement cube.filter(axes)
+
+5) add more operations
+
+6) add performance tests
