@@ -27,6 +27,22 @@ Axis alignment
 - if one of the axes is Series and the other is Index, then the values in Series must be subset of those in Index; the result axis is the Series
 - if both axes are Series, error is raised; two Series objects cannot be matched
 
+Operations with non-Cube types
+------------------------------
+Cube can be used in operations with non-Cube types - scalar and numpy array. The result of such operaytion is Cube.
+In this case however the axes are not matched and the operation is done solely with the cube.values and the other
+non-Cube operand. For numpy array it means that the dimensions lengths must match or the array must be able to
+be broadcasted to a compatible shape.
+
+Example:
+```python
+C = Cube(np.random.rand(2, 2), Index("A", ("a1", "b1")), Index("B", ["b1", "b2"]))  # 2 x 2 cube
+D = C * 10  # OK, scalar has no requirements for dimensions
+E = C * np.random.rand(2, 2)  # OK, dimension lengths match
+F = C * np.array([1, 2])  # OK, one dimensional array is broadcasted
+G = C * np.arange(3)  # error, dimensions do not match
+```
+
 Example 1
 ---------
 We want to calculate the likely price of the fuel mix given we are using two fuels - gas and oil.

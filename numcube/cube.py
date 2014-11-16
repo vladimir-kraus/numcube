@@ -10,9 +10,9 @@ class Cube(object):
     Wrapper around numpy.ndarray with named and labeled axes.
     """
 
-    # when numpy array is the first argument in operation and Cube is second,
+    # when numpy array is the first argument in operation and Cube is the second,
     # then __array_priority__ will force Cube to handle the operation ranther than numpy array
-    __array_priority__ = 20
+    __array_priority__ = 10
 
     def __init__(self, values, axes):
         values = np.asarray(values)
@@ -55,6 +55,15 @@ class Cube(object):
         """
         return self._axes
 
+    def apply(self, func, *args):
+        """
+        Apply function to all values and return the new cube.
+        :param func:
+        :param args:
+        :return:
+        """
+        return Cube(func(self._values, *args), self._axes)
+
     def transpose(self, axis_ids):
         """
         Analogy to numpy.transpose.
@@ -72,27 +81,117 @@ class Cube(object):
     def _indices(self, axes):
         return [self._axes.index(axis) if isinstance(axis, str) else axis for axis in axes]
 
+    # arithmetic operators
+
+    # A + B
+    def __add__(self, other):
+        return _eval_operation(self, other, np.add)
+
+    def __radd__(self, other):
+        return _eval_operation(other, self, np.add)
+
+    # A * B
     def __mul__(self, other):
         return _eval_operation(self, other, np.multiply)
 
     def __rmul__(self, other):
         return _eval_operation(other, self, np.multiply)
-        
+
+    # A - B
+    def __sub__(self, other):
+        return _eval_operation(self, other, np.subtract)
+
+    def __rsub__(self, other):
+        return _eval_operation(other, self, np.subtract)
+
+    # A / B
+    def __truediv__(self, other):
+        return _eval_operation(self, other, np.divide)
+
+    def __rtruediv__(self, other):
+        return _eval_operation(other, self, np.divide)
+
+    # A // B
+    def __floordiv__(self, other):
+        return _eval_operation(self, other, np.floor_divide)
+
+    def __rfloordiv__(self, other):
+        return _eval_operation(other, self, np.floor_divide)
+
+    # A ** B
+    def __pow__(self, other):
+        return _eval_operation(self, other, np.power)
+
+    def __rpow__(self, other):
+        return _eval_operation(other, self, np.power)
+
+    # A % B
+    def __mod__(self, other):
+        return _eval_operation(self, other, np.mod)
+
+    def __rmod__(self, other):
+        return _eval_operation(other, self, np.mod)
+
+    # bitwise operators
+
+    # A & B
+    def __and__(self, other):
+        return _eval_operation(self, other, np.bitwise_and)
+
+    def __rand__(self, other):
+        return _eval_operation(other, self, np.bitwise_and)
+
+    # A | B
+    def __or__(self, other):
+        return _eval_operation(self, other, np.bitwise_or)
+
+    def __ror__(self, other):
+        return _eval_operation(other, self, np.bitwise_or)
+
+    # A ^ B
+    def __xor__(self, other):
+        return _eval_operation(self, other, np.bitwise_xor)
+
+    def __rxor__(self, other):
+        return _eval_operation(other, self, np.bitwise_xor)
+
+    # A >> B
+    def __lshift__(self, other):
+        return _eval_operation(self, other, np.left_shift)
+
+    def __rlshift__(self, other):
+        return _eval_operation(other, self, np.left_shift)
+
+    # A << B
+    def __rshift__(self, other):
+        return _eval_operation(self, other, np.right_shift)
+
+    def __rrshift__(self, other):
+        return _eval_operation(other, self, np.right_shift)
+
+    # comparison operators
+
+    # A == B
     def __eq__(self, other):
         return _eval_operation(self, other, np.equal)
 
+    # A != B
     def __ne__(self, other):
         return _eval_operation(self, other, np.not_equal)
 
+    # A < B
     def __lt__(self, other):
         return _eval_operation(self, other, np.less)
 
+    # A <= B
     def __le__(self, other):
         return _eval_operation(self, other, np.less_equal)
 
+    # A > B
     def __gt__(self, other):
         return _eval_operation(self, other, np.greater)
 
+    # A >= B
     def __ge__(self, other):
         return _eval_operation(self, other, np.greater_equal)
         

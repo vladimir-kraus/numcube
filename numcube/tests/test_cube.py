@@ -48,7 +48,12 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, Cube, values, [a, c])
         self.assertRaises(ValueError, Cube, values, [b, a])
 
-    def test_cube_transpose(self):
+    def test_apply(self):
+        C = year_quarter_weekday_cube()
+        D = C.apply(np.sin)
+        self.assertTrue(np.array_equal(np.sin(C.values), D.values))
+
+    def test_transpose(self):
         C = year_quarter_weekday_cube()
 
         #transpose by axis indices
@@ -90,7 +95,7 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(TypeError, C.transpose, [1.1, 0, 2])
         self.assertRaises(TypeError, C.transpose, [None, "weekday", "year"])
 
-    def test_cube_operations(self):
+    def test_operations(self):
         values = np.arange(12).reshape(3, 4)
         c1 = Index("a", [10, 20, 30])
         c2 = Index("b", ["a", "b", "c", "d"])
@@ -156,8 +161,26 @@ class CubeTests(unittest.TestCase):
         D = Cube(values_d, Series("b", ["d", "d", "c", "a"]))
         X = C * D
         self.assertTrue(np.array_equal(X.values, values.take([3, 3, 2, 0], 1) * values_d))
-        
-    def test_cube_groupby(self):
+
+        C = year_quarter_cube() + 1  # +1 to prevent division by zero
+        import operator as op
+        ops = [op.add, op.mul, op.floordiv, op.truediv, op.sub, op.pow, op.mod,  # arithmetics ops
+               op.eq, op.ne, op.ge, op.le, op.gt, op.lt,  # comparison ops
+               op.and_, op.or_, op.xor, op.rshift, op.lshift]  # bitwise ops
+
+        # operations with scalar
+        D = 2
+        for op in ops:
+            self.assertTrue(np.array_equal(op(C, D).values, op(C.values, D)))
+            self.assertTrue(np.array_equal(op(D, C).values, op(D, C.values)))
+
+        # oprations with numpy array
+        D = (np.arange(12).reshape(3, 4) / 6 + 1).astype(np.int)  # +1 to prevent division by zero
+        for op in ops:
+            self.assertTrue(np.array_equal(op(C, D).values, op(C.values, D)))
+            self.assertTrue(np.array_equal(op(D, C).values, op(D, C.values)))
+
+    def test_groupby(self):
         values = np.arange(12).reshape(3, 4)
         ax1 = Series("year", [2014, 2014, 2014])
         ax2 = Series("month", ["jan", "jan", "feb", "feb"])
@@ -192,7 +215,7 @@ class CubeTests(unittest.TestCase):
         D = C.groupby(ax1.name, third_quartile)
         self.assertTrue(np.array_equiv(D.values, np.apply_along_axis(third_quartile, 0, C.values)))
 
-    def test_cube_rename_axis(self):
+    def test_rename_axis(self):
         C = year_quarter_cube()
 
         # successfull renaming
@@ -218,7 +241,7 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(LookupError, C.rename_axis, 2, "quarter")
         self.assertRaises(LookupError, C.rename_axis, "scenario", "quarter")
 
-    def test_cube_swap_axis(self):
+    def test_swap_axis(self):
         C = year_quarter_weekday_cube()
 
         # swap by name
@@ -229,7 +252,7 @@ class CubeTests(unittest.TestCase):
         D = C.swap_axes(0, 2)
         self.assertEqual(tuple(D.axes.names()), ("weekday", "quarter", "year"))
 
-    def test_cube_concatenate(self):
+    def test_concatenate(self):
         values = np.arange(12).reshape(3, 4)
         ax1 = Index("year", [2014, 2015, 2016])
         ax2 = Index("month", ["jan", "feb", "mar", "apr"])
@@ -242,7 +265,7 @@ class CubeTests(unittest.TestCase):
 
         E = concatenate([C, D], "month")
 
-    def test_cube_join(self):
+    def test_join(self):
         C = year_quarter_cube()
         D = year_quarter_cube()
         ax = Index("country", ["GB", "FR"])
@@ -250,7 +273,7 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(E.values.shape, (2, 3, 4))
         self.assertEqual(tuple(E.axes.names()), ("country", "year", "quarter"))
         
-    def test_cube_combine_axes(self):
+    def test_combine_axes(self):
         C = year_quarter_weekday_cube()
 
         self.assertRaises(ValueError, C.combine_axes, ["year", "year"], "period", "{}-{}")

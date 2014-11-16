@@ -9,3 +9,5 @@
 5) add more operations
 
 6) add performance tests
+
+7) add apply function to apply numpy function on values
