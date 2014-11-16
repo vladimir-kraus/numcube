@@ -1,13 +1,13 @@
 import unittest
 import functools
 import numpy as np
-from numcube import Index, Series, Axes, Cube
+from numcube import Index, Series, Cube
 from numcube.cube import join, concatenate
 
 
 def year_quarter_cube():
     """
-    Create 2D cube with axes "year" and "quarter".
+    Create a sample 2D cube with axes "year" and "quarter" with shape (3, 4)
     :return: new Cube object
     """
     values = np.arange(12).reshape(3, 4)
@@ -18,7 +18,7 @@ def year_quarter_cube():
 
 def year_quarter_weekday_cube():
     """
-    Create 3D cube with axes "year", "quarter", "weekday".
+    Create 3D cube with axes "year", "quarter", "weekday" with shape (3, 4, 7)
     :return: new Cube object
     """
     values = np.arange(3 * 4 * 7).reshape(3, 4, 7)
@@ -28,61 +28,13 @@ def year_quarter_weekday_cube():
     return Cube(values, [ax1, ax2, ax3])
 
 
-class ExpressionScriptTests(unittest.TestCase):
-
-    def test_create_index(self):
-        a = Series("A", [10, 20, 30])
-        self.assertEqual(a.name, "A")
-        self.assertEqual(len(a), 3)
-
-        a = Series("A", ["a", "b", "c", "d"])
-        self.assertEqual(a.name, "A")
-        self.assertEqual(len(a), 4)
-        
-        # duplicit values
-        self.assertRaises(ValueError, Series, "A", ["a", "b", "a"])
-
-    def test_create_index(self):
-        a = Index("A", [10, 20, 30])
-        self.assertEqual(a.name, "A")
-        self.assertEqual(len(a), 3)
-
-        a = Index("Dim", ["a", "b", "c", "d"])
-        self.assertEqual(a.name, "Dim")
-        self.assertEqual(len(a), 4)
-        
-        # duplicit values
-        self.assertRaises(ValueError, Index, "A", ["a", "b", "a"])
-
-    def test_index_writeable(self):
-        a = Index("A", [10, 20, 30])
-        self.assertRaises(ValueError, a.values.__setitem__, 0, 40)
-
-    def test_index_indexing(self):
-        a = Index("A", [10, 20, 30])
-        self.assertEqual(a.index(10), 0)
-        self.assertTrue(np.array_equal(a.index([10, 30]), [0, 2]))
-
-        b = Index("Dim", ["a", "b", "c", "d"])
-        self.assertEqual(b.index("c"), 2)
-        self.assertTrue(np.array_equal(b.index(["d", "c"]), [3, 2]))
-
-        # invalid Index name
-        self.assertRaises(TypeError, Index, 1, [1, 2, 3])
-
-    def test_create_axes(self):
-        ax = Axes([Index("A", [10, 20]), Index("B", ["a", "b", "c"])])
-        self.assertEqual(len(ax), 2)
-        self.assertEqual(ax[0].name, "A")
-        self.assertEqual(len(ax[1]), 3)
+class CubeTests(unittest.TestCase):
 
     def test_create_cube(self):
         a = Index("A", [10, 20, 30])
         b = Index("B", ["a", "b", "c", "d"])
         c = Index("C", [1.1, 1.2])
-
         values = np.arange(12).reshape(3, 4)
-
         try:
             Cube(values, (a, b))
             Cube(values, [a, b])
@@ -97,51 +49,46 @@ class ExpressionScriptTests(unittest.TestCase):
         self.assertRaises(ValueError, Cube, values, [b, a])
 
     def test_cube_transpose(self):
-        a = Index("A", [10, 20, 30])
-        b = Index("Dim", ["a", "b", "c", "d"])
-        c = Index("XXX", [1.1, 2.2])
+        C = year_quarter_weekday_cube()
 
-        values = np.arange(24).reshape(3, 4, 2)
-        C = Cube(values, [a, b, c])
-
-        #transpose by Index indices
+        #transpose by axis indices
         D = C.transpose([1, 0, 2])
 
-        self.assertEqual(D.values.shape, (4, 3, 2))
+        self.assertEqual(D.values.shape, (4, 3, 7))
 
         # check that original cube has not been changed
-        self.assertEqual(C.values.shape, (3, 4, 2))
+        self.assertEqual(C.values.shape, (3, 4, 7))
 
         # compare with numpy transpose
-        tvalues = values.transpose([1, 0, 2])
+        tvalues = C.values.transpose([1, 0, 2])
         self.assertTrue(np.array_equal(D.values, tvalues))
 
-        # transpose by Index names
-        E = C.transpose(["Dim", "A", "XXX"])
+        # transpose by axis names
+        E = C.transpose(["quarter", "year", "weekday"])
         self.assertTrue(np.array_equal(D.values, E.values))
 
-        # transpose with wrong Index indices
+        # transpose with wrong axis indices
         self.assertRaises(IndexError, C.transpose, [3, 0, 2])
         self.assertRaises(IndexError, C.transpose, [-5, 0, 1])
 
-        # transpose with wrong Index names
-        self.assertRaises(KeyError, C.transpose, ["Dim", "A", "Y"])
+        # transpose with wrong axis names
+        self.assertRaises(KeyError, C.transpose, ["A", "B", "C"])
 
         # invalid number of axes
-        self.assertRaises(ValueError, C.transpose, ["Dim", "A"])
+        self.assertRaises(ValueError, C.transpose, ["year", "weekday"])
         self.assertRaises(ValueError, C.transpose, [1, 2])
         # note that number of axes is checked before accessing the axes
         # so the wrong number of axes is raised KeyError or IndexError
-        self.assertRaises(ValueError, C.transpose, ["Dim", "A", "XXX", "Y"])
+        self.assertRaises(ValueError, C.transpose, ["year", "weekday", "quarter", "A"])
         self.assertRaises(ValueError, C.transpose, [1, 0, 2, 3])
 
         # duplicit axes
         self.assertRaises(ValueError, C.transpose, [0, 0, 2])
-        self.assertRaises(ValueError, C.transpose, ["A", "A", "Dim"])
+        self.assertRaises(ValueError, C.transpose, ["year", "year", "quarter"])
 
         # invalid types
         self.assertRaises(TypeError, C.transpose, [1.1, 0, 2])
-        self.assertRaises(TypeError, C.transpose, [None, "A", "Dim"])
+        self.assertRaises(TypeError, C.transpose, [None, "weekday", "year"])
 
     def test_cube_operations(self):
         values = np.arange(12).reshape(3, 4)

@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from numcube import Index, Series, Axes
 
+
 class AxesTests(unittest.TestCase):
 
     def test_create_index(self):

@@ -30,6 +30,22 @@ class Axes:
             axes = [axes]
         self._axes = tuple(axes)
         self._update_axis_indices()
+
+    def _update_axis_indices(self):
+        """
+        Create inner axis dictionary to allow lookup by name.
+        If for non-unique axes are found, ValueError is raised.
+        :return: None
+        """
+        self._axis_dict = {}
+        for i, axis in enumerate(self._axes):
+            if not isinstance(axis, Series):
+                raise TypeError("axis must be instance of Series or Index")
+
+            name = axis.name
+            if name in self._axis_dict:
+                raise ValueError("duplicate axis {}".format(repr(name)))
+            self._axis_dict[name] = i
         
     def __str__(self):
         axes = [str(axis) for axis in self._axes]
@@ -65,10 +81,7 @@ class Axes:
             return self._axis_dict[axis_id]
         else:
             return axis_id
-        
-    #def indices(self, axes):
-    #    return [self.index(axis) for axis in axes]        
-        
+
     def contains(self, axis_name):
         """
         Returns True if Axes contain an axis of the specified name. Otherwise return False.
@@ -82,19 +95,6 @@ class Axes:
         """
         for axis in self._axes:
             yield axis.name
-
-    def _update_axis_indices(self):
-        """
-        Create inner axis dictionary to allow lookup by name.
-        If for non-unique axes are found, ValueError is raised.
-        :return: None
-        """
-        self._axis_dict = {}
-        for i, axis in enumerate(self._axes):
-            name = axis.name
-            if name in self._axis_dict:
-                raise ValueError("duplicate axis {}".format(repr(name)))
-            self._axis_dict[name] = i
 
     def transpose(self, axes):
         """
