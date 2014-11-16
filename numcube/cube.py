@@ -7,17 +7,15 @@ from .exceptions import AxisAlignError
 
 class Cube(object):
     """
-    Wrapper around numpy.ndarray with named axes.
-    Axes in numpy.ndarray are identified by their index. Cube allows any hashable value to identify the axes.
+    Wrapper around numpy.ndarray with named and labeled axes.
     """
+
+    # when numpy array is the first argument in operation and Cube is second,
+    # then __array_priority__ will force Cube to handle the operation ranther than numpy array
     __array_priority__ = 20
 
     def __init__(self, values, axes):
-        """
-        'axes' must be a sequence with the number of values equal to the number of dimensions of 'values'.
-        If 'axes' is empty, then sequence 0,1,2... is generated.
-        """
-        values = np.array(values)  # copy, view?
+        values = np.asarray(values)
 
         # convert a collection of axes to Axes object
         if not isinstance(axes, Axes):
@@ -41,6 +39,7 @@ class Cube(object):
     def ndim(self):
         """
         :return: the number of axes
+        :rtype: int
         """
         return self._values.ndim
 
@@ -50,6 +49,10 @@ class Cube(object):
 
     @property
     def axes(self):
+        """
+        :return:
+        :rtype: Axes
+        """
         return self._axes
 
     def transpose(self, axis_ids):

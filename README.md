@@ -1,3 +1,8 @@
+numcube
+=======
+
+Cube
+----
 - Cube is a wrapper around numpy.ndarray object
 - it has named axes (name must be a string)
 - the axes have values
@@ -24,10 +29,9 @@ Axis alignment
 
 Example 1
 ---------
-
 We want to calculate the likely price of the fuel mix given we are using two fuels - gas and oil.
 We assume that the prices go up or 
-
+```python
 fuels = Index("fuel", ["gas", "oil"])
 fuel_heat_rates = ([10, 15.5], [fuels])  # in GJ / kg
 
@@ -37,13 +41,12 @@ exchange_rates = ([28.1, 290, 45, 1], countries)  # in local currency / EUR
 local_prices = ([...], [countries, fuels])  # in local currency / kg
 
 eu_prices_per_GJ = local_prices / exchange_rates / fuel_heat_rates  # in EUR / GJ
-
+```
 
 Example 2
 ---------
-
 Working with multiple scenarios.
-
+```python
 years = Index("year", range(2014, 10))  # we are planning 10 years ahead
 geom_growth_exp = Cube(range[len(years)], [years])
 
@@ -53,4 +56,4 @@ growth_rate = Cube([0.9, 1, 1.1], [scenarios])
 growth_coef = growth_rate ** geom_growth_exp
 
 gas_scenario_prices = ...
-
+```

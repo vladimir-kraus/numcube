@@ -28,7 +28,10 @@ class Axes(object):
         """
         if isinstance(axes, Series):
             axes = [axes]
+
+        # the sequence of axes must be immutable
         self._axes = tuple(axes)
+
         self._update_axis_indices()
 
     def _update_axis_indices(self):
@@ -37,10 +40,10 @@ class Axes(object):
         If for non-unique axes are found, ValueError is raised.
         :return: None
         """
-        self._axis_dict = {}
+        self._axis_dict = dict()
         for i, axis in enumerate(self._axes):
             if not isinstance(axis, Series):
-                raise TypeError("axis must be instance of Series or Index")
+                raise TypeError("axis must be an instance of Series or Index")
 
             name = axis.name
             if name in self._axis_dict:

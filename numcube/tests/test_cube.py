@@ -208,7 +208,7 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(TypeError, C.rename_axis, 0, 0.0)
         self.assertRaises(TypeError, C.rename_axis, "year", None)
 
-        # ducplicate axes
+        # duplicate axes
         self.assertRaises(ValueError, C.rename_axis, 0, "quarter")
         self.assertRaises(ValueError, C.rename_axis, "year", "quarter")
 
@@ -234,22 +234,27 @@ class CubeTests(unittest.TestCase):
         ax1 = Index("year", [2014, 2015, 2016])
         ax2 = Index("month", ["jan", "feb", "mar", "apr"])
         C = Cube(values, [ax1, ax2])
-        
+
         values = np.arange(12).reshape(3, 4)
         ax3 = Index("year", [2014, 2015, 2016])
         ax4 = Index("month", ["may", "jun", "jul", "aug"])
         D = Cube(values, [ax3, ax4])
-        
+
         E = concatenate([C, D], "month")
+
+    def test_cube_join(self):
+        C = year_quarter_cube()
+        D = year_quarter_cube()
+        ax = Index("country", ["GB", "FR"])
+        E = join([C, D], ax)
+        self.assertEqual(E.values.shape, (2, 3, 4))
+        self.assertEqual(tuple(E.axes.names()), ("country", "year", "quarter"))
         
     def test_cube_combine_axes(self):
-        values = np.arange(24).reshape(3, 4, 2)
-        ax1 = Index("year", [2014, 2015, 2016])
-        ax2 = Index("quarter", ["Q1", "Q2", "Q3", "Q4"])
-        ax3 = Index("scenario", ["low", "high"])
-        C = Cube(values, [ax1, ax2, ax3])
+        C = year_quarter_weekday_cube()
 
         self.assertRaises(ValueError, C.combine_axes, ["year", "year"], "period", "{}-{}")
-        self.assertRaises(ValueError, C.combine_axes, ["year", "quarter"], "scenario", "{}-{}")
+        self.assertRaises(ValueError, C.combine_axes, ["year", "quarter"], "weekday", "{}-{}")
 
         D = C.combine_axes(["year", "quarter"], "period", "{}-{}")
+        self.assertEqual(tuple(D.axes.names()), ("period", "weekday"))
