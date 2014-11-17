@@ -5,7 +5,8 @@ Principles
 ----------
 * similar interface to numpy array
 * simple things should be made simple
-* potentially surprising things to happen only if explicitly asked for 
+* potentially surprising things to happen only if explicitly asked for
+* immutability - no method or function changes the structure of existing cube; the values however can be changed
 
 Cube
 ----

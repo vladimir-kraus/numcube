@@ -33,7 +33,7 @@ class AxesTests(unittest.TestCase):
         a = Index("A", [10, 20, 30])
         self.assertRaises(ValueError, a.values.__setitem__, 0, 40)
 
-    def test_index_indexing(self):
+    def test_index_index(self):
         a = Index("A", [10, 20, 30])
         self.assertEqual(a.index(10), 0)
         self.assertTrue(np.array_equal(a.index([10, 30]), [0, 2]))
@@ -44,6 +44,17 @@ class AxesTests(unittest.TestCase):
 
         # invalid Index name
         self.assertRaises(TypeError, Index, 1, [1, 2, 3])
+
+    def test_index_contains(self):
+        a = Index("A", [10, 20, 30])
+        self.assertEqual(a.contains(20), True)
+        self.assertEqual(a.contains(40), False)
+        self.assertTrue(np.array_equal(a.contains([0, 10, 20, 40]), [False, True, True, False]))
+
+        b = Index("B", ["jan", "feb", "mar", "apr"])
+        self.assertEqual(b.contains("feb"), True)
+        self.assertEqual(b.contains("jun"), False)
+        self.assertTrue(np.array_equal(b.contains(["jan", "dec", "feb"]), [True, False, True]))
 
     def test_create_axes(self):
         ax = Axes([Index("A", [10, 20]), Index("B", ["a", "b", "c"])])

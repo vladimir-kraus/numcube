@@ -142,6 +142,17 @@ class Axes(object):
 
         return Axes(new_axes)
 
+    def insert(self, axis, index=0):
+        """
+        Insert a new axis at the specified position and return the new Axes object.
+        :param axis: the new axis to be inserted
+        :param index: the index of the new axis
+        :return: new Axes object
+        """
+        axis_list = list(self._axes)
+        axis_list.insert(index, axis)
+        return Axes(axis_list)
+
     def replace(self, old_axis_id, new_axis):
         """
         Replace an existing axis with a new axis and return the new Axes object.

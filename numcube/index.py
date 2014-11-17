@@ -25,22 +25,25 @@ class Index(Series):
             raise ValueError('index has duplicit values')
         
         self._vec_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
-        
-    def __str__(self):
-        return "Index('{}', {})".format(self._name, self._values)        
-        
-    def index(self, value):
-        """Return numpy array of indices of the given values."""
-        return self._vec_index(value)
+        self._vec_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])
 
-    def take(self, indices):
-        """Analogy to ndarray.take."""
-        return Index(self._name, self._values.take(indices))
+    def index(self, item):
+        """
+        If item is single value, then return a single integer value.
+        If item is a sequence, then return numpy array of booleans.
+        :param item: a single value or a sequence of values
+        :return: int or numpy array of ints
+        :raises: KeyError
+        """
+        return self._vec_index(item)
 
-    def rename(self, new_name):
-        """Returns a new Index object with the new name and the same values."""
-        return Index(new_name, self._values)
+    def contains(self, item):
+        """
+        If item is single value, then return a single boolean value.
+        If item is a sequence, then return numpy array of booleans.
+        :param item: a single value or a sequence of values
+        :return: bool or numpy array of bools
+        """
+        return self._vec_contains(item)
 
-    def reorder(self, indices):
-        """Returns a new Index object with the same name and reordered values."""
-        return Index(self._name, self._values[indices])
+

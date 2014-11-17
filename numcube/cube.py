@@ -254,6 +254,18 @@ class Cube(object):
         new_values = self._values.swapaxes(index1, index2)
         return Cube(new_values, new_axes)
 
+    def insert_axis(self, axis, index=0):
+        """
+        Adds a new axis and repeat the values to fill the new cube.
+        :param axis: the new axis to be inserted
+        :param index: the index of the new axis
+        :return: new Cube object
+        """
+        new_axes = self._axes.insert(axis, index)
+        new_values = np.expand_dims(self._values, index)
+        new_values = np.repeat(new_values, repeats=len(axis), axis=index)
+        return Cube(new_values, new_axes)
+
     def align_axis(self, new_axis):
         """
         Return a cube with values aligned to a new axis.
