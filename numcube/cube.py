@@ -106,10 +106,10 @@ class Cube(object):
 
     # A / B
     def __truediv__(self, other):
-        return _eval_operation(self, other, np.divide)
+        return _eval_operation(self, other, np.true_divide)
 
     def __rtruediv__(self, other):
-        return _eval_operation(other, self, np.divide)
+        return _eval_operation(other, self, np.true_divide)
 
     # A // B
     def __floordiv__(self, other):

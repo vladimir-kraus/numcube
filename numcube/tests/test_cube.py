@@ -162,7 +162,7 @@ class CubeTests(unittest.TestCase):
         X = C * D
         self.assertTrue(np.array_equal(X.values, values.take([3, 3, 2, 0], 1) * values_d))
 
-        C = year_quarter_cube() + 1  # +1 to prevent division by zero
+        C = year_quarter_cube() + 1  # +1 to prevent division by zero error
         import operator as op
         ops = [op.add, op.mul, op.floordiv, op.truediv, op.sub, op.pow, op.mod,  # arithmetics ops
                op.eq, op.ne, op.ge, op.le, op.gt, op.lt,  # comparison ops
@@ -175,7 +175,7 @@ class CubeTests(unittest.TestCase):
             self.assertTrue(np.array_equal(op(D, C).values, op(D, C.values)))
 
         # oprations with numpy array
-        D = (np.arange(12).reshape(3, 4) / 6 + 1).astype(np.int)  # +1 to prevent division by zero
+        D = (np.arange(12).reshape(3, 4) / 6 + 1).astype(np.int)  # +1 to prevent division by zero error
         for op in ops:
             self.assertTrue(np.array_equal(op(C, D).values, op(C.values, D)))
             self.assertTrue(np.array_equal(op(D, C).values, op(D, C.values)))
@@ -276,6 +276,7 @@ class CubeTests(unittest.TestCase):
     def test_combine_axes(self):
         C = year_quarter_weekday_cube()
 
+        # duplicate axes
         self.assertRaises(ValueError, C.combine_axes, ["year", "year"], "period", "{}-{}")
         self.assertRaises(ValueError, C.combine_axes, ["year", "quarter"], "weekday", "{}-{}")
 
