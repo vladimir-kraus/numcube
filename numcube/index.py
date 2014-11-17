@@ -1,8 +1,8 @@
 import numpy as np
-from .series import Series
+from .axis import Axis
 
 
-class Index(Series):
+class Index(Axis):
     """
     A series of unique indexed values.
     """

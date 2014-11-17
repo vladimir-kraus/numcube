@@ -5,6 +5,35 @@ from numcube import Index, Series, Axes
 
 class AxesTests(unittest.TestCase):
 
+    def test_axis_getitem(self):
+        a = Series("A", [10, 20, 30, 40])
+        b = Index("B", [10, 20, 30, 40])
+
+        self.assertEqual(a[1].values, 20)
+        self.assertEqual(b[1].values, 20)
+        self.assertEqual(a[-1].values, 40)
+        self.assertEqual(b[-1].values, 40)
+
+        # slicing
+        self.assertTrue(np.array_equal(a[1:3].values, [20, 30]))
+        self.assertTrue(np.array_equal(b[1:3].values, [20, 30]))
+
+        # indexing with bool numpy array
+        sel = a.values > 20
+        self.assertTrue(np.array_equal(a[sel].values, [30, 40]))
+        self.assertTrue(np.array_equal(b[sel].values, [30, 40]))
+
+    def test_axis_take(self):
+        a = Series("A", [10, 20, 30, 40])
+        b = Index("B", [10, 20, 30, 40])
+
+        self.assertEqual(a.take(1).values, 20)
+        self.assertEqual(b.take(1).values, 20)
+        self.assertEqual(a.take(-1).values, 40)
+        self.assertEqual(a.take(-1).values, 40)
+        self.assertTrue(np.array_equal(a.take([1, 2]).values, [20, 30]))
+        self.assertTrue(np.array_equal(b.take([1, 2]).values, [20, 30]))
+
     def test_create_index(self):
         a = Series("A", [10, 20, 30])
         self.assertEqual(a.name, "A")

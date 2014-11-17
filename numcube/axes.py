@@ -1,4 +1,4 @@
-from .series import Series
+from .axis import Axis
 
 
 class Axes(object):
@@ -28,13 +28,13 @@ class Axes(object):
         If axis has invali dtype, TypeError is raised.
         """
         # special case with a single axis
-        if isinstance(axes, Series):
+        if isinstance(axes, Axis):
             axes = [axes]
 
         unique_names = set()
         for axis in axes:
             # test correct types
-            if not isinstance(axis, Series):
+            if not isinstance(axis, Axis):
                 raise TypeError("axis must be instance of Index or Series")
             # test unique names - report the name of the first axis which is not unique
             if axis.name in unique_names:
