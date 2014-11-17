@@ -17,11 +17,13 @@ class Series(object):
         self._values = np.asarray(values)
         
     def __str__(self):
-        T = type(self)
-        return "{}('{}', {})".format(T.__name__, self._name, self._values)
+        return "{}('{}', {})".format(self.__class__.__name__, self._name, self._values)
 
     def __len__(self):
         return len(self._values)
+
+    def __getitem__(self, item):
+        return self.__class__(self._name, self._values[item])
 
     @property
     def name(self):
@@ -36,12 +38,10 @@ class Series(object):
         Returns a new object (of type Series or actual derived type) with the same name and reordered values.
         Analogy to ndarray.take.
         """
-        T = type(self)
-        return T(self._name, self._values.take(indices))
+        return self.__class__(self._name, self._values[indices])
 
     def rename(self, new_name):
         """
         Returns a new object (of type Series or actual derived type) with the new name and the same values.
         """
-        T = type(self)
-        return T(new_name, self._values)
+        return self.__class__(new_name, self._values)

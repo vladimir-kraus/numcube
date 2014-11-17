@@ -45,7 +45,7 @@ class Cube(object):
 
     @property
     def values(self):
-        return self._values.view()
+        return self._values  # .view()
 
     @property
     def axes(self):
