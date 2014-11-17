@@ -64,141 +64,133 @@ class Cube(object):
         """
         return Cube(func(self._values, *args), self._axes)
 
-    def transpose(self, axis_ids):
+    def transpose(self, axes):
         """
         Analogy to numpy.transpose.
-        :param axis_ids: axis names or indices defining the new order of axes
+        :param axes: axis names or indices defining the new order of axes
         :return: new Cube object
         """
-        if len(axis_ids) != self.ndim:
+        if len(axes) != self.ndim:
             raise ValueError("invalid number of axes")
 
-        indices = np.array(self._indices(axis_ids))
-        new_axes = self._axes.subset(axis_ids)
+        new_axes = self._axes.transpose(axes)
+        indices = np.array([self._axes.index(axis_id) for axis_id in axes])
         new_values = self._values.transpose(indices)
         return Cube(new_values, new_axes)
         
-    def _indices(self, axes):
-        return [self._axes.index(axis) if isinstance(axis, str) else axis for axis in axes]
-
     # arithmetic operators
 
     # A + B
     def __add__(self, other):
-        return _eval_operation(self, other, np.add)
+        return apply2(self, other, np.add)
 
     def __radd__(self, other):
-        return _eval_operation(other, self, np.add)
+        return apply2(other, self, np.add)
 
     # A * B
     def __mul__(self, other):
-        return _eval_operation(self, other, np.multiply)
+        return apply2(self, other, np.multiply)
 
     def __rmul__(self, other):
-        return _eval_operation(other, self, np.multiply)
+        return apply2(other, self, np.multiply)
 
     # A - B
     def __sub__(self, other):
-        return _eval_operation(self, other, np.subtract)
+        return apply2(self, other, np.subtract)
 
     def __rsub__(self, other):
-        return _eval_operation(other, self, np.subtract)
+        return apply2(other, self, np.subtract)
 
     # A / B
     def __truediv__(self, other):
-        return _eval_operation(self, other, np.true_divide)
+        return apply2(self, other, np.true_divide)
 
     def __rtruediv__(self, other):
-        return _eval_operation(other, self, np.true_divide)
+        return apply2(other, self, np.true_divide)
 
     # A // B
     def __floordiv__(self, other):
-        return _eval_operation(self, other, np.floor_divide)
+        return apply2(self, other, np.floor_divide)
 
     def __rfloordiv__(self, other):
-        return _eval_operation(other, self, np.floor_divide)
+        return apply2(other, self, np.floor_divide)
 
     # A ** B
     def __pow__(self, other):
-        return _eval_operation(self, other, np.power)
+        return apply2(self, other, np.power)
 
     def __rpow__(self, other):
-        return _eval_operation(other, self, np.power)
+        return apply2(other, self, np.power)
 
     # A % B
     def __mod__(self, other):
-        return _eval_operation(self, other, np.mod)
+        return apply2(self, other, np.mod)
 
     def __rmod__(self, other):
-        return _eval_operation(other, self, np.mod)
+        return apply2(other, self, np.mod)
 
     # bitwise operators
 
     # A & B
     def __and__(self, other):
-        return _eval_operation(self, other, np.bitwise_and)
+        return apply2(self, other, np.bitwise_and)
 
     def __rand__(self, other):
-        return _eval_operation(other, self, np.bitwise_and)
+        return apply2(other, self, np.bitwise_and)
 
     # A | B
     def __or__(self, other):
-        return _eval_operation(self, other, np.bitwise_or)
+        return apply2(self, other, np.bitwise_or)
 
     def __ror__(self, other):
-        return _eval_operation(other, self, np.bitwise_or)
+        return apply2(other, self, np.bitwise_or)
 
     # A ^ B
     def __xor__(self, other):
-        return _eval_operation(self, other, np.bitwise_xor)
+        return apply2(self, other, np.bitwise_xor)
 
     def __rxor__(self, other):
-        return _eval_operation(other, self, np.bitwise_xor)
+        return apply2(other, self, np.bitwise_xor)
 
     # A >> B
     def __lshift__(self, other):
-        return _eval_operation(self, other, np.left_shift)
+        return apply2(self, other, np.left_shift)
 
     def __rlshift__(self, other):
-        return _eval_operation(other, self, np.left_shift)
+        return apply2(other, self, np.left_shift)
 
     # A << B
     def __rshift__(self, other):
-        return _eval_operation(self, other, np.right_shift)
+        return apply2(self, other, np.right_shift)
 
     def __rrshift__(self, other):
-        return _eval_operation(other, self, np.right_shift)
+        return apply2(other, self, np.right_shift)
 
     # comparison operators
 
     # A == B
     def __eq__(self, other):
-        return _eval_operation(self, other, np.equal)
+        return apply2(self, other, np.equal)
 
     # A != B
     def __ne__(self, other):
-        return _eval_operation(self, other, np.not_equal)
+        return apply2(self, other, np.not_equal)
 
     # A < B
     def __lt__(self, other):
-        return _eval_operation(self, other, np.less)
+        return apply2(self, other, np.less)
 
     # A <= B
     def __le__(self, other):
-        return _eval_operation(self, other, np.less_equal)
+        return apply2(self, other, np.less_equal)
 
     # A > B
     def __gt__(self, other):
-        return _eval_operation(self, other, np.greater)
+        return apply2(self, other, np.greater)
 
     # A >= B
     def __ge__(self, other):
-        return _eval_operation(self, other, np.greater_equal)
-        
-    def _get_axis_and_index(self, axis):
-        if isinstance(axis, str):
-            axis = self.axes.index(axis)
-        return self.axes[axis], axis
+        return apply2(self, other, np.greater_equal)
         
     def groupby(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
         """
@@ -208,7 +200,7 @@ class Cube(object):
             - must return array with one axes less then the input array
             - examples are np.sum, np.mean, etc.
         """
-        old_axis, old_axis_index = self._get_axis_and_index(axis)
+        old_axis, old_axis_index = self.axes.axis_and_index(axis)
         
         if isinstance(old_axis, Index):
             return self  # Index already contains unique values
@@ -268,8 +260,7 @@ class Cube(object):
         :param new_axis: the name of the new axis (str)
         :return: new Cube object
         """
-        old_axis_index = self._axes.index(new_axis.name)
-        old_axis = self._axes[old_axis_index]
+        old_axis, old_axis_index = self._axes.axis_and_index(new_axis.name)
         indices = old_axis.index(new_axis.values)
         new_values = self._values.take(indices, old_axis_index)
         new_axes = self._axes.replace(old_axis_index, new_axis)
@@ -295,10 +286,9 @@ class Cube(object):
         axis_indices = list()
         unique_axis_indices = set()
         for axis_name in axis_names:
-            axis_index = self._axes.index(axis_name)
+            axis, axis_index = self._axes.axis_and_index(axis_name)
             unique_axis_indices.add(axis_index)
             axis_indices.append(axis_index)
-            axis = self._axes[axis_index]
             axes.append(axis)
             array_list.append(axis.values)
             size *= len(axis)
@@ -368,13 +358,22 @@ def _broadcast_values(values, old_axes, new_axes):
     return new_values.transpose(transpose_indices)        
 
 
-def _eval_operation(a, b, func):
+def apply2(a, b, func, *args):
+    """
+    Apply function elementwise on values of two cubes.
+    The cube axes are matched and aligned before the function is applied.
+    :param a:
+    :param b:
+    :param func:
+    :param args:
+    :return:
+    """
 
     if not isinstance(a, Cube):
-        return Cube(func(a, b.values), b.axes)
+        return Cube(func(a, b.values, *args), b.axes)
 
     if not isinstance(b, Cube):
-        return Cube(func(a.values, b), a.axes)
+        return Cube(func(a.values, b, *args), a.axes)
 
     values_a = a.values
     values_b = b.values
@@ -383,12 +382,11 @@ def _eval_operation(a, b, func):
     for axis_index_a, axis_a in enumerate(a.axes):
         
         try:
-            axis_index_b = b.axes.index(axis_a.name)
+            axis_b, axis_index_b = b.axes.axis_and_index(axis_a.name)
         except KeyError:  
             # axis not found in cube b --> do not align
             continue
-        axis_b = b.axes[axis_index_b]
-        
+
         # if axes are identical --> do not align
         if axis_a is axis_b:
             continue
@@ -407,7 +405,7 @@ def _eval_operation(a, b, func):
                 value_indices = _align_index_to_series(axis_b, axis_a)
                 values_b = values_b.take(value_indices, axis_index_b)
             else:  # axis_b is Series
-                _assert_align_series(axis_b, _axis_a)
+                _assert_align_series(axis_b, axis_a)
 
     # add axes from b which have not been aligned
     for axis_b in b.axes:
@@ -417,7 +415,7 @@ def _eval_operation(a, b, func):
     values_a = _broadcast_values(values_a, a.axes, all_axes)
     values_b = _broadcast_values(values_b, b.axes, all_axes)
 
-    return Cube(func(values_a, values_b), all_axes)
+    return Cube(func(values_a, values_b, *args), all_axes)
     
     
 def _align_index_to_index(axis_from, axis_to):

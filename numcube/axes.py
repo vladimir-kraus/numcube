@@ -25,31 +25,25 @@ class Axes(object):
     def __init__(self, axes):
         """
         If for non-unique axes are found, ValueError is raised.
+        If axis has invali dtype, TypeError is raised.
         """
+        # special case with a single axis
         if isinstance(axes, Series):
             axes = [axes]
+
+        unique_names = set()
+        for axis in axes:
+            # test correct types
+            if not isinstance(axis, Series):
+                raise TypeError("axis must be instance of Index or Series")
+            # test unique names - report the name of the first axis which is not unique
+            if axis.name in unique_names:
+                raise ValueError("axis '{}' is not unique".format(axis.name))
+            unique_names.add(axis.name)
 
         # the sequence of axes must be immutable
         self._axes = tuple(axes)
 
-        self._update_axis_indices()
-
-    def _update_axis_indices(self):
-        """
-        Create inner axis dictionary to allow lookup by name.
-        If for non-unique axes are found, ValueError is raised.
-        :return: None
-        """
-        self._axis_dict = dict()
-        for i, axis in enumerate(self._axes):
-            if not isinstance(axis, Series):
-                raise TypeError("axis must be an instance of Series or Index")
-
-            name = axis.name
-            if name in self._axis_dict:
-                raise ValueError("duplicate axis {}".format(repr(name)))
-            self._axis_dict[name] = i
-        
     def __str__(self):
         axes = [str(axis) for axis in self._axes]
         return '\n'.join(axes)
@@ -71,25 +65,56 @@ class Axes(object):
 
         Note: LookupError can be used to catch both KeyError and IndexError.
         """
-        if isinstance(item, str):
-            item = self._axis_dict[item]
-        return self._axes[item]
+        if isinstance(item, int):
+            if 0 <= item < len(self._axes):
+                return self._axes[item]
+            raise IndexError("invalid axis index: {}".format(item))
+        elif isinstance(item, str):
+            for a in self._axes:
+                if a.name == item:
+                    return a
+            raise KeyError("invalid axis name: '{}'".format(item))
+        else:
+            raise TypeError("axis can be specified by index (int) or name (str)")
+
+    def axis_and_index(self, axis):
+        if isinstance(axis, int):
+            if 0 <= axis < len(self._axes):
+                return self._axes[axis], axis
+            raise IndexError("invalid axis index: {}".format(axis))
+        elif isinstance(axis, str):
+            for i, a in enumerate(self._axes):
+                if a.name == axis:
+                    return a, i
+            raise KeyError("invalid axis name: '{}'".format(axis))
+        else:
+            raise TypeError("axis can be specified by index (int) or name (str)")
         
-    def index(self, axis_id):
+    def index(self, axis):
         """
         Find index of an axis by the name. If not found return KeyError.
         """
-        # TODO: ...
-        if isinstance(axis_id, str):
-            return self._axis_dict[axis_id]
+        if isinstance(axis, int):
+            if 0 <= axis < len(self._axes):
+                return axis
+            raise IndexError("invalid axis index: {}".format(axis))
+        elif isinstance(axis, str):
+            for i, a in enumerate(self._axes):
+                if a.name == axis:
+                    return i
+            raise KeyError("invalid axis name: '{}'".format(axis))
         else:
-            return axis_id
+            raise TypeError("axis can be specified by index (int) or name (str)")
 
-    def contains(self, axis_name):
+    def contains(self, axis_id):
         """
         Returns True if Axes contain an axis of the specified name. Otherwise return False.
         """
-        return axis_name in self._axis_dict
+        try:
+            self[axis_id]
+            return True
+        except LookupError:
+            return False
 
     def names(self):
         """
@@ -116,18 +141,6 @@ class Axes(object):
             raise ValueError("duplicit axes")
 
         return Axes(new_axes)
-        
-    def subset(self, axes):
-        """
-        axes is an sequence of strings and/or integers
-        """
-        return [self[axis] for axis in axes]
-        
-    def _get_index(self, axis):
-        if isinstance(axis, str):
-            return self.index(axis)
-        else:
-            return axis
 
     def replace(self, old_axis_id, new_axis):
         """
@@ -138,7 +151,7 @@ class Axes(object):
         :param new_axis: Series or Index object
         :return: new Axes object
         """
-        old_axis_index = self._get_index(old_axis_id)
+        old_axis_index = self.index(old_axis_id)
         new_axes = list(self._axes)
         new_axes[old_axis_index] = new_axis
         return Axes(new_axes)

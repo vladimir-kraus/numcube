@@ -1,6 +1,12 @@
 numcube
 =======
 
+Principles
+----------
+* similar interface to numpy array
+* simple things should be made simple
+* potentially surprising things to happen only if explicitly asked for 
+
 Cube
 ----
 - Cube is a wrapper around numpy.ndarray object
@@ -27,9 +33,25 @@ Axis alignment
 - if one of the axes is Series and the other is Index, then the values in Series must be subset of those in Index; the result axis is the Series
 - if both axes are Series, error is raised; two Series objects cannot be matched
 
+Operation with cubes
+--------------------
+
+Example:
+```python
+>> from numcube import Index, Cube
+>> Y = Index("year", range(2014, 3))
+>> Q = Index("quarter", ["Q1", "Q2", "Q3", "Q4"])
+>> sales = Cube([[14, 16, 13, 20], [15, 15, 10, 19], [16, 17, 15, 21]], [Y, Q])
+>> prices = Cube([[1.50, 1.52, 1.53, 1.55], [1.48, 1.47, 1.46, 1.49], [1.51, 1.57, 1.59, 1.61]], [Y, Q])
+>> revenues_q = sales * prices  # quarterly revenues
+>> revenues_y = revenues_q.sum("quarter")  # annual revenues
+>> rel_revenues = revenues_y / revenues_y.mean("year")  # compare to overall annual average
+>> revenue_coef = revenues_y / revenues.values[0]  # compare to first year revenue
+```
+
 Operations with non-Cube types
 ------------------------------
-Cube can be used in operations with non-Cube types - scalar and numpy array. The result of such operaytion is Cube.
+Cube can be used in operations with non-Cube types - scalar and numpy array. The result of such operation is Cube.
 In this case however the axes are not matched and the operation is done solely with the cube.values and the other
 non-Cube operand. For numpy array it means that the dimensions lengths must match or the array must be able to
 be broadcasted to a compatible shape.
