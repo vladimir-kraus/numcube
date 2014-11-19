@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from numcube import Index, Series, Axes
+from numcube import Index, Series, Axes, intersect
 
 
 class AxesTests(unittest.TestCase):
@@ -86,13 +86,43 @@ class AxesTests(unittest.TestCase):
         self.assertTrue(np.array_equal(b.contains(["jan", "dec", "feb"]), [True, False, True]))
 
     def test_create_axes(self):
+        # create from a single axis
+        ax = Axes(Index("A", [10, 20]))
+        self.assertEqual(len(ax), 1)
+        self.assertEqual(ax[0].name, "A")
+        self.assertEqual(len(ax[0]), 2)
+
+        # create from a list of axes
         ax = Axes([Index("A", [10, 20]), Index("B", ["a", "b", "c"])])
         self.assertEqual(len(ax), 2)
         self.assertEqual(ax[0].name, "A")
         self.assertEqual(len(ax[1]), 3)
+
+        # create from another Axes object
+        ax2 = Axes(ax)
+        self.assertEqual(len(ax2), 2)
+        self.assertEqual(ax2[0].name, "A")
+        self.assertEqual(len(ax2[1]), 3)
 
         # duplicate axes
         self.assertRaises(ValueError, Axes, [Index("A", [10, 20]), Index("A", ["a", "b", "c"])])
 
         # invalid axis type
         self.assertRaises(TypeError, Axes, [None, Index("A", ["a", "b", "c"])])
+
+    def test_intersect(self):
+        ax1 = Index("A", ["a1", "a2", "a3"])
+        ax2 = Index("B", ["b1", "b2", "b4", "b3"])
+        ax3 = Index("C", [1, 2, 3])
+        ax4 = Index("A", ["a3", "a2"])
+        ax5 = Index("B", ["b3", "b2", "b1", "b5"])
+        ax6 = Index("D", [1, 2, 3])
+        axes1 = Axes([ax1, ax2, ax3])
+        axes2 = Axes([ax5, ax4, ax6])
+        axes_int = intersect(axes1, axes2)
+        self.assertTrue(isinstance(axes_int, Axes))
+        self.assertEqual(len(axes_int), 2)
+        self.assertEqual(len(axes_int[0]), 2)
+        self.assertEqual(len(axes_int[1]), 3)
+        self.assertTrue(np.array_equal(axes_int[0].values, ("a2", "a3")))
+        self.assertTrue(np.array_equal(axes_int[1].values, ("b1", "b2", "b3")))

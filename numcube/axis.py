@@ -37,13 +37,17 @@ class Axis(object):
 
     def take(self, indices):
         """
-        Returns a new object (of type Series or actual derived type) with the same name and reordered values.
+        Returns a new object (of type Series or actual derived type) with the same name and the specified values.
         Analogy to ndarray.take.
+        :param indices: int or list of int
+        :return: new axis (instance of actual derived type)
         """
         return self.__class__(self._name, self._values[indices])
 
     def rename(self, new_name):
         """
         Returns a new object (of type Series or actual derived type) with the new name and the same values.
+        :param new_name: str
+        :return: new axis (instance of actual derived type)
         """
         return self.__class__(new_name, self._values)

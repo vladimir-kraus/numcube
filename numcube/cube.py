@@ -2,6 +2,7 @@ import numpy as np
 from .index import Index
 from .series import Series
 from .axes import Axes
+from .axis import Axis
 from .exceptions import AxisAlignError
 
 
@@ -14,8 +15,8 @@ class Cube(object):
     # then __array_priority__ will force Cube to handle the operation ranther than numpy array
     __array_priority__ = 10
 
-    def __init__(self, values, axes):
-        values = np.asarray(values)
+    def __init__(self, values, axes, dtype=None):
+        values = np.asarray(values, dtype)
 
         # convert a collection of axes to Axes object
         if not isinstance(axes, Axes):
@@ -31,7 +32,24 @@ class Cube(object):
 
         self._values = values
         self._axes = axes
-        
+
+    def __getitem__(self, axes):
+        """
+        Returns the subsection of the cube corresponding to the space defined by axes.
+        :param item: Axes object or convertible to Axes
+        :return:
+        """
+
+        #if isinstance(item, Cube):
+        #    item = item.axes
+
+        if not isinstance(axes, Axes):
+            axes = Axes(axes)
+            cube = self
+            for axis in axes:
+                cube = cube.filter(axis)
+            return cube
+
     def __str__(self):
         return "axes:\n{}\nvalues:\n{}".format(self._axes, self._values)
 
@@ -191,6 +209,13 @@ class Cube(object):
     # A >= B
     def __ge__(self, other):
         return apply2(self, other, np.greater_equal)
+
+    def filter(self, axis):
+        self_axis, self_axis_index = self._axes.axis_and_index(axis.name)
+        value_indices = self_axis.index(axis.values)
+        new_values = self._values.take(value_indices, self_axis_index)
+        new_axes = self._axes.replace(self_axis_index, axis)
+        return Cube(new_values, new_axes)
         
     def groupby(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
         """

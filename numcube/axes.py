@@ -1,3 +1,4 @@
+import numpy as np
 from .axis import Axis
 
 
@@ -25,7 +26,8 @@ class Axes(object):
     def __init__(self, axes):
         """
         If for non-unique axes are found, ValueError is raised.
-        If axis has invali dtype, TypeError is raised.
+        If axis has invalid type, TypeError is raised.
+        :param axes: Axis or a collection of Axis objects (incl. another Axes object)
         """
         # special case with a single axis
         if isinstance(axes, Axis):
@@ -179,3 +181,32 @@ class Axes(object):
         new_axes = list(self)
         new_axes[index1], new_axes[index2] = new_axes[index2], new_axes[index1]
         return Axes(new_axes)
+
+
+def intersect(axes1, axes2):
+    """
+    Return the space intersect of the common axes. The order of values on each axis correspond to the order on
+    the corresponding axis on axes1.
+
+    The result can be used for inner join operations.
+
+    :param axes1: Axes object
+    :param axes2: Axes object
+    :return: Axes
+    """
+    common_axes = []
+    for axis1 in axes1:
+        try:
+            axis2 = axes2[axis1.name]
+        except LookupError:
+            continue
+
+        if axis1 is axes2:
+            axis = axis1
+        else:
+            indices = np.in1d(axis1.values, axis2.values)  # assume_unique=True ?
+            axis = axis1[indices]
+
+        common_axes.append(axis)
+
+    return Axes(common_axes)
