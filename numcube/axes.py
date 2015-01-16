@@ -29,6 +29,12 @@ class Axes(object):
         If axis has invalid type, TypeError is raised.
         :param axes: Axis or a collection of Axis objects (incl. another Axes object)
         """
+        # special case with zero axes
+        if axes is None:
+            self._axes = tuple()
+            self._shape = tuple()
+            return
+
         # special case with a single axis
         if isinstance(axes, Axis):
             axes = [axes]
@@ -40,15 +46,16 @@ class Axes(object):
                 raise TypeError("axis must be instance of Index or Series")
             # test unique names - report the name of the first axis which is not unique
             if axis.name in unique_names:
-                raise ValueError("axis '{}' is not unique".format(axis.name))
+                raise ValueError("multiple axes with name '{}'".format(axis.name))
             unique_names.add(axis.name)
 
         # the sequence of axes must be immutable
         self._axes = tuple(axes)
+        self._shape = tuple(len(a) for a in axes)
 
-    def __str__(self):
-        axes = [str(axis) for axis in self._axes]
-        return '\n'.join(axes)
+    def __repr__(self):
+        axes = [str(a) for a in self._axes]
+        return "Axes(" + ', '.join(axes) + ")"
 
     def __len__(self):
         return len(self._axes)
@@ -78,6 +85,10 @@ class Axes(object):
             raise KeyError("invalid axis name: '{}'".format(item))
         else:
             raise TypeError("axis can be specified by index (int) or name (str)")
+            
+    @property
+    def shape(self):
+        return self._shape
 
     def axis_and_index(self, axis):
         if isinstance(axis, int):
@@ -154,6 +165,16 @@ class Axes(object):
         axis_list = list(self._axes)
         axis_list.insert(index, axis)
         return Axes(axis_list)
+
+    def remove(self, axis):
+        """
+        Remove axis or axes with a given index or name.
+        Return new Axes object.
+        """
+        i = self.index(axis)
+        new_axes = list(self._axes)
+        del new_axes[i]
+        return Axes(new_axes)
 
     def replace(self, old_axis_id, new_axis):
         """

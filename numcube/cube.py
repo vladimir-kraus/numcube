@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from .index import Index
 from .series import Series
 from .axes import Axes
@@ -8,11 +9,11 @@ from .exceptions import AxisAlignError
 
 class Cube(object):
     """
-    Wrapper around numpy.ndarray with named and labeled axes.
+    Wrapper around numpy.ndarray with named and labelled axes.
     """
 
     # when numpy array is the first argument in operation and Cube is the second,
-    # then __array_priority__ will force Cube to handle the operation ranther than numpy array
+    # then __array_priority__ will force Cube to handle the operation rather than numpy array
     __array_priority__ = 10
 
     def __init__(self, values, axes, dtype=None):
@@ -33,32 +34,50 @@ class Cube(object):
         self._values = values
         self._axes = axes
 
-    def __getitem__(self, axes):
-        """
-        Returns the subsection of the cube corresponding to the space defined by axes.
-        :param item: Axes object or convertible to Axes
+    def __getitem__(self, items):
+        """Similar rules apply as with indexing and slicing numpy ndarray.
+        Notes:
+        1) np.newaxis is not supported.
+        2) axes indexed by integer are collapsed
+
+        :param item:
         :return:
         """
 
-        #if isinstance(item, Cube):
-        #    item = item.axes
+        if not isinstance(items, tuple):
+            items = (items,)
+        new_axes = []
 
-        if not isinstance(axes, Axes):
-            axes = Axes(axes)
-            cube = self
-            for axis in axes:
-                cube = cube.filter(axis)
-            return cube
+        # append the axes given by items
+        for item, axis in zip(items, self._axes):
+            if not isinstance(item, int):  # indexing by int collapses a dimension
+                new_axes.append(axis[item])
 
-    def __str__(self):
-        return "axes:\n{}\nvalues:\n{}".format(self._axes, self._values)
+        # append the rest of axes
+        for i in range(len(items), len(self._axes)):
+            new_axes.append(self._axes[i])
+
+        return Cube(self._values[items], new_axes)
+
+    def __bool__(self):
+        """Return the truth value of the cube.
+        If the cube is empty, returns False.
+        If the cube is scalar, returns the truth value of the only element.
+        If the cube has more than one element, ValueError is raised.
+        Note: The function returns the truth value of the underlying numpy ndarray.
+        """
+        return bool(self._values)
+
+    def __contains__(self, item):
+        """Implements the behaviour of built-in 'in' operator."""
+        return item in self._values
+
+    def __repr__(self):
+        return "axes: {}\nvalues: {}".format(self._axes, self._values)
 
     @property
     def ndim(self):
-        """
-        :return: the number of axes
-        :rtype: int
-        """
+        """Number of array dimensions."""
         return self._values.ndim
 
     @property
@@ -74,17 +93,15 @@ class Cube(object):
         return self._axes
 
     def apply(self, func, *args):
-        """
-        Apply function to all values and return the new cube.
-        :param func:
-        :param args:
-        :return:
+        """Apply function to all values and return the new cube.
+        :param func: function to be applied to values
+        :param args: additional optional arguments of func
+        :return: Cube
         """
         return Cube(func(self._values, *args), self._axes)
 
     def transpose(self, axes):
-        """
-        Analogy to numpy.transpose.
+        """Analogy to numpy.transpose.
         :param axes: axis names or indices defining the new order of axes
         :return: new Cube object
         """
@@ -92,11 +109,19 @@ class Cube(object):
             raise ValueError("invalid number of axes")
 
         new_axes = self._axes.transpose(axes)
-        indices = np.array([self._axes.index(axis_id) for axis_id in axes])
+        indices = np.array([self._axes.index(a) for a in axes])
         new_values = self._values.transpose(indices)
         return Cube(new_values, new_axes)
         
-    # arithmetic operators
+    """arithmetics operators"""
+
+    # unary +
+    def __pos__(self):
+        return self
+
+    # unary -
+    def __neg__(self):
+        return Cube(-self._values, self._axes)
 
     # A + B
     def __add__(self, other):
@@ -147,7 +172,11 @@ class Cube(object):
     def __rmod__(self, other):
         return apply2(other, self, np.mod)
 
-    # bitwise operators
+    """bitwise operators"""
+
+    def __invert__(self):
+        """Compute bit-wise inversion, or bit-wise NOT, element-wise."""
+        return Cube(np.invert(self._values), self._axes)
 
     # A & B
     def __and__(self, other):
@@ -184,7 +213,7 @@ class Cube(object):
     def __rrshift__(self, other):
         return apply2(other, self, np.right_shift)
 
-    # comparison operators
+    """comparison operators"""
 
     # A == B
     def __eq__(self, other):
@@ -210,20 +239,119 @@ class Cube(object):
     def __ge__(self, other):
         return apply2(self, other, np.greater_equal)
 
-    def filter(self, axis):
-        self_axis, self_axis_index = self._axes.axis_and_index(axis.name)
-        value_indices = self_axis.index(axis.values)
-        new_values = self._values.take(value_indices, self_axis_index)
-        new_axes = self._axes.replace(self_axis_index, axis)
+    """mathematical functions"""
+
+    def __abs__(self):
+        """Implements behavior for the built in abs() function."""
+        return Cube(abs(self._values), self._axes)
+
+    def __round__(self, n):
+        """Implements behavior for the built in round() function. n is the number of decimal places to round to."""
+        return Cube(round(self._values, n), self._axes)
+
+    def __floor__(self):
+        """Implements behavior for math.floor(), i.e., rounding down to the nearest integer."""
+        return Cube(math.floor(self._values), self._axes)
+
+    def __ceil__(self):
+        """Implements behavior for math.ceil(), i.e., rounding up to the nearest integer."""
+        return Cube(math.ceil(self._values), self._axes)
+
+    def __trunc__(self):
+        """Implements behavior for math.trunc(), i.e., truncating to an integral."""
+        return Cube(math.trunc(self._values), self._axes)
+
+    def sin(self):
+        """Sine, element-wise.
+        Can be called as numpy.sin(C) or C.sin()."""
+        return Cube(np.sin(self._values), self._axes)
+
+    def cos(self):
+        """Cosine, element-wise.
+        Can be called as numpy.cos(C) or C.cos()."""
+        return Cube(np.cos(self._values), self._axes)
+
+    def tan(self):
+        """Tangents, element-wise.
+        Can be called as numpy.tan(C) or C.tan()."""
+        return Cube(np.tan(self._values), self._axes)
+
+    """aggregation functions"""
+
+    def sum(self, axis=None, keep=None):
+        """Sum of array elements over a given axis.
+
+        :param axis: Axis or axes along which a sum is performed. The default (axis = None) is perform a sum
+        over all the dimensions of the input array. axis may be negative, in which case it counts from the last
+        to the first axis. If this is a tuple of ints, a sum is performed on multiple axes, instead of a single
+        axis or all the axes as before.
+         :return:
+        """
+        return self.aggregate(np.sum, axis, keep)
+
+    def mean(self, axis=None, keep=None):
+        """Compute the arithmetic mean along the specified axis."""
+        return self.aggregate(np.mean, axis, keep)
+
+    def min(self, axis=None, keep=None):
+        """Return the minimum of a cube or minimum along an axis."""
+        return self.aggregate(np.min, axis, keep)
+
+    def max(self, axis=None, keep=None):
+        """Return the maximum of a cube or maximum along an axis."""
+        return self.aggregate(np.max, axis, keep)
+
+    def all(self, axis=None, keep=None):
+        """Test whether all cube elements along a given axis evaluate to True."""
+        return self.aggregate(np.all, axis, keep)
+
+    def any(self, axis=None, keep=None):
+        """Test whether any cube element along a given axis evaluates to True."""
+        return self.aggregate(np.any, axis, keep)
+
+    def aggregate(self, func, axis=None, keep=None):
+        """
+        :param axis: axis which are eliminated by the aggregation
+        :param keep: axis or axes which are kept after the aggregation
+        Note: if keep is not None, then axis must be None, otherwise ValueError is raised.
+        """
+
+        # complete aggregation to a scalar
+        if axis is None and keep is None:
+            return Cube(func(self._values), None)
+
+        if keep is not None and axis is not None:
+            raise ValueError("either 'keep' or 'axis' argument must be None")
+
+        if isinstance(axis, str) or isinstance(axis, int):
+            axis = [axis]
+
+        if isinstance(keep, str) or isinstance(keep, int):
+            keep = [keep]
+
+        if axis is not None:
+            axis_indices_to_remove = tuple(self._axes.index(a) for a in axis)
+            new_axes = list(a for i, a in enumerate(self._axes) if i not in axis_indices_to_remove)
+        else:
+            axis_index_set = set(self._axes.index(a) for a in keep)
+            new_axes = list(a for i, a in enumerate(self._axes) if i in axis_index_set)
+            axis_indices_to_remove = tuple(set(range(self.ndim)) - axis_index_set)
+
+        new_values = self._values
+        if axis_indices_to_remove:
+            new_values = func(new_values, axis_indices_to_remove)
+
         return Cube(new_values, new_axes)
-        
+
     def groupby(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
         """
-        func 
+        :param axis:
+        :param func:
             - a function which takes two fixed arguments - array and axis (in this order) 
             - following these two can also take a variable number of other arguments passed in *args
             - must return array with one axes less then the input array
             - examples are np.sum, np.mean, etc.
+        :param sorted:
         """
         old_axis, old_axis_index = self.axes.axis_and_index(axis)
         
@@ -253,12 +381,19 @@ class Cube(object):
         new_axis = Index(old_axis.name, unique_values)
         new_axes = self._axes.replace(old_axis_index, new_axis)
         new_values = np.concatenate(sub_cubes, old_axis_index)
-        return Cube(new_values, new_axes)  
+        return Cube(new_values, new_axes)
+
+    def _filter_axis(self, axis):
+        self_axis, self_axis_index = self._axes.axis_and_index(axis.name)
+        value_indices = self_axis.index(axis.values)
+        new_values = self._values.take(value_indices, self_axis_index)
+        new_axes = self._axes.replace(self_axis_index, axis)
+        return Cube(new_values, new_axes)
 
     def replace_axis(self, old_axis_id, new_axis):
         """
         Replace an existing axis with a new axis and return the new Cube object.
-        The new axes collection is checked for duplicit names.
+        The new axes collection is checked for duplicate names.
         The new axis must have the same length as the axis to be replaced.
         :param old_axis_id: axis index (int) or name (str)
         :param new_axis: Series or Index object
@@ -294,7 +429,9 @@ class Cube(object):
     def align_axis(self, new_axis):
         """
         Return a cube with values aligned to a new axis.
-        :param new_axis: the name of the new axis (str)
+        The order of the axes in the cube remains the same.
+        The new axis will become one of the cube axes.
+        :param new_axis: axis which the values should be aligned to
         :return: new Cube object
         """
         old_axis, old_axis_index = self._axes.axis_and_index(new_axis.name)
@@ -302,6 +439,11 @@ class Cube(object):
         new_values = self._values.take(indices, old_axis_index)
         new_axes = self._axes.replace(old_axis_index, new_axis)
         return Cube(new_values, new_axes)
+
+    def extend(self, axis, fill):
+        old_axis, old_axis_index = self._axes.axis_and_index(axis)
+        if not isinstance(old_axis, Index):
+            old_axis_indices = old_axis.index(axis.values)
 
     def rename_axis(self, old_axis_id, new_axis_name):
         """
@@ -370,6 +512,38 @@ class Cube(object):
         new_axis = Index(new_axis_name, new_axis_values)
         new_axes.insert(0, new_axis)
         return Cube(new_values, new_axes)
+        
+    def filter(self, axis, values=None):
+        """
+        """
+        if isinstance(axis, Axis):
+            values = axis.values
+            axis = axis.name
+        # TODO ...
+        
+    @staticmethod
+    def full(axes, fill_value, dtype=None):
+        """Return a new cube filled with `fill_value`."""
+        if not isinstance(axes, Axes):
+            axes = Axes(axes)
+        values = np.full(axes.shape, fill_value, dtype)
+        return Cube(values, axes)
+        
+    @staticmethod
+    def zeros(axes, dtype=float):
+        """Return a new cube filled with zeros."""
+        if not isinstance(axes, Axes):
+            axes = Axes(axes)
+        values = np.zeros(axes.shape, dtype)
+        return Cube(values, axes)
+
+    @staticmethod
+    def ones(axes, dtype=float):
+        """Return a new cube filled with ones."""
+        if not isinstance(axes, Axes):
+            axes = Axes(axes)
+        values = np.ones(axes.shape, dtype)
+        return Cube(values, axes)
 
 
 def _broadcast_values(values, old_axes, new_axes):
@@ -392,12 +566,43 @@ def _broadcast_values(values, old_axes, new_axes):
         raise ValueError("cube broadcasting axis mismatch")
 
     # transpose the result
-    return new_values.transpose(transpose_indices)        
+    return new_values.transpose(transpose_indices)
+
+
+def _align_axes(axis1, axis2, axis_index1, axis_index2, values1, values2):
+    """
+
+    :param axis1:
+    :param axis2:
+    :param axis_index1:
+    :param axis_index2:
+    :param values1:
+    :param values2:
+    :return: tuple (axis, values1, values2)
+    """
+    if isinstance(axis1, Index):
+        if isinstance(axis2, Index):
+            axis = axis1
+            value_indices = _align_index_to_index(axis2, axis1)
+            values2 = values2.take(value_indices, axis_index2)
+        else:  # axis_b is Series
+            # only in this case the new axis will be from cube b
+            axis = axis2
+            value_indices = _align_index_to_series(axis1, axis2)
+            values1 = values1.take(value_indices, axis_index1)
+    else:  # axis_a is Series
+        if isinstance(axis2, Index):
+            axis = axis1
+            value_indices = _align_index_to_series(axis2, axis1)
+            values2 = values2.take(value_indices, axis_index2)
+        else:  # axis_b is Series
+            axis = axis1
+            _assert_align_series(axis2, axis1)
+    return axis, values1, values2
 
 
 def apply2(a, b, func, *args):
-    """
-    Apply function elementwise on values of two cubes.
+    """Apply function elementwise on values of two cubes.
     The cube axes are matched and aligned before the function is applied.
     :param a:
     :param b:
@@ -414,35 +619,23 @@ def apply2(a, b, func, *args):
 
     values_a = a.values
     values_b = b.values
-    all_axes = list(a.axes)
+    all_axes = list()
     
     for axis_index_a, axis_a in enumerate(a.axes):
         
         try:
             axis_b, axis_index_b = b.axes.axis_and_index(axis_a.name)
-        except KeyError:  
+        except KeyError:
             # axis not found in cube b --> do not align
+            axis_b = axis_a
+
+        # if axes are identical or if axis_b has not been found --> do not align
+        if axis_b is axis_a:
+            all_axes.append(axis_a)
             continue
 
-        # if axes are identical --> do not align
-        if axis_a is axis_b:
-            continue
-        
-        if isinstance(axis_a, Index):
-            if isinstance(axis_b, Index):
-                value_indices = _align_index_to_index(axis_b, axis_a)
-                values_b = values_b.take(value_indices, axis_index_b)
-            else:  # axis_b is Series
-                # only in this case the new axis will be from cube b
-                all_axes[axis_index_a] = axis_b
-                value_indices = _align_index_to_series(axis_a, axis_b)
-                values_a = values_a.take(value_indices, axis_index_a)
-        else:  # axis_a is Series
-            if isinstance(axis_b, Index):
-                value_indices = _align_index_to_series(axis_b, axis_a)
-                values_b = values_b.take(value_indices, axis_index_b)
-            else:  # axis_b is Series
-                _assert_align_series(axis_b, axis_a)
+        axis, values_a, values_b = _align_axes(axis_a, axis_b, axis_index_a, axis_index_b, values_a, values_b)
+        all_axes.append(axis)
 
     # add axes from b which have not been aligned
     for axis_b in b.axes:

@@ -30,10 +30,39 @@ def year_quarter_weekday_cube():
 
 class CubeTests(unittest.TestCase):
 
+    def test_create_scalar(self):
+
+        C = Cube(1, None)
+        self.assertEqual(C.ndim, 0)
+        self.assertEqual(C.values.ndim, 0)
+
+        C = Cube(1, [])
+        self.assertEqual(C.ndim, 0)
+        self.assertEqual(C.values.ndim, 0)
+
     def test_create_cube(self):
+    
         a = Index("A", [10, 20, 30])
         b = Index("B", ["a", "b", "c", "d"])
         c = Index("C", [1.1, 1.2])
+
+        # test Cube.zeros()
+        A = Cube.zeros([a, c])
+        self.assertTrue(np.array_equal(A.values, [[0, 0], [0, 0], [0, 0]]))
+
+        # test Cube.ones()
+        A = Cube.ones([a, c])
+        self.assertTrue(np.array_equal(A.values, [[1, 1], [1, 1], [1, 1]]))
+
+        # test Cube.full()
+        A = Cube.full([a, c], np.inf)
+        self.assertTrue(np.array_equal(A.values, [[np.inf, np.inf], [np.inf, np.inf], [np.inf, np.inf]]))
+
+        # test Cube.full with NaNs
+        # note: be careful because NaN != NaN so np.array_equal does not work
+        A = Cube.full([a, c], np.nan)
+        np.testing.assert_equal(A.values, [[np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan]])
+        
         values = np.arange(12).reshape(3, 4)
         try:
             Cube(values, (a, b))
@@ -47,6 +76,44 @@ class CubeTests(unittest.TestCase):
         # wrong lengths of dimensions
         self.assertRaises(ValueError, Cube, values, [a, c])
         self.assertRaises(ValueError, Cube, values, [b, a])
+
+    def test_getitem(self):
+        C = year_quarter_cube()
+
+        D = C[0:2, 0:2]
+        self.assertTrue(np.array_equal(D.values, [[0, 1], [4, 5]]))
+        self.assertEqual(D.ndim, 2)
+        self.assertEqual(tuple(D.axes.names()), ("year", "quarter"))
+
+        # collapsing axis
+        D = C[0]
+        self.assertTrue(np.array_equal(D.values, [0, 1, 2, 3]))
+        self.assertEqual(D.ndim, 1)
+        self.assertEqual(D.axes[0].name, "quarter")
+
+        D = C[:, 0]
+        self.assertTrue(np.array_equal(D.values, [0, 4, 8]))
+        self.assertEqual(D.ndim, 1)
+        self.assertEqual(D.axes[0].name, "year")
+
+        self.assertTrue(np.array_equal(C[-1].values, [8, 9, 10, 11]))
+        self.assertTrue(np.array_equal(C[:, -1].values, [3, 7, 11]))
+
+        # not collapsing axis
+        self.assertTrue(np.array_equal(C[0:1].values, [[0, 1, 2, 3]]))
+        self.assertTrue(np.array_equal(C[:, 0:1].values, [[0], [4], [8]]))
+
+        # np.newaxis is not supported
+        self.assertRaises(ValueError, C.__getitem__, (0, 0, np.newaxis))
+        self.assertRaises(ValueError, C.__getitem__, (np.newaxis, 0, 0))
+
+        # eq. C[0, 0, 0] raises IndexError: too many indices
+        self.assertRaises(IndexError, C.__getitem__, (0, 0, 0))
+
+    def test_contains(self):
+        C = year_quarter_cube()
+        self.assertTrue(0 in C)
+        self.assertFalse(12 in C)
 
     def test_apply(self):
         C = year_quarter_weekday_cube()
@@ -162,6 +229,11 @@ class CubeTests(unittest.TestCase):
         X = C * D
         self.assertTrue(np.array_equal(X.values, values.take([3, 3, 2, 0], 1) * values_d))
 
+        #unary plus and minus
+        C = year_quarter_cube()
+        self.assertTrue(np.array_equal((+C).values, C.values))
+        self.assertTrue(np.array_equal((-C).values, -C.values))
+
         C = year_quarter_cube() + 1  # +1 to prevent division by zero error
         import operator as op
         ops = [op.add, op.mul, op.floordiv, op.truediv, op.sub, op.pow, op.mod,  # arithmetics ops
@@ -241,6 +313,14 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(LookupError, C.rename_axis, 2, "quarter")
         self.assertRaises(LookupError, C.rename_axis, "scenario", "quarter")
 
+    def test_aggregate(self):
+        C = year_quarter_cube()
+        self.assertTrue((C.sum("quarter") == C.sum(keep="year")).all())
+        self.assertEqual(C.sum(), 66)
+        self.assertEqual(C.mean(), 5.5)
+        self.assertEqual(C.min(), 0)
+        self.assertEqual(C.max(), 11)
+
     def test_swap_axis(self):
         C = year_quarter_weekday_cube()
 
@@ -251,8 +331,24 @@ class CubeTests(unittest.TestCase):
         # swap by index
         D = C.swap_axes(0, 2)
         self.assertEqual(tuple(D.axes.names()), ("weekday", "quarter", "year"))
+        
+    def test_align_axis(self):
+        C = year_quarter_cube()
+        ax1 = Series("year", [2015, 2015, 2014, 2014])
+        ax2 = Index("quarter", ["Q1", "Q3"])
+        
+        D = C.align_axis(ax1)
+        D = D.align_axis(ax2)
+
+        # test identity of the new axis
+        self.assertTrue(D.axes["year"] is ax1)
+        self.assertTrue(D.axes["quarter"] is ax2)
+
+        # test aligned values
+        self.assertTrue(np.array_equal(D.values, [[4, 6], [4, 6], [0, 2], [0, 2]]))
 
     def test_concatenate(self):
+        # TODO
         values = np.arange(12).reshape(3, 4)
         ax1 = Index("year", [2014, 2015, 2016])
         ax2 = Index("month", ["jan", "feb", "mar", "apr"])

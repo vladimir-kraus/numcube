@@ -3,38 +3,50 @@ import numpy as np
 from numcube import Index, Series, Axes, intersect
 
 
+def create_axes():
+    # create a list of axes of different types
+    return [Series("A", [10, 20, 30, 40]), Index("B", [10, 20, 30, 40])]
+
+
 class AxesTests(unittest.TestCase):
 
     def test_axis_getitem(self):
-        a = Series("A", [10, 20, 30, 40])
-        b = Index("B", [10, 20, 30, 40])
+        axes = create_axes()
 
-        self.assertEqual(a[1].values, 20)
-        self.assertEqual(b[1].values, 20)
-        self.assertEqual(a[-1].values, 40)
-        self.assertEqual(b[-1].values, 40)
+        for a in axes:
+            # indexing with a single index
+            self.assertEqual(a[1].values, 20)
+            self.assertEqual(a[-1].values, 40)
 
-        # slicing
-        self.assertTrue(np.array_equal(a[1:3].values, [20, 30]))
-        self.assertTrue(np.array_equal(b[1:3].values, [20, 30]))
+            # slicing
+            self.assertTrue(np.array_equal(a[1:3].values, [20, 30]))
+            
+            # indexing with numpy array of ints
+            sel = [2, 1, -1]
+            self.assertTrue(np.array_equal(a[sel].values, [30, 20, 40]))
+            
+            # indexing with numpy array of ints
+            sel = np.array([2, 1, -1])
+            self.assertTrue(np.array_equal(a[sel].values, [30, 20, 40]))
+            
+            # selection with numpy array of bools
+            sel = np.array([False, False, True, True])
+            self.assertTrue(np.array_equal(a[sel].values, [30, 40]))
+            
+            sel = a.values > 20
+            self.assertTrue(np.array_equal(a[sel].values, [30, 40]))
+        
+    def test_axis_filter(self):
+        axes = create_axes()
+        for a in axes:
+            self.assertEqual(a.filter(10).values, 10)
+            self.assertTrue(np.array_equal(a.filter([30, 10, 20]).values, [10, 20, 30]))
+            self.assertTrue(np.array_equal(a.filter((30, 10, 20)).values, [10, 20, 30]))
+            self.assertTrue(np.array_equal(a.filter({30, 10, 20}).values, [10, 20, 30]))
+        
+        # TODO: test nonexisting values
 
-        # indexing with bool numpy array
-        sel = a.values > 20
-        self.assertTrue(np.array_equal(a[sel].values, [30, 40]))
-        self.assertTrue(np.array_equal(b[sel].values, [30, 40]))
-
-    def test_axis_take(self):
-        a = Series("A", [10, 20, 30, 40])
-        b = Index("B", [10, 20, 30, 40])
-
-        self.assertEqual(a.take(1).values, 20)
-        self.assertEqual(b.take(1).values, 20)
-        self.assertEqual(a.take(-1).values, 40)
-        self.assertEqual(a.take(-1).values, 40)
-        self.assertTrue(np.array_equal(a.take([1, 2]).values, [20, 30]))
-        self.assertTrue(np.array_equal(b.take([1, 2]).values, [20, 30]))
-
-    def test_create_index(self):
+    def test_create_series(self):
         a = Series("A", [10, 20, 30])
         self.assertEqual(a.name, "A")
         self.assertEqual(len(a), 3)
@@ -43,8 +55,11 @@ class AxesTests(unittest.TestCase):
         self.assertEqual(a.name, "A")
         self.assertEqual(len(a), 4)
 
-        # duplicit values
-        self.assertRaises(ValueError, Series, "A", ["a", "b", "a"])
+        # duplicit values are OK
+        try:
+            a = Series("A", ["a", "b", "a"])
+        except ValueError:
+            self.fail("Series raised ValueError unexpectedly")
 
     def test_create_index(self):
         a = Index("A", [10, 20, 30])
@@ -57,6 +72,14 @@ class AxesTests(unittest.TestCase):
 
         # duplicit values
         self.assertRaises(ValueError, Index, "A", ["a", "b", "a"])
+        
+    def test_numpy_recarray_axis(self):
+        array = np.array([(1, 1.0), (2, 2.0), (3, 3.0)], dtype=[("int", int), ("float", float)])
+        #print(array)
+        #for i in array:
+        #    print(i, type(i))
+        #a = Index("Dim", array)
+        b = Series("Dim", array)
 
     def test_index_writeable(self):
         a = Index("A", [10, 20, 30])
@@ -126,3 +149,17 @@ class AxesTests(unittest.TestCase):
         self.assertEqual(len(axes_int[1]), 3)
         self.assertTrue(np.array_equal(axes_int[0].values, ("a2", "a3")))
         self.assertTrue(np.array_equal(axes_int[1].values, ("b1", "b2", "b3")))
+
+    def test_remove(self):
+        ax1 = Index("A", ["a1", "a2", "a3"])
+        ax2 = Index("B", ["b1", "b2", "b4", "b3"])
+        ax3 = Index("C", [1, 2, 3])
+        axs1 = Axes([ax1, ax2, ax3])
+        axs2 = axs1.remove("A")
+        self.assertEqual(tuple(axs2.names()), ("B", "C"))
+        axs2 = axs1.remove("C")
+        self.assertEqual(tuple(axs2.names()), ("A", "B"))
+        axs2 = axs1.remove(0)
+        self.assertEqual(tuple(axs2.names()), ("B", "C"))
+        axs2 = axs1.remove(2)
+        self.assertEqual(tuple(axs2.names()), ("A", "B"))

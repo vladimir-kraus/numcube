@@ -4,7 +4,7 @@ from .axis import Axis
 
 class Index(Axis):
     """
-    A series of unique indexed values.
+    A sequence of unique indexed values.
     """
 
     def __init__(self, name, values):
@@ -26,16 +26,26 @@ class Index(Axis):
         
         self._vec_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
         self._vec_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])
+        
+    @property
+    def indexed(self):
+        """
+        Index values are indexed.
+        """
+        return True
 
     def index(self, item):
         """
         If item is single value, then return a single integer value.
-        If item is a sequence, then return numpy array of booleans.
+        If item is a sequence, then return numpy array of integers.
         :param item: a single value or a sequence of values
         :return: int or numpy array of ints
         :raises: KeyError
         """
-        return self._vec_index(item)
+        v = self._vec_index(item)
+        if v.ndim > 0:
+            return v
+        return v.item()
 
     def contains(self, item):
         """
@@ -44,6 +54,9 @@ class Index(Axis):
         :param item: a single value or a sequence of values
         :return: bool or numpy array of bools
         """
-        return self._vec_contains(item)
+        v = self._vec_contains(item)
+        if v.ndim > 0:
+            return v
+        return v.item()
 
 

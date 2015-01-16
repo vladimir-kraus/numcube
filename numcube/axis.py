@@ -17,10 +17,10 @@ class Axis(object):
         self._values = np.atleast_1d(values)
         if self._values.ndim > 1:
             raise ValueError("values cannot have more than 1 dimension")
-        
-    def __str__(self):
-        return "{}('{}', {})".format(self.__class__.__name__, self._name, self._values)
 
+    def __repr__(self):
+        return "{}('{}', {})".format(self.__class__.__name__, self._name, self._values)
+        
     def __len__(self):
         return len(self._values)
 
@@ -34,15 +34,26 @@ class Axis(object):
     @property
     def values(self):
         return self._values  # .view()
+        
+    @property
+    def indexed(self):
+        """
+        Override this in a derived class and return True if the axis class 
+        provides indexing.
+        """
+        return False
 
-    def take(self, indices):
+    def filter(self, values):
         """
-        Returns a new object (of type Series or actual derived type) with the same name and the specified values.
-        Analogy to ndarray.take.
-        :param indices: int or list of int
-        :return: new axis (instance of actual derived type)
+        Filter axis elements which are contained in values. The axis order is preserved.
+        :param values: a value or a list, set, tuple or numpy array of values
+            the order or values is irrelevant, need not be unique
         """
-        return self.__class__(self._name, self._values[indices])
+        if isinstance(values, set):
+            values = list(values)
+        values = np.asarray(values)
+        selection = np.in1d(self._values, values)
+        return self.__class__(self._name, self._values[selection])
 
     def rename(self, new_name):
         """
