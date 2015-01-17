@@ -85,7 +85,11 @@ class Axes(object):
             raise KeyError("invalid axis name: '{}'".format(item))
         else:
             raise TypeError("axis can be specified by index (int) or name (str)")
-            
+
+    @property
+    def items(self):
+        return self._axes
+
     @property
     def shape(self):
         return self._shape

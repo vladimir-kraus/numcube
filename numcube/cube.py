@@ -75,6 +75,13 @@ class Cube(object):
     def __repr__(self):
         return "axes: {}\nvalues: {}".format(self._axes, self._values)
 
+    # def axis(self, item):
+    #    """Return axis by name or index."""
+    #    return self._axes[item]
+
+    # def axis_index(self, axis):
+    #    return self._axes.index(axis)
+
     @property
     def ndim(self):
         """Number of array dimensions."""
@@ -87,10 +94,11 @@ class Cube(object):
     @property
     def axes(self):
         """
-        :return:
-        :rtype: Axes
+        :return: tuple of axes
+        :rtype: tuple
         """
         return self._axes
+        # return self._axes.items
 
     def apply(self, func, *args):
         """Apply function to all values and return the new cube.

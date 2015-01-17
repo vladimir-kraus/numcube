@@ -31,6 +31,6 @@ class TableTests(unittest.TestCase):
     def test_create_table(self):
         C = year_quarter_weekday_cube()
         T = Table.from_cube(C, ['year', 'quarter'], ['weekday'])
-        print(T)
+        # print(T)
         T = Table.from_cube(C, ['year'], ['weekday', 'quarter'])
-        print(T)
+        # print(T)

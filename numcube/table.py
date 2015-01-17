@@ -5,7 +5,7 @@ from numcube import Axis, Series
 class Header(object):
     def __init__(self, series, format=None):
         self._series = tuple(series)
-        self._size = len(series[0])  # TODO: what is there are no series
+        self._size = len(series[0])  # TODO: what if there are no series
         for s in series:
             if self._size != len(s):
                 raise ValueError('all header series must have equal lengths')
@@ -40,7 +40,7 @@ class Header(object):
         return self._series[series].values[index]
 
     @staticmethod
-    def fromAxes(axes, format=None):
+    def from_axes(axes, format=None):
         """
         :param axes: Axis object or a collection of Axis objects
         """
@@ -93,8 +93,8 @@ class Table:
         row_axis_list = [cube.axes[i] for i in row_axis_indices]
         col_axis_list = [cube.axes[i] for i in col_axis_indices]
 
-        row_header = Header.fromAxes(row_axis_list, row_label)
-        col_header = Header.fromAxes(col_axis_list, col_label)
+        row_header = Header.from_axes(row_axis_list, row_label)
+        col_header = Header.from_axes(col_axis_list, col_label)
 
         cube = cube.transpose(row_axis_indices + col_axis_indices)
         values = cube.values.reshape(len(row_header), len(col_header))
