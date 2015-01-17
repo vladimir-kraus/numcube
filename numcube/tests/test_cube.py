@@ -83,7 +83,7 @@ class CubeTests(unittest.TestCase):
         D = C[0:2, 0:2]
         self.assertTrue(np.array_equal(D.values, [[0, 1], [4, 5]]))
         self.assertEqual(D.ndim, 2)
-        self.assertEqual(tuple(D.axes.names()), ("year", "quarter"))
+        self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
 
         # collapsing axis
         D = C[0]
@@ -266,13 +266,13 @@ class CubeTests(unittest.TestCase):
         
         D = C.groupby(ax2.name, np.sum, sorted=False)  # sum by month
         self.assertTrue(np.array_equal(D.values, np.array([[1, 5], [9, 13], [17, 21]])))
-        self.assertTrue(np.array_equal(D.axes[ax2.name].values, ["jan", "feb"]))
+        self.assertTrue(np.array_equal(D.axis(ax2.name).values, ["jan", "feb"]))
 
         D = C.groupby(ax2.name, np.sum)  # sum by month, sorted by default
         self.assertTrue(np.array_equal(D.values, np.array([[5, 1], [13, 9], [21, 17]])))
-        self.assertTrue(np.array_equal(D.axes[ax2.name].values, ["feb", "jan"]))
-        self.assertTrue(isinstance(D.axes[ax2.name], Index))
-        self.assertEqual(len(D.axes[ax2.name]), 2)
+        self.assertTrue(np.array_equal(D.axis(ax2.name).values, ["feb", "jan"]))
+        self.assertTrue(isinstance(D.axis(ax2.name), Index))
+        self.assertEqual(len(D.axis(ax2.name)), 2)
         self.assertEqual(D.values.shape, (3, 2))
         
         # testing various aggregation functions
@@ -293,11 +293,11 @@ class CubeTests(unittest.TestCase):
         # successfull renaming
         D = C.rename_axis("year", "Y")
         D = D.rename_axis("quarter", "Q")
-        self.assertEqual(tuple(D.axes.names()), ("Y", "Q"))
+        self.assertEqual(tuple(D.axis_names), ("Y", "Q"))
 
         D = C.rename_axis(0, "Y")
         D = D.rename_axis(1, "Q")
-        self.assertEqual(tuple(D.axes.names()), ("Y", "Q"))
+        self.assertEqual(tuple(D.axis_names), ("Y", "Q"))
 
         # invalid new axis name type
         self.assertRaises(TypeError, C.rename_axis, 0, 0.0)
@@ -326,11 +326,11 @@ class CubeTests(unittest.TestCase):
 
         # swap by name
         D = C.swap_axes("year", "quarter")
-        self.assertEqual(tuple(D.axes.names()), ("quarter", "year", "weekday"))
+        self.assertEqual(tuple(D.axis_names), ("quarter", "year", "weekday"))
 
         # swap by index
         D = C.swap_axes(0, 2)
-        self.assertEqual(tuple(D.axes.names()), ("weekday", "quarter", "year"))
+        self.assertEqual(tuple(D.axis_names), ("weekday", "quarter", "year"))
         
     def test_align_axis(self):
         C = year_quarter_cube()
@@ -341,8 +341,8 @@ class CubeTests(unittest.TestCase):
         D = D.align_axis(ax2)
 
         # test identity of the new axis
-        self.assertTrue(D.axes["year"] is ax1)
-        self.assertTrue(D.axes["quarter"] is ax2)
+        self.assertTrue(D.axis("year") is ax1)
+        self.assertTrue(D.axis("quarter") is ax2)
 
         # test aligned values
         self.assertTrue(np.array_equal(D.values, [[4, 6], [4, 6], [0, 2], [0, 2]]))
@@ -367,7 +367,7 @@ class CubeTests(unittest.TestCase):
         ax = Index("country", ["GB", "FR"])
         E = join([C, D], ax)
         self.assertEqual(E.values.shape, (2, 3, 4))
-        self.assertEqual(tuple(E.axes.names()), ("country", "year", "quarter"))
+        self.assertEqual(tuple(E.axis_names), ("country", "year", "quarter"))
         
     def test_combine_axes(self):
         C = year_quarter_weekday_cube()
@@ -377,4 +377,4 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, C.combine_axes, ["year", "quarter"], "weekday", "{}-{}")
 
         D = C.combine_axes(["year", "quarter"], "period", "{}-{}")
-        self.assertEqual(tuple(D.axes.names()), ("period", "weekday"))
+        self.assertEqual(tuple(D.axis_names), ("period", "weekday"))

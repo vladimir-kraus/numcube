@@ -50,6 +50,7 @@ class Axes(object):
             unique_names.add(axis.name)
 
         # the sequence of axes must be immutable
+        self._names = tuple(axis.name for axis in axes)
         self._axes = tuple(axes)
         self._shape = tuple(len(a) for a in axes)
 
@@ -89,6 +90,13 @@ class Axes(object):
     @property
     def items(self):
         return self._axes
+
+    @property
+    def names(self):
+        """
+        :return: tuple of strings
+        """
+        return self._names
 
     @property
     def shape(self):
@@ -132,14 +140,6 @@ class Axes(object):
             return True
         except LookupError:
             return False
-
-    def names(self):
-        """
-        Return iterator over axis names.
-        :return:
-        """
-        for axis in self._axes:
-            yield axis.name
 
     def transpose(self, axes):
         """

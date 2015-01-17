@@ -75,12 +75,13 @@ class Cube(object):
     def __repr__(self):
         return "axes: {}\nvalues: {}".format(self._axes, self._values)
 
-    # def axis(self, item):
-    #    """Return axis by name or index."""
-    #    return self._axes[item]
+    @property
+    def shape(self):
+        return self._values.shape
 
-    # def axis_index(self, axis):
-    #    return self._axes.index(axis)
+    @property
+    def size(self):
+        return self._values.size
 
     @property
     def ndim(self):
@@ -97,8 +98,22 @@ class Cube(object):
         :return: tuple of axes
         :rtype: tuple
         """
-        return self._axes
+        return self._axes.items
         # return self._axes.items
+
+    @property
+    def axis_names(self):
+        return self._axes.names
+
+    def axis(self, item):
+        """Return axis by name or index."""
+        return self._axes[item]
+
+    def axis_index(self, axis):
+        return self._axes.index(axis)
+
+    def has_axis(self, axis):
+        return self._axes.contains(axis)
 
     def apply(self, func, *args):
         """Apply function to all values and return the new cube.
@@ -361,7 +376,7 @@ class Cube(object):
             - examples are np.sum, np.mean, etc.
         :param sorted:
         """
-        old_axis, old_axis_index = self.axes.axis_and_index(axis)
+        old_axis, old_axis_index = self._axes.axis_and_index(axis)  # TODO - do not use private accessor
         
         if isinstance(old_axis, Index):
             return self  # Index already contains unique values
@@ -632,7 +647,7 @@ def apply2(a, b, func, *args):
     for axis_index_a, axis_a in enumerate(a.axes):
         
         try:
-            axis_b, axis_index_b = b.axes.axis_and_index(axis_a.name)
+            axis_b, axis_index_b = b._axes.axis_and_index(axis_a.name)  # TODO - do not use private accessor
         except KeyError:
             # axis not found in cube b --> do not align
             axis_b = axis_a
@@ -647,11 +662,11 @@ def apply2(a, b, func, *args):
 
     # add axes from b which have not been aligned
     for axis_b in b.axes:
-        if not a.axes.contains(axis_b.name):
+        if not a.has_axis(axis_b.name):
             all_axes.append(axis_b)
                 
-    values_a = _broadcast_values(values_a, a.axes, all_axes)
-    values_b = _broadcast_values(values_b, b.axes, all_axes)
+    values_a = _broadcast_values(values_a, a._axes, all_axes)  # TODO - do not use private accessor
+    values_b = _broadcast_values(values_b, b._axes, all_axes)  # TODO - do not use private accessor
 
     return Cube(func(values_a, values_b, *args), all_axes)
     
@@ -716,7 +731,7 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis):
     for base_axis in axis_list:
         for cube_index, cube in enumerate(cube_list):
             try:
-                axis_index = cube.axes.index(base_axis.name)
+                axis_index = cube.axis_index(base_axis.name)
             except KeyError:
                 continue
             axis = cube.axes[axis_index]
@@ -750,7 +765,7 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis):
     # broadcast value arrays
     for cube_index, cube in enumerate(cube_list):
         array = array_list[cube_index]
-        array = _broadcast_values(array, cube.axes, axis_list)
+        array = _broadcast_values(array, cube._axes, axis_list)  # TODO - do not use private accessor
         array_list[cube_index] = array
 
     array_list = np.broadcast_arrays(*array_list)
@@ -769,7 +784,7 @@ def concatenate(cubes, axis_name, as_index=True):
     main_axis_values_list = list()
     for cube in cubes:
         try:
-            axis = cube.axes[axis_name]
+            axis = cube.axis(axis_name)
         except KeyError:
             raise ValueError("cube does not contain axis '{}'".format(axis_name))
         main_axis_values_list.append(axis.values)
@@ -799,7 +814,7 @@ def join(cubes, axis):
     """
 
     for cube in cubes:
-        if cube.axes.contains(axis.name):
+        if cube.has_axis(axis.name):
             raise ValueError("cube already contains axis '{}'".format(axis.name))
 
     if len(cubes) != len(axis):

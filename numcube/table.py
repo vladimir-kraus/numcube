@@ -87,8 +87,8 @@ class Table:
             row_axes = [row_axes]
         if isinstance(col_axes, int) or isinstance(col_axes, str):
             col_axes = [col_axes]
-        row_axis_indices = [cube.axes.index(a) for a in row_axes]
-        col_axis_indices = [cube.axes.index(a) for a in col_axes]
+        row_axis_indices = [cube.axis_index(a) for a in row_axes]
+        col_axis_indices = [cube.axis_index(a) for a in col_axes]
 
         row_axis_list = [cube.axes[i] for i in row_axis_indices]
         col_axis_list = [cube.axes[i] for i in col_axis_indices]
