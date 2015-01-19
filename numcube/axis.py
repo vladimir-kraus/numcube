@@ -32,6 +32,10 @@ class Axis(object):
         return self._name
 
     @property
+    def size(self):
+        return self._values.size
+
+    @property
     def values(self):
         return self._values  # .view()
         
