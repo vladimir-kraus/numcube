@@ -60,6 +60,17 @@ class AxesTests(unittest.TestCase):
             a = Series("A", ["a", "b", "a"])
         except ValueError:
             self.fail("Series raised ValueError unexpectedly")
+            
+    def test_complement(self):
+        a = Index("A", [10, 20, 30])
+        b = Index("B", [10, 20, 30])
+        c = Index("C", [10, 20, 30])
+        axs = Axes((a, b, c))
+        self.assertEqual(axs.complement("A"), (1, 2))
+        self.assertEqual(axs.complement(["B"]), (0, 2))
+        self.assertEqual(axs.complement(("A", "C")), (1,))
+        self.assertRaises(ValueError, axs.complement, ["A", "A"])
+        self.assertRaises(ValueError, axs.complement, ["B", 1])
 
     def test_create_index(self):
         a = Index("A", [10, 20, 30])

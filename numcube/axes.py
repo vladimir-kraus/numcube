@@ -114,6 +114,22 @@ class Axes(object):
             raise KeyError("invalid axis name: '{}'".format(axis))
         else:
             raise TypeError("axis can be specified by index (int) or name (str)")
+            
+    def is_unique_subset(self, axes):
+        """Tests whether all axes are contained in the Axes object and whether they are unique."""
+        raise NotImplementedError
+        
+    def complement(self, axes):
+        """Return a tuple of indices of axes from Axes object which are not contained in the specified collection of axes.
+        :param axes: collection of axes specified by axis name or index
+        :returns: tuple of int
+        """
+        if isinstance(axes, str) or isinstance(axes, int):
+            axes = (axes,)
+        indices = set(self.index(a) for a in axes)
+        if len(indices) != len(axes):
+            raise ValueError("axes are not unique")
+        return tuple(i for i in range(len(self)) if i not in indices)
         
     def index(self, axis):
         """

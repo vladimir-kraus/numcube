@@ -83,15 +83,29 @@ class Table:
 
     @staticmethod
     def from_cube(cube, row_axes, col_axes, row_label=None, col_label=None):
-        if isinstance(row_axes, int) or isinstance(row_axes, str):
-            row_axes = [row_axes]
-        if isinstance(col_axes, int) or isinstance(col_axes, str):
-            col_axes = [col_axes]
-        row_axis_indices = [cube.axis_index(a) for a in row_axes]
-        col_axis_indices = [cube.axis_index(a) for a in col_axes]
+        if row_axes is None and col_axes is None:
+            raise ValueError('row_axes or col_axes must not be None')
+            
+        if row_axes is not None:
+            if isinstance(row_axes, int) or isinstance(row_axes, str):
+                row_axes = (row_axes,)
+                
+        if col_axes is not None:
+            if isinstance(col_axes, int) or isinstance(col_axes, str):
+                col_axes = (col_axes,)
+        
+        if row_axes is not None:
+            row_axis_indices = tuple(cube.axis_index(a) for a in row_axes)
+        else:
+            row_axis_indices = cube._axes.complement(col_axes)
+         
+        if col_axes is not None:
+            col_axis_indices = tuple(cube.axis_index(a) for a in col_axes)
+        else:
+            col_axis_indices = cube._axes.complement(row_axes)
 
-        row_axis_list = [cube.axes[i] for i in row_axis_indices]
-        col_axis_list = [cube.axes[i] for i in col_axis_indices]
+        row_axis_list = tuple(cube.axes[i] for i in row_axis_indices)
+        col_axis_list = tuple(cube.axes[i] for i in col_axis_indices)
 
         row_header = Header.from_axes(row_axis_list, row_label)
         col_header = Header.from_axes(col_axis_list, col_label)
