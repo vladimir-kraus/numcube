@@ -1,16 +1,10 @@
 numcube
 =======
 
-Principles
-----------
-* similar interface to numpy array
-* simple things should be made simple
-* potentially surprising things to happen only if explicitly asked for
-* immutability - no method or function changes the structure of existing cube; the values however can be changed
-
 Cube
 ----
 - Cube is a wrapper around numpy.ndarray object
+- has similar interface as numpy.ndarray
 - it has named axes (name must be a string)
 - the axes have values
 - Axes is a collection of axes
@@ -21,6 +15,7 @@ Cube
 - Cube support aggregations
 - transposition (in n-dimensional space)
 - the operations work element wise
+- the interface is designed to support immutability
 
 Axis matching
 -------------
@@ -50,20 +45,12 @@ Example:
 >> revenue_coef = revenues_y / revenues.values[0]  # compare to first year revenue
 ```
 
-Operations with non-Cube types
-------------------------------
-Cube can be used in operations with non-Cube types - scalar and numpy array. The result of such operation is Cube.
-In this case however the axes are not matched and the operation is done solely with the cube.values and the other
-non-Cube operand. For numpy array it means that the dimensions lengths must match or the array must be able to
-be broadcasted to a compatible shape.
-
-Example:
+Cube can also be in operation with a scalar value, which is treated as dimensionless Cube. 
 ```python
-C = Cube(np.random.rand(2, 2), Index("A", ("a1", "b1")), Index("B", ["b1", "b2"]))  # 2 x 2 cube
-D = C * 10  # OK, scalar has no requirements for dimensions
-E = C * np.random.rand(2, 2)  # OK, dimension lengths match
-F = C * np.array([1, 2])  # OK, one dimensional array is broadcasted
-G = C * np.arange(3)  # error, dimensions do not match
+>> Y = Index("year", range(2014, 3))
+>> Q = Index("quarter", ["Q1", "Q2", "Q3", "Q4"])
+>> prices = Cube([[1.50, 1.52, 1.53, 1.55], [1.48, 1.47, 1.46, 1.49], [1.51, 1.57, 1.59, 1.61]], [Y, Q])
+>> discounted_prices = sales * 0.5
 ```
 
 Example 1
@@ -72,10 +59,10 @@ We want to calculate the likely price of the fuel mix given we are using two fue
 We assume that the prices go up or 
 ```python
 fuels = Index("fuel", ["gas", "oil"])
-fuel_heat_rates = ([10, 15.5], [fuels])  # in GJ / kg
+fuel_heat_rates = ([10, 15.5], fuels)  # in GJ / kg
 
 countries = Index("country", ["CZ", "HU", "PL", "SK"])
-exchange_rates = ([28.1, 290, 45, 1], countries)  # in local currency / EUR
+exchange_rates = Cube([28.1, 290, 45, 1], countries)  # in local currency / EUR
 
 local_prices = ([...], [countries, fuels])  # in local currency / kg
 
@@ -86,11 +73,11 @@ Example 2
 ---------
 Working with multiple scenarios.
 ```python
-years = Index("year", range(2014, 10))  # we are planning 10 years ahead
-geom_growth_exp = Cube(range[len(years)], [years])
+years = Index("year", range(2014, 2020))
+geom_growth_exp = Cube(range[len(years)], years)
 
 scenarios = Index("scenario", ["low", "mid", "high"])
-growth_rate = Cube([0.9, 1, 1.1], [scenarios])
+growth_rate = Cube([0.9, 1, 1.1], scenarios)
 
 growth_coef = growth_rate ** geom_growth_exp
 

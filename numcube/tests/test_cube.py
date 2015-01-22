@@ -63,6 +63,15 @@ class CubeTests(unittest.TestCase):
         A = Cube.full([a, c], np.nan)
         np.testing.assert_equal(A.values, [[np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan]])
         
+        # create one dimension caube        
+        values = np.arange(3)
+        try:
+            Cube(values, (a,))
+            Cube(values, a)  # no need to pass axes as collection if there is only one axis
+        except Exception:
+            self.fail("raised exception unexpectedly")
+        
+        # two dimension cubes
         values = np.arange(12).reshape(3, 4)
         try:
             Cube(values, (a, b))
