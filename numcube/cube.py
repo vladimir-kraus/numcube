@@ -543,6 +543,24 @@ class Cube(object):
             values = axis.values
             axis = axis.name
         # TODO ...
+
+    def take(self, indices, axis_id):
+        """Filter cube along given axis on specified indices. This is analogy to ndarray.take method.
+        :param indices: a collection of ints or int
+        :param axis_id: string or int specifying the axis
+        """
+        axis, axis_id = self._axes.axis_and_index(axis_id)
+        new_axis = axis[indices]
+        if isinstance(indices, int):
+            # if indices is not collection,
+            # then will remove one dimension
+            axes = self._axes.remove(axis_id)
+        else:
+            # otherwise the dimension is preserved,
+            # even if the collection has one element
+            axes = self._axes.replace(axis_id, new_axis)
+        values = self._values.take(indices, axis_id)
+        return Cube(values, axes)
         
     @staticmethod
     def full(axes, fill_value, dtype=None):

@@ -186,12 +186,12 @@ class Axes(object):
         axis_list.insert(index, axis)
         return Axes(axis_list)
 
-    def remove(self, axis):
+    def remove(self, axis_id):
         """
         Remove axis or axes with a given index or name.
         Return new Axes object.
         """
-        i = self.index(axis)
+        i = self.index(axis_id)
         new_axes = list(self._axes)
         del new_axes[i]
         return Axes(new_axes)

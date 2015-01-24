@@ -387,3 +387,19 @@ class CubeTests(unittest.TestCase):
 
         D = C.combine_axes(["year", "quarter"], "period", "{}-{}")
         self.assertEqual(tuple(D.axis_names), ("period", "weekday"))
+
+    def test_take(self):
+        C = year_quarter_cube()
+        self.assertTrue(np.array_equal(C.take([0, 1], "year").values, C.values.take([0, 1], 0)))
+        self.assertTrue(np.array_equal(C.take([0, 1], 0).values, C.values.take([0, 1], 0)))
+        # do not collapse dimension
+        self.assertTrue(np.array_equal(C.take([2], 0).values, C.values.take([2], 0)))
+        # collapse dimension
+        self.assertTrue(np.array_equal(C.take(2, 0).values, C.values.take(2, 0)))
+        self.assertTrue(np.array_equal(C.take([0, 1], "quarter").values, C.values.take([0, 1], 1)))
+        self.assertTrue(np.array_equal(C.take([0, 1], 1).values, C.values.take([0, 1], 1)))
+        # do not collapse dimension
+        self.assertTrue(np.array_equal(C.take([2], 1).values, C.values.take([2], 1)))
+        # collapse dimension
+        self.assertTrue(np.array_equal(C.take(2, 1).values, C.values.take(2, 1)))
+
