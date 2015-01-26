@@ -561,6 +561,14 @@ class Cube(object):
             axes = self._axes.replace(axis_id, new_axis)
         values = self._values.take(indices, axis_id)
         return Cube(values, axes)
+
+    def make_index(self, axis_id):
+        """Convert an axis into Index. If the axis is already an Index, then does nothing."""
+        self._axes.make_index(axis_id)
+
+    def make_series(self, axis_id):
+        """Convert an axis into Series. If the axis is already an Series, then does nothing."""
+        self._axes.make_series(axis_id)
         
     @staticmethod
     def full(axes, fill_value, dtype=None):

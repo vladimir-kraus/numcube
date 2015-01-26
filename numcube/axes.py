@@ -1,5 +1,7 @@
 import numpy as np
 from .axis import Axis
+from .index import Index
+from .series import Series
 
 
 class Axes(object):
@@ -199,13 +201,16 @@ class Axes(object):
     def replace(self, old_axis_id, new_axis):
         """
         Replace an existing axis with a new axis and return the new Axes object.
-        The new axes collection is checked for duplicit names.
+        The new axes collection is checked for duplicate names.
         The old and new axes are NOT checked for equal lengths.
         :param old_axis_id: axis index (int) or name (str)
         :param new_axis: Series or Index object
         :return: new Axes object
         """
         old_axis_index = self.index(old_axis_id)
+        return self._replace(old_axis_index, new_axis)
+
+    def _replace(self, old_axis_index, new_axis):
         new_axes = list(self._axes)
         new_axes[old_axis_index] = new_axis
         return Axes(new_axes)
@@ -222,6 +227,18 @@ class Axes(object):
         new_axes = list(self)
         new_axes[index1], new_axes[index2] = new_axes[index2], new_axes[index1]
         return Axes(new_axes)
+
+    def make_index(self, axis_id):
+        """Convert an axis into Index. If the axis is already an Index, then does nothing."""
+        axis = self[axis_id]
+        if not isinstance(axis, Index):
+            self.replace(axis_id, Index(axis.name, axis.values))
+
+    def make_series(self, axis_id):
+        """Convert an axis into Series. If the axis is already an Series, then does nothing."""
+        axis = self[axis_id]
+        if not isinstance(axis, Series):
+            self.replace(axis_id, Series(axis.name, axis.values))
 
 
 def intersect(axes1, axes2):
