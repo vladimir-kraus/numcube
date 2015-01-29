@@ -22,7 +22,6 @@ class Cube(object):
             axes = Axes(axes)
 
         # if axes dimensions and value dimension do not match
-        print(values.ndim, len(axes))
         if values.ndim != len(axes):
             raise ValueError("invalid number of axes")
 
@@ -556,6 +555,12 @@ class Cube(object):
     def make_series(self, axis_id):
         """Convert an axis into Series. If the axis is already a Series, then does nothing."""
         self._axes.make_series(axis_id)
+        
+    def squeeze(self):
+        """Remove the axes of size one. Analogy to numpy ndarray.squeeze()."""
+        new_axes = tuple(a for a in self.axes if len(a) != 1)
+        new_values = self._values.squeeze()
+        return Cube(new_values, new_axes)        
         
     @staticmethod
     def full(axes, fill_value, dtype=None):

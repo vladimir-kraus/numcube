@@ -132,6 +132,18 @@ class CubeTests(unittest.TestCase):
         C = year_quarter_weekday_cube()
         D = C.apply(np.sin)
         self.assertTrue(np.array_equal(np.sin(C.values), D.values))
+        
+    def test_squeeze(self):
+        a = Index("A", [1])
+        b = Index("B", [1, 2, 3])
+        C = Cube([[1, 2, 3]], [a, b])
+        D = C.squeeze()
+        self.assertEqual(D.ndim, 1)
+        self.assertEqual(D.axis(0).name, "B")
+        C = Cube([[1], [2], [3]], [b, a])
+        D = C.squeeze()
+        self.assertEqual(D.ndim, 1)
+        self.assertEqual(D.axis(0).name, "B")
 
     def test_transpose(self):
         C = year_quarter_weekday_cube()
