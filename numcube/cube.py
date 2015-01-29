@@ -39,7 +39,7 @@ class Cube(object):
         2) axes indexed by integer are collapsed
 
         :param item:
-        :return:
+        :return: Cube
         """
 
         if not isinstance(items, tuple):
@@ -87,7 +87,7 @@ class Cube(object):
 
     @property
     def values(self):
-        return self._values  # .view()
+        return self._values  # .view()?
 
     @property
     def axes(self):
@@ -96,20 +96,23 @@ class Cube(object):
         :rtype: tuple
         """
         return self._axes.items
-        # return self._axes.items
 
     @property
     def axis_names(self):
+        """Return a tuple of axis names."""
         return self._axes.names
 
     def axis(self, item):
-        """Return axis by name or index."""
+        """Return axis by the name or by the index.
+        Index can be a negative number, in that case, the axes are counted backwards from the last one."""
         return self._axes[item]
 
     def axis_index(self, axis):
+        """Return numeric index of the axis specified by its name."""
         return self._axes.index(axis)
 
     def has_axis(self, axis):
+        """Return True/False indicating whether the axis specified by its name exist in the Cube."""
         return self._axes.contains(axis)
 
     def apply(self, func, *args):
@@ -523,13 +526,12 @@ class Cube(object):
         new_axes.insert(0, new_axis)
         return Cube(new_values, new_axes)
         
-    def filter(self, axis, values=None):
+    def filter(self, axis_id, values=None):
+        """Return a filtered cube with only those elements on the axis, which are contained in the array of values.
         """
-        """
-        if isinstance(axis, Axis):
-            values = axis.values
-            axis = axis.name
-        # TODO ...
+        axis, axis_index = self._axes.axis_and_index(axis_id)
+        indices = [i for i, v in enumerate(axis.values) if v in values]
+        return self.take(indices, axis_index)
 
     def take(self, indices, axis_id):
         """Filter cube along given axis on specified indices. This is analogy to ndarray.take method.

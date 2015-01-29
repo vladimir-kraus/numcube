@@ -128,6 +128,11 @@ class CubeTests(unittest.TestCase):
         self.assertTrue(0 in C)
         self.assertFalse(12 in C)
 
+    def test_filter(self):
+        C = year_quarter_cube()
+        D = C.filter("year", [2014, 2018])
+        self.assertTrue((D.values == C.values[0]).all())
+
     def test_apply(self):
         C = year_quarter_weekday_cube()
         D = C.apply(np.sin)
