@@ -29,8 +29,12 @@ def year_quarter_weekday_cube():
 class TableTests(unittest.TestCase):
 
     def test_create_table(self):
+        pass
+        
+    def test_from_cube(self):
         C = year_quarter_weekday_cube()
         T = Table.from_cube(C, ['year', 'quarter'], ['weekday'])
-        # print(T)
         T = Table.from_cube(C, ['year'], ['weekday', 'quarter'])
-        # print(T)
+        T = Table.from_cube(C)
+        T = Table.from_cube(C, 'year')
+        T = Table.from_cube(C, 0)

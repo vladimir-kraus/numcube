@@ -30,6 +30,10 @@ def year_quarter_weekday_cube():
 
 class CubeTests(unittest.TestCase):
 
+    def test_empty_cube(self):
+        #C = Cube([], [])
+        pass
+
     def test_create_scalar(self):
 
         C = Cube(1, None)
@@ -147,6 +151,10 @@ class CubeTests(unittest.TestCase):
         # transpose by axis names
         E = C.transpose(["quarter", "year", "weekday"])
         self.assertTrue(np.array_equal(D.values, E.values))
+        
+        # transpose axes specified by negative indices
+        E = C.transpose([-2, -3, -1])
+        self.assertTrue(np.array_equal(D.values, E.values))
 
         # transpose with wrong axis indices
         self.assertRaises(IndexError, C.transpose, [3, 0, 2])
@@ -163,7 +171,7 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, C.transpose, ["year", "weekday", "quarter", "A"])
         self.assertRaises(ValueError, C.transpose, [1, 0, 2, 3])
 
-        # duplicit axes
+        # duplicate axes
         self.assertRaises(ValueError, C.transpose, [0, 0, 2])
         self.assertRaises(ValueError, C.transpose, ["year", "year", "quarter"])
 
@@ -299,13 +307,19 @@ class CubeTests(unittest.TestCase):
     def test_rename_axis(self):
         C = year_quarter_cube()
 
-        # successfull renaming
+        # axes by name
         D = C.rename_axis("year", "Y")
         D = D.rename_axis("quarter", "Q")
         self.assertEqual(tuple(D.axis_names), ("Y", "Q"))
 
+        # axes by index
         D = C.rename_axis(0, "Y")
         D = D.rename_axis(1, "Q")
+        self.assertEqual(tuple(D.axis_names), ("Y", "Q"))
+        
+        # axes with negative indices
+        D = C.rename_axis(-2, "Y")
+        D = D.rename_axis(-1, "Q")
         self.assertEqual(tuple(D.axis_names), ("Y", "Q"))
 
         # invalid new axis name type
@@ -324,6 +338,11 @@ class CubeTests(unittest.TestCase):
 
     def test_aggregate(self):
         C = year_quarter_cube()
+        self.assertTrue((C.sum("quarter") == C.sum(1)).all())
+        self.assertTrue((C.sum("quarter") == C.sum(-1)).all())
+        self.assertTrue((C.sum("year") == C.sum(keep=1)).all())
+        self.assertTrue((C.sum("year") == C.sum(keep=-1)).all())
+        self.assertTrue((C.sum(["year"]) == C.sum(keep=[-1])).all())
         self.assertTrue((C.sum("quarter") == C.sum(keep="year")).all())
         self.assertEqual(C.sum(), 66)
         self.assertEqual(C.mean(), 5.5)

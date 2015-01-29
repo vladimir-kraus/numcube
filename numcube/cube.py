@@ -22,6 +22,7 @@ class Cube(object):
             axes = Axes(axes)
 
         # if axes dimensions and value dimension do not match
+        print(values.ndim, len(axes))
         if values.ndim != len(axes):
             raise ValueError("invalid number of axes")
 

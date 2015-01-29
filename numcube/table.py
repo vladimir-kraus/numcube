@@ -82,9 +82,11 @@ class Table:
     """
 
     @staticmethod
-    def from_cube(cube, row_axes, col_axes, row_label=None, col_label=None):
+    def from_cube(cube, row_axes=None, col_axes=None, row_label=None, col_label=None):
         if row_axes is None and col_axes is None:
-            raise ValueError('row_axes or col_axes must not be None')
+            # the last axis will become the column axis
+            # other axes will become row axes
+            col_axes = -1  
             
         if row_axes is not None:
             if isinstance(row_axes, int) or isinstance(row_axes, str):
@@ -93,7 +95,7 @@ class Table:
         if col_axes is not None:
             if isinstance(col_axes, int) or isinstance(col_axes, str):
                 col_axes = (col_axes,)
-        
+                
         if row_axes is not None:
             row_axis_indices = tuple(cube.axis_index(a) for a in row_axes)
         else:

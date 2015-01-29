@@ -72,8 +72,11 @@ class Axes(object):
 
         Note: LookupError can be used to catch both KeyError and IndexError."""
         if isinstance(item, int):
-            if 0 <= item < len(self._axes):
+            axis_count = len(self._axes)
+            if 0 <= item < axis_count:
                 return self._axes[item]
+            if -axis_count <= item:
+                return self._axes[axis_count + item]
             raise IndexError("invalid axis index: {}".format(item))
         elif isinstance(item, str):
             for a in self._axes:
@@ -126,18 +129,31 @@ class Axes(object):
         return tuple(i for i in range(len(self)) if i not in indices)
         
     def index(self, axis):
-        """Find index of an axis by the name. If not found return KeyError."""
+        """Find index of an axis by the name, index, or by axis object. If not found then raise exception."""
+        
+        # find by numeric index, normalize negative numbers
         if isinstance(axis, int):
-            if 0 <= axis < len(self._axes):
+            axis_count = len(self._axes)
+            if 0 <= axis < axis_count:
                 return axis
+            if -axis_count <= axis:
+                # negative index is counted from the last axis backward
+                return axis_count + axis
             raise IndexError("invalid axis index: {}".format(axis))
-        elif isinstance(axis, str):
+        
+        # find by name
+        if isinstance(axis, str):
             for i, a in enumerate(self._axes):
                 if a.name == axis:
                     return i
             raise KeyError("invalid axis name: '{}'".format(axis))
-        else:
-            raise TypeError("axis can be specified by index (int) or name (str)")
+        
+        # find by object identity
+        for i, a in enumerate(self._axes):
+            if a is axis:
+                return i
+        
+        raise ValueError("axis not found: {}".format(axis))
 
     def contains(self, axis_id):
         """Returns True if Axes contain an axis of the specified name. Otherwise return False."""
