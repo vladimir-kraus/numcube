@@ -52,10 +52,11 @@ class Header(object):
         for a in axes:
             rep_all.append(n)
             n *= len(a)
-
+            
         rep_each = []
         for a in axes:
-            n //= len(a)
+            if len(a) != 0:  # to protect against zero-length axes problem
+                n //= len(a)
             rep_each.append(n)
 
         series = []
