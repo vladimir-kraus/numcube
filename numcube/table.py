@@ -61,8 +61,8 @@ class Header(object):
 
         series = []
         for a, r1, r2 in zip(axes, rep_all, rep_each):
-            repeated__values = np.tile(np.repeat(a.values, r2), r1)
-            series.append(Series(a.name, repeated__values))
+            repeated_values = np.tile(np.repeat(a.values, r2), r1)
+            series.append(Series(a.name, repeated_values))
 
         return Header(series, format)
 
@@ -119,12 +119,12 @@ class Table:
 
     def __init__(self, values, row_header=None, col_header=None):
 
-        self.__values = np.atleast_2d(values)
-        if self.__values.ndim != 2:
+        self._values = np.atleast_2d(values)
+        if self._values.ndim != 2:
             raise ValueError("values must have 2 dimensions")
 
-        #nrow = self.__values.shape[0]
-        #ncol = self.__values.shape[1]
+        #nrow = self._values.shape[0]
+        #ncol = self._values.shape[1]
 
         #if row_axis is not None:
         #    if nrow != row_axis.length:
@@ -138,7 +138,7 @@ class Table:
         self.__col_header = col_header
 
     def __repr__(self):
-        return "rows:\n{}\ncolumns:\n{}\nvalues:\n{}".format(self.__row_header, self.__col_header, self.__values)
+        return "rows:\n{}\ncolumns:\n{}\nvalues:\n{}".format(self.__row_header, self.__col_header, self._values)
 
     @property
     def nrows(self):
@@ -149,7 +149,11 @@ class Table:
         return len(self.__col_header)
 
     def value(self, row, col):
-        return self.__values[row, col]
+        return self._values[row, col]
+        
+    @property
+    def size(self):
+        return self._values.size
 
     @property
     def row_header(self):
@@ -167,7 +171,7 @@ class Table:
         
     @property
     def values(self):
-        return self.__values
+        return self._values
 
     def axis_field_count(self, axis_index):
         axis = self._axes[axis_index]
@@ -191,7 +195,7 @@ class Table:
         lst = [self.axis_label(1, c) for c in range(col_count)]
         print("{}, {}".format("", ", ".join(lst)))
         for r in range(row_count):
-            lst = [str(self.__values[r, c]) for c in range(col_count)]
+            lst = [str(self._values[r, c]) for c in range(col_count)]
             print("{}, {}".format(self.axis_label(0, r), ", ".join(lst)))
 
     def filter(self, row_filter=None, col_filter=None):
@@ -200,7 +204,7 @@ class Table:
         :param col_filter:
         :return:
         """
-        values = self.__values
+        values = self._values
         if row_filter is not None:
             values = values[row_filter, :]
         if col_filter is not None:
