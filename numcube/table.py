@@ -3,6 +3,7 @@ from numcube import Axis, Series
 
 
 class Header(object):
+    
     def __init__(self, series, format=None):
         self._series = tuple(series)
         self._size = len(series[0])  # TODO: what if there are no series
@@ -10,6 +11,10 @@ class Header(object):
             if self._size != len(s):
                 raise ValueError('all header series must have equal lengths')
         self._format = format
+        
+    def __getitem__(self, items):
+        new_series = tuple(s[items] for s in self._series)
+        return Header(new_series, self._format)
 
     def __repr__(self):
         lst = [repr(s) for s in self._series]
@@ -65,7 +70,7 @@ class Header(object):
             series.append(Series(a.name, repeated_values))
 
         return Header(series, format)
-
+        
 
 class Table:
     """
@@ -123,30 +128,42 @@ class Table:
         if self._values.ndim != 2:
             raise ValueError("values must have 2 dimensions")
 
-        #nrow = self._values.shape[0]
-        #ncol = self._values.shape[1]
+        nrows = self._values.shape[0]
+        ncols = self._values.shape[1]
 
         #if row_axis is not None:
-        #    if nrow != row_axis.length:
-        #        raise ValueError("invalid number of rows")
+        if nrows != len(row_header):
+                raise ValueError("invalid number of rows")
+                
+        if ncols != len(col_header):
+                raise ValueError("invalid number of columns")                
 
         #if col_axis is not None:
         #    if ncol != col_axis.length:
         #        raise ValueError("invalid number of columns")
 
-        self.__row_header = row_header
-        self.__col_header = col_header
+        self._row_header = row_header
+        self._col_header = col_header
 
     def __repr__(self):
-        return "rows:\n{}\ncolumns:\n{}\nvalues:\n{}".format(self.__row_header, self.__col_header, self._values)
+        return "rows:\n{}\ncolumns:\n{}\nvalues:\n{}".format(self._row_header, self._col_header, self._values)
+        
+    def __getitem__(self, items):
+        if not isinstance(items, tuple):
+            items = (items, slice(None))
+        row_items, col_items = items
+        new_values = self._values[items]
+        new_row_header = self._row_header[row_items]
+        new_col_header = self._col_header[col_items]
+        return Table(new_values, new_row_header, new_col_header)
 
     @property
     def nrows(self):
-        return len(self.__row_header)
+        return len(self._row_header)
 
     @property
     def ncols(self):
-        return len(self.__col_header)
+        return len(self._col_header)
 
     def value(self, row, col):
         return self._values[row, col]
@@ -157,17 +174,17 @@ class Table:
 
     @property
     def row_header(self):
-        return self.__row_header
+        return self._row_header
 
     @property
     def col_header(self):
-        return self.__col_header
+        return self._col_header
 
     def row_label(self, index):
-        return self.__row_header.label(index)
+        return self._row_header.label(index)
 
     def col_label(self, index):
-        return self.__col_header.label(index)
+        return self._col_header.label(index)
         
     @property
     def values(self):
@@ -219,3 +236,15 @@ class Table:
             col_axis = col_axis._filter_axis(col_filter)
 
         return Table(values, row_axis, col_axis)
+        
+    def take(self, row_indices=None, col_indices=None):
+        values = self._values
+        row_header = self._row_header
+        col_header = self._col_header
+        if row_indices is not None:
+            row_header = row_header[row_indices]
+            values = values.take(row_indices, 0)
+        if col_indices is not None:
+            col_header = col_header[col_indices]
+            values = values.take(col_indices, 1)
+        return Table(values, row_header, col_header)

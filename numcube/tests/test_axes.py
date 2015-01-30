@@ -21,7 +21,7 @@ class AxesTests(unittest.TestCase):
             # slicing
             self.assertTrue(np.array_equal(a[1:3].values, [20, 30]))
             
-            # indexing with numpy array of ints
+            # indexing with list of ints
             sel = [2, 1, -1]
             self.assertTrue(np.array_equal(a[sel].values, [30, 20, 40]))
             

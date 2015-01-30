@@ -38,3 +38,23 @@ class TableTests(unittest.TestCase):
         T = Table.from_cube(C)
         T = Table.from_cube(C, 'year')
         T = Table.from_cube(C, 0)
+        
+    def test_getitem(self):
+        C = year_quarter_cube()
+        T = Table.from_cube(C)
+        self.assertTrue(T[0, 0].values == 0)
+        self.assertTrue(T[2, 3].values == 11)
+        self.assertTrue(np.array_equal(T[1].values, [[4, 5, 6, 7]]))
+        self.assertTrue(np.array_equal(T[-2].values, [[4, 5, 6, 7]]))
+        self.assertTrue(np.array_equal(T[0, :].values, [[0, 1, 2, 3]]))
+        self.assertTrue(np.array_equal(T[0:2, 0:2].values, [[0, 1], [4, 5]]))
+        
+        # the following numpy style of indexing is not possible
+        # note: compare to Table.take([0, 2], [0, 1])
+        self.assertRaises(ValueError, T.__getitem__, ([0, 2], [0, 1]))
+        
+    def test_take(self):
+        C = year_quarter_cube()
+        T = Table.from_cube(C)    
+        self.assertTrue(np.array_equal(T.take([0, 2], [0, 1]).values, [[0, 1], [8, 9]]))
+        
