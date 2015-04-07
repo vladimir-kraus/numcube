@@ -255,3 +255,19 @@ class Table:
             col_header = col_header[col_indices]
             values = values.take(col_indices, 1)
         return Table(values, row_header, col_header)
+
+    def compress(self, row_condition=None, col_condition=None):
+    
+        # TODO: test if a header is None 
+        
+        values = self._values
+        row_header = self._row_header
+        col_header = self._col_header
+        if row_condition is not None:
+            row_header = row_header[row_condition]
+            values = values.compress(row_condition, 0)
+        if col_condition is not None:
+            col_header = col_header[col_condition]
+            values = values.compress(col_condition, 1)
+        return Table(values, row_header, col_header)
+        
