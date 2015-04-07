@@ -60,22 +60,19 @@ Index('M', ['jan' 'feb' 'mar' 'apr' 'may' 'jun' 'jul' 'aug' 'sep' 'oct' 'nov' 'd
 #>>> mo.sort()  # not sure why would you do that with month names... but you can
 #Index("month", ["apr" "aug" "dec" "jul" "jun" "mar" "may" "nov" "oct" "sep"])
 
-Axes class
-- you usually do not need to create Axes object manually
-- Axes is a part of Cube
-
+Cube.axes return a tuple representing ordered collection of axes
 >>> X = Index("X", ["x1", "x2"])
 >>> Y = Index("Y", ["y1", "y2", "y3"])
 >>> C = Cube(np.arange(6).reshape(2, 3), [X, Y])
 >>> C.axes
-Axes(Index('X', ['x1' 'x2']), Index('Y', ['y1' 'y2' 'y3']))
+(Index('X', ['x1' 'x2']), Index('Y', ['y1' 'y2' 'y3']))
 
 Axis can be accessed by index
 >>> C.axes[0]
 Index('X', ['x1' 'x2'])
 
 # axis can be accessed by name
->>> C.axes["Y"]
+>>> C.axis("Y")
 Index('Y', ['y1' 'y2' 'y3'])
 
 # Axes can be used as an iterator to generate list, tuple, dict, etc.
@@ -157,10 +154,26 @@ Cube broadcasting:
 >>> Y = Index("Y", ["y1", "y2", "y3"])
 >>> C = Cube(np.arange(2), X)
 >>> D = Cube(np.arange(3), Y)
->>> C * D
+>>> E = C * D
+>>> E
 axes: Axes(Index('X', ['x1' 'x2']), Index('Y', ['y1' 'y2' 'y3']))
 values: [[0 0 0]
  [0 1 2]]
+
+Analogy to numpy.ndarray.compress function:
+>>> E.compress(np.array([True, False, True]), "Y")
+axes: Axes(Index('X', ['x1' 'x2']), Index('Y', ['y1' 'y3']))
+values: [[0 0]
+ [0 2]]
+
+Analogy to numpy.ndarray.take function:
+#>>> E.take(np.array([0, 2]), "Y")
+>>> E.take([0, 2], "Y")
+axes: Axes(Index('X', ['x1' 'x2']), Index('Y', ['y1' 'y3']))
+values: [[0 0]
+ [0 2]]
+
+
 
 if __name__ == "__main__":
     import doctest

@@ -93,8 +93,16 @@ class CubeTests(unittest.TestCase):
     def test_getitem(self):
         C = year_quarter_cube()
 
-        D = C[0:2, 0:2]
-        self.assertTrue(np.array_equal(D.values, [[0, 1], [4, 5]]))
+        D = C[0:2, 0:3]
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2], [4, 5, 6]]))
+        self.assertEqual(D.ndim, 2)
+        self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
+        
+        # by logical vector
+        sel_y = np.array([True, True, False, False])
+        #sel_q = np.array([True, True, True, False])
+        D = C[sel_y, :]
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3], [4, 5, 6, 7]]))
         self.assertEqual(D.ndim, 2)
         self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
 

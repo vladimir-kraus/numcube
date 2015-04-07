@@ -221,23 +221,30 @@ class Table:
         :param col_filter:
         :return:
         """
+        # TODO: test if a header is None 
+        # TODO: is it duplicate with take?
+        
         values = self._values
         if row_filter is not None:
             values = values[row_filter, :]
         if col_filter is not None:
             values = values[:, col_filter]
 
-        row_axis = self.row_axis
-        if row_axis is not None:
-            row_axis = row_axis._filter_axis(row_filter)
+        row_header = self._row_header
+        col_header = self._col_header
+            
+        if row_header is not None:
+            row_header = row_header[row_filter]        
 
-        col_axis = self.col_axis
-        if col_axis is not None:
-            col_axis = col_axis._filter_axis(col_filter)
+        if col_header is not None:
+            col_header = col_header[col_filter]        
 
-        return Table(values, row_axis, col_axis)
+        return Table(values, row_header, col_header)
         
     def take(self, row_indices=None, col_indices=None):
+    
+        # TODO: test if a header is None 
+        
         values = self._values
         row_header = self._row_header
         col_header = self._col_header

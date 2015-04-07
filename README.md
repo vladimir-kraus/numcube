@@ -29,6 +29,19 @@ Axis alignment
 - if one of the axes is Series and the other is Index, then the values in Series must be subset of those in Index; the result axis is the Series
 - if both axes are Series, error is raised; two Series objects cannot be matched
 
+Filtering and data selection
+----------------------------
+
+Example:
+```python
+>> Y = Index("year", range(2014, 3))
+>> Q = Index("quarter", ["Q1", "Q2", "Q3", "Q4"])
+>> sales = Cube([[14, 16, 13, 20], [15, 15, 10, 19], [16, 17, 15, 21]], [Y, Q])
+>> salesH1 = sales.filter("quarter", ["Q1", "Q2"])  # by dimension attribute
+>> salesH1 = sales.take([0, 1], "quarter")  # by numeric indices
+>> salesH1 = sales.compress(np.array([True, True, False, False]), "quarter")  # by logical vector
+```
+
 Operation with cubes
 --------------------
 

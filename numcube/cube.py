@@ -529,6 +529,7 @@ class Cube(object):
     def filter(self, axis_id, values=None):
         """Return a filtered cube with only those elements on the axis, which are contained in the array of values.
         """
+        # TODO - consider switching argument order to be consistent with take and compress
         axis, axis_index = self._axes.axis_and_index(axis_id)
         indices = [i for i, v in enumerate(axis.values) if v in values]
         return self.take(indices, axis_index)
@@ -548,6 +549,15 @@ class Cube(object):
             # even if the collection has one element
             axes = self._axes.replace(axis_id, new_axis)
         values = self._values.take(indices, axis_id)
+        return Cube(values, axes)
+
+    def compress(self, condition, axis_id):
+        # TODO...
+        axis, axis_id = self._axes.axis_and_index(axis_id)
+        new_axis = axis[condition]
+        # TODO - can it collapse axis?
+        axes = self._axes.replace(axis_id, new_axis)
+        values = self._values.compress(condition, axis_id)
         return Cube(values, axes)
 
     def make_index(self, axis_id):
