@@ -161,13 +161,12 @@ values: [[0 0 0]
  [0 1 2]]
 
 Analogy to numpy.ndarray.compress function:
->>> E.compress(np.array([True, False, True]), "Y")
+>>> E.compress([True, False, True], "Y")
 axes: Axes(Index('X', ['x1' 'x2']), Index('Y', ['y1' 'y3']))
 values: [[0 0]
  [0 2]]
 
 Analogy to numpy.ndarray.take function:
-#>>> E.take(np.array([0, 2]), "Y")
 >>> E.take([0, 2], "Y")
 axes: Axes(Index('X', ['x1' 'x2']), Index('Y', ['y1' 'y3']))
 values: [[0 0]

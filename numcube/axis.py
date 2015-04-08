@@ -58,6 +58,14 @@ class Axis(object):
         values = np.asarray(values)
         selection = np.in1d(self._values, values)
         return self.__class__(self._name, self._values[selection])
+        
+    def take(self, indices):
+        """Analogy to numpy.ndarray.take."""
+        return self.__class__(self._name, self._values.take(indices))
+        
+    def compress(self, condition):
+        """Analogy to numpy.ndarray.compress."""
+        return self.__class__(self._name, self._values.compress(condition))
 
     def rename(self, new_name):
         """

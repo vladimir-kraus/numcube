@@ -535,11 +535,11 @@ class Cube(object):
         return self.take(indices, axis_index)
 
     def take(self, indices, axis_id):
-        """Filter cube along given axis on specified indices. This is analogy to ndarray.take method.
+        """Filter cube along given axis on specified indices. Analogy to numpy.ndarray.take.
         :param indices: a collection of ints or int
         :param axis_id: string or int specifying the axis"""
         axis, axis_id = self._axes.axis_and_index(axis_id)
-        new_axis = axis[indices]
+        new_axis = axis.take(indices)
         if isinstance(indices, int):
             # if indices is not collection,
             # then will remove one dimension
@@ -552,10 +552,9 @@ class Cube(object):
         return Cube(values, axes)
 
     def compress(self, condition, axis_id):
-        # TODO...
+        """Take elements using a boolean mask along a specified axis. Analogy to numpy.ndarray.compress."""
         axis, axis_id = self._axes.axis_and_index(axis_id)
-        new_axis = axis[condition]
-        # TODO - can it collapse axis?
+        new_axis = axis.compress(condition)
         axes = self._axes.replace(axis_id, new_axis)
         values = self._values.compress(condition, axis_id)
         return Cube(values, axes)
