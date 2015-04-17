@@ -223,6 +223,7 @@ class Table:
         """
         # TODO: test if a header is None 
         # TODO: is it duplicate with take?
+        # TODO: what happens if both are None?
         
         values = self._values
         if row_filter is not None:
@@ -244,6 +245,7 @@ class Table:
     def take(self, row_indices=None, col_indices=None):
     
         # TODO: test if a header is None 
+        # TODO: what happens if both are None?
         
         values = self._values
         row_header = self._row_header
@@ -259,6 +261,7 @@ class Table:
     def compress(self, row_condition=None, col_condition=None):
     
         # TODO: test if a header is None 
+        # TODO: what happens if both are None?
         
         values = self._values
         row_header = self._row_header
