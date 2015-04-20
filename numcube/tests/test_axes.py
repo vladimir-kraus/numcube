@@ -44,23 +44,8 @@ class AxesTests(unittest.TestCase):
             self.assertTrue(np.array_equal(a.filter((30, 10, 20)).values, [10, 20, 30]))
             self.assertTrue(np.array_equal(a.filter({30, 10, 20}).values, [10, 20, 30]))
         
-        # TODO: test nonexisting values
+        # TODO: test non-existing values
 
-    def test_create_series(self):
-        a = Series("A", [10, 20, 30])
-        self.assertEqual(a.name, "A")
-        self.assertEqual(len(a), 3)
-
-        a = Series("A", ["a", "b", "c", "d"])
-        self.assertEqual(a.name, "A")
-        self.assertEqual(len(a), 4)
-
-        # duplicit values are OK
-        try:
-            a = Series("A", ["a", "b", "a"])
-        except ValueError:
-            self.fail("Series raised ValueError unexpectedly")
-            
     def test_complement(self):
         a = Index("A", [10, 20, 30])
         b = Index("B", [10, 20, 30])
@@ -72,34 +57,6 @@ class AxesTests(unittest.TestCase):
         self.assertRaises(ValueError, axs.complement, ["A", "A"])
         self.assertRaises(ValueError, axs.complement, ["B", 1])
 
-    def test_create_index(self):
-        a = Index("A", [10, 20, 30])
-        self.assertEqual(a.name, "A")
-        self.assertEqual(len(a), 3)
-
-        a = Index("Dim", ["a", "b", "c", "d"])
-        self.assertEqual(a.name, "Dim")
-        self.assertEqual(len(a), 4)
-
-        # duplicate values
-        self.assertRaises(ValueError, Index, "A", ["a", "b", "a"])
-        
-    def test_index_take(self):
-        # TODO - put to separate test_index file
-        a = Index("A", ["a", "b", "c", "d"])
-        self.assertEqual(a.take([0, 2]).name, "A")  # preserve name
-        self.assertTrue(np.array_equal(a.take([0, 2]).values, ["a", "c"]))
-        self.assertTrue(np.array_equal(a.take([2, 0]).values, ["c", "a"]))
-        self.assertRaises(ValueError, a.take, [0, 2, 0])  # duplicate values in Index
-        
-    def test_index_compress(self):
-        # TODO - put to separate test_index file
-        a = Index("A", ["a", "b", "c", "d"])
-        b = [True, False, True, False]
-        c = a.compress(b)
-        self.assertEqual(a.name, c.name)  # keep name
-        self.assertTrue(np.array_equal(c.values, a.values.compress(b)))
-        
     def test_numpy_recarray_axis(self):
         array = np.array([(1, 1.0), (2, 2.0), (3, 3.0)], dtype=[("int", int), ("float", float)])
         #print(array)
@@ -107,33 +64,6 @@ class AxesTests(unittest.TestCase):
         #    print(i, type(i))
         #a = Index("Dim", array)
         b = Series("Dim", array)
-
-    def test_index_writeable(self):
-        a = Index("A", [10, 20, 30])
-        self.assertRaises(ValueError, a.values.__setitem__, 0, 40)
-
-    def test_index_index(self):
-        a = Index("A", [10, 20, 30])
-        self.assertEqual(a.index(10), 0)
-        self.assertTrue(np.array_equal(a.index([10, 30]), [0, 2]))
-
-        b = Index("Dim", ["a", "b", "c", "d"])
-        self.assertEqual(b.index("c"), 2)
-        self.assertTrue(np.array_equal(b.index(["d", "c"]), [3, 2]))
-
-        # invalid Index name
-        self.assertRaises(TypeError, Index, 1, [1, 2, 3])
-
-    def test_index_contains(self):
-        a = Index("A", [10, 20, 30])
-        self.assertEqual(a.contains(20), True)
-        self.assertEqual(a.contains(40), False)
-        self.assertTrue(np.array_equal(a.contains([0, 10, 20, 40]), [False, True, True, False]))
-
-        b = Index("B", ["jan", "feb", "mar", "apr"])
-        self.assertEqual(b.contains("feb"), True)
-        self.assertEqual(b.contains("jun"), False)
-        self.assertTrue(np.array_equal(b.contains(["jan", "dec", "feb"]), [True, False, True]))
 
     def test_create_axes(self):
         # create from a single axis

@@ -34,6 +34,7 @@ class Index(Axis):
         """
         return True
 
+    # TODO: consider renaming index to index_of or indexof
     def index(self, item):
         """
         If item is single value, then return a single integer value.
