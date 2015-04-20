@@ -88,15 +88,17 @@ class AxesTests(unittest.TestCase):
         # TODO - put to separate test_index file
         a = Index("A", ["a", "b", "c", "d"])
         self.assertEqual(a.take([0, 2]).name, "A")  # preserve name
-        self.assertEqual(a.take([0, 2]).values, ("a", "c"))
-        self.assertEqual(a.take([2, 0]).values, ("c", "a"))
+        self.assertTrue(np.array_equal(a.take([0, 2]).values, ["a", "c"]))
+        self.assertTrue(np.array_equal(a.take([2, 0]).values, ["c", "a"]))
         self.assertRaises(ValueError, a.take, [0, 2, 0])  # duplicate values in Index
         
     def test_index_compress(self):
         # TODO - put to separate test_index file
         a = Index("A", ["a", "b", "c", "d"])
-        self.assertEqual(a.compress([True, False, True, False]).name, "A")  # preserve name
-        self.assertEqual(a.compress([True, False, True, False]).values, ("a", "c"))
+        b = [True, False, True, False]
+        c = a.compress(b)
+        self.assertEqual(a.name, c.name)  # keep name
+        self.assertTrue(np.array_equal(c.values, a.values.compress(b)))
         
     def test_numpy_recarray_axis(self):
         array = np.array([(1, 1.0), (2, 2.0), (3, 3.0)], dtype=[("int", int), ("float", float)])

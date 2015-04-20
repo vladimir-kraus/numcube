@@ -98,14 +98,6 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(D.ndim, 2)
         self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
         
-        # by logical vector
-        sel_y = np.array([True, True, False, False])
-        #sel_q = np.array([True, True, True, False])
-        D = C[sel_y, :]
-        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3], [4, 5, 6, 7]]))
-        self.assertEqual(D.ndim, 2)
-        self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
-
         # collapsing axis
         D = C[0]
         self.assertTrue(np.array_equal(D.values, [0, 1, 2, 3]))
@@ -157,6 +149,15 @@ class CubeTests(unittest.TestCase):
         D = C.squeeze()
         self.assertEqual(D.ndim, 1)
         self.assertEqual(D.axis(0).name, "B")
+
+    def test_compress(self):
+        c = year_quarter_cube()
+        d = c.compress([True, False, False], 0)
+        self.assertTrue(np.array_equal(d.values, [[0, 1, 2, 3]]))
+        self.assertEqual(d.ndim, 2)
+        self.assertEqual(tuple(d.axis_names), ("year", "quarter"))
+        e = c.compress([True, False, True, False], 1)
+        self.assertTrue(np.array_equal(e.values, [[0, 2], [4, 6], [8, 10]]))
 
     def test_transpose(self):
         C = year_quarter_weekday_cube()

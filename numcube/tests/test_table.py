@@ -33,6 +33,10 @@ class TableTests(unittest.TestCase):
         
     def test_from_cube(self):
         C = year_quarter_weekday_cube()
+        T = Table.from_cube(C)
+        self.assertEqual(T.nrows, 12)
+        self.assertEqual(T.ncols, 7)
+
         T = Table.from_cube(C, ['year', 'quarter'], ['weekday'])
         T = Table.from_cube(C, ['year'], ['weekday', 'quarter'])
         T = Table.from_cube(C)
@@ -57,4 +61,12 @@ class TableTests(unittest.TestCase):
         C = year_quarter_cube()
         T = Table.from_cube(C)    
         self.assertTrue(np.array_equal(T.take([0, 2], [0, 1]).values, [[0, 1], [8, 9]]))
-        
+
+    def test_transpose(self):
+        t1 = Table.from_cube(year_quarter_weekday_cube())
+        t2 = t1.transpose()
+        t3 = t2.transpose()
+        self.assertEqual(t2.nrows, t1.ncols)
+        self.assertEqual(t2.ncols, t1.nrows)
+        self.assertTrue(np.array_equal(t1.values.transpose(), t2.values))
+        self.assertTrue(np.array_equal(t1.values, t3.values))

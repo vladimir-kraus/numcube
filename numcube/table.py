@@ -271,3 +271,7 @@ class Table:
             values = values.compress(col_condition, 1)
         return Table(values, row_header, col_header)
         
+    def transpose(self):
+        """Return a table with swapped rows and columns."""
+        return Table(self._values.transpose(), self._col_header, self._row_header)
+        
