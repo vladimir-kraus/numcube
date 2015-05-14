@@ -1,14 +1,16 @@
 import numpy as np
 import math
+
 from .index import Index
 from .series import Series
 from .axes import Axes
-from .axis import Axis
 from .exceptions import AxisAlignError
 
 
 class Cube(object):
-    """Wrapper around numpy.ndarray with named and labelled axes."""
+    """Wrapper around numpy.ndarray with named and labelled axes. The API aims to be as similar to ndarray API as
+    possible. Moreover it allows automatic axis matching and alignment in operations among cubes.
+    """
 
     # when numpy array is the first argument in operation and Cube is the second,
     # then __array_priority__ will force Cube to handle the operation rather than numpy array

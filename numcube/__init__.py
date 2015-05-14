@@ -4,4 +4,3 @@ from .index import Index
 from .series import Series
 from .axis import Axis
 from .axes import Axes, intersect
-from .table import Header, Table

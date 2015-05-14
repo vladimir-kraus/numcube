@@ -1,10 +1,21 @@
 """
-# Index class
-# - Index is a named, indexed collection of unique values
-# doctest: +NORMALIZE_WHITESPACE
+Index class
+-----------
+
+Index is a named, ordered and indexed collection of unique values
+
 
 >>> import numpy as np
->>> from numcube import Index, Series, Cube
+>>> from numcube import Index, Cube
+
+
+Index object
+------------
+
+>>> yr = Index("year", range(2010, 2020))
+
+>>> yr
+Index('year', [2010 2011 2012 2013 2014 2015 2016 2017 2018 2019])
 
 >>> mo = Index("month", ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"])
 >>> mo.name
@@ -15,38 +26,25 @@ array(['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep',
        'oct', 'nov', 'dec'],
       dtype='<U3')
 
->>> mo[1:3] # indexing is the same as indexing of one dimensional numpy array
-Index('month', ['feb' 'mar'])
+
+Slicing
+-------
+
+>>> mo[0:4]
+Index('month', ['jan' 'feb' 'mar' 'apr'])
 
 >>> mo[-1]
 Index('month', ['dec'])
 
-slicing
->>> mo[0:4]
-Index('month', ['jan' 'feb' 'mar' 'apr'])
-
 >>> mo[::2]
 Index('month', ['jan' 'mar' 'may' 'jul' 'sep' 'nov'])
 
->>> mo.index("nov")
-10
 
-index can take only values, cannot mix with indices because in case of integer values, it would be uncertain whether the number is considered a value or index
-
->>> ix = mo.index(["dec", "may"])
->>> ix
-array([11,  4])
-
->>> mo[ix]  # ix is np.array
-Index('month', ['dec' 'may'])
+Indexing
+--------
 
 >>> mo[[0, 2, 4]]  # note the double square brackets!
 Index('month', ['jan' 'mar' 'may'])
-
->>> yr = Index("year", range(2010, 2020))
-
->>> yr
-Index('year', [2010 2011 2012 2013 2014 2015 2016 2017 2018 2019])
 
 >>> yr[yr.values % 2 == 0]  # even years
 Index('year', [2010 2012 2014 2016 2018])
@@ -54,8 +52,35 @@ Index('year', [2010 2012 2014 2016 2018])
 >>> yr[(yr.values >= 2013) & (yr.values <= 2016)]
 Index('year', [2013 2014 2015 2016])
 
->>> mo.rename("M")
+
+Finding index of a values
+-------------------------
+
+>>> mo.index("nov")
+10
+
+>>> ix = mo.index(["dec", "may"])  # multiple indices are returned as numpy array of integers
+>>> ix
+array([11,  4])
+
+>>> mo[ix]  # ix is np.array
+Index('month', ['dec' 'may'])
+
+
+Renaming
+--------
+
+>>> m = mo.rename("M")
+>>> m
 Index('M', ['jan' 'feb' 'mar' 'apr' 'may' 'jun' 'jul' 'aug' 'sep' 'oct' 'nov' 'dec'])
+
+Note: the original is unchanged!
+>>> mo
+Index('month', ['jan' 'feb' 'mar' 'apr' 'may' 'jun' 'jul' 'aug' 'sep' 'oct' 'nov' 'dec'])
+
+
+Sorting
+-------
 
 #>>> mo.sort()  # not sure why would you do that with month names... but you can
 #Index("month", ["apr" "aug" "dec" "jul" "jun" "mar" "may" "nov" "oct" "sep"])

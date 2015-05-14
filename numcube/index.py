@@ -1,4 +1,5 @@
 import numpy as np
+
 from .axis import Axis
 
 
@@ -22,7 +23,7 @@ class Index(Axis):
         self._values.flags.writeable = False
         
         if len(self._indices) != len(self._values):
-            raise ValueError('index has duplicit values')
+            raise ValueError('index has duplicate values')
         
         self._vec_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
         self._vec_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])

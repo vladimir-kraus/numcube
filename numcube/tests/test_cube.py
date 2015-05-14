@@ -1,6 +1,7 @@
 import unittest
 import functools
 import numpy as np
+
 from numcube import Index, Series, Cube
 from numcube.cube import join, concatenate
 

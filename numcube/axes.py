@@ -1,4 +1,5 @@
 import numpy as np
+
 from .axis import Axis
 from .index import Index
 from .series import Series

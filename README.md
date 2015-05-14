@@ -1,26 +1,28 @@
-numcube
-=======
+numcube package
+===============
 
 Cube
 ----
-- Cube is a wrapper around numpy.ndarray object
-- has similar interface as numpy.ndarray
-- it has named axes (name must be a string)
-- the axes have values
-- Axes is a collection of axes
-- cube can have axes of two types: Index and Series
+- Cube is a wrapper around numpy.ndarray object and provides similar API
+- the interface of all classes is designed to support immutability
+- axes are named (name must be a string)
+- axes annotated with values (any type, but all values on one axis must have the same type)
+- cube can have axes of two types: Index and Series, both are ordered
 - Index must have unique values
+- Index can be aligned to another axis
 - Series does not need to have unique values
+- Series cannot be aligned to another axis but another axis can be aligned to a Series
 - Cube support normal operations such as multiplication, adding etc.
-- Cube support aggregations
-- transposition (in n-dimensional space)
-- the operations work element wise
-- the interface is designed to support immutability
+- operations are among two cubes or among cube and a scalar
+- all operations work element wise
+- Cube support aggregations such as sum, mean, min, max etc.
+- Cube supports numerical functions such as sin, cos, log, exp etc.
+- transposition (in n-dimensional space) changes the order of axes
 
 Axis matching
 -------------
 - axes with same names are aligned (see Axis alignment)
-- axes with unique names are broadcasted
+- axes with unique names are broadcast
 - the order of axes is the same as in the first cube followed by the unique axes from the other cube
     
 Axis alignment
