@@ -2,15 +2,12 @@ import unittest
 import functools
 import numpy as np
 
-from numcube import Index, Series, Cube
+from numcube import Index, Axis, Cube
 from numcube.cube import join, concatenate
 
 
 def year_quarter_cube():
-    """
-    Create a sample 2D cube with axes "year" and "quarter" with shape (3, 4)
-    :return: new Cube object
-    """
+    """Creates a sample 2D cube with axes "year" and "quarter" with shape (3, 4)."""
     values = np.arange(12).reshape(3, 4)
     ax1 = Index("year", [2014, 2015, 2016])
     ax2 = Index("quarter", ["Q1", "Q2", "Q3", "Q4"])
@@ -18,10 +15,7 @@ def year_quarter_cube():
 
 
 def year_quarter_weekday_cube():
-    """
-    Create 3D cube with axes "year", "quarter", "weekday" with shape (3, 4, 7)
-    :return: new Cube object
-    """
+    """Creates 3D cube with axes "year", "quarter", "weekday" with shape (3, 4, 7)."""
     values = np.arange(3 * 4 * 7).reshape(3, 4, 7)
     ax1 = Index("year", [2014, 2015, 2016])
     ax2 = Index("quarter", ["Q1", "Q2", "Q3", "Q4"])
@@ -264,12 +258,12 @@ class CubeTests(unittest.TestCase):
         
         # matching Index and Series
         values_d = np.array([0, 1])
-        D = Cube(values_d, Series("a", [10, 10]))
+        D = Cube(values_d, Axis("a", [10, 10]))
         X = C * D
         self.assertTrue(np.array_equal(X.values, values.take([0, 0], 0) * values_d[:, np.newaxis]))
         
         values_d = np.array([0, 1, 2, 3])
-        D = Cube(values_d, Series("b", ["d", "d", "c", "a"]))
+        D = Cube(values_d, Axis("b", ["d", "d", "c", "a"]))
         X = C * D
         self.assertTrue(np.array_equal(X.values, values.take([3, 3, 2, 0], 1) * values_d))
 
@@ -298,8 +292,8 @@ class CubeTests(unittest.TestCase):
 
     def test_groupby(self):
         values = np.arange(12).reshape(3, 4)
-        ax1 = Series("year", [2014, 2014, 2014])
-        ax2 = Series("month", ["jan", "jan", "feb", "feb"])
+        ax1 = Axis("year", [2014, 2014, 2014])
+        ax2 = Axis("month", ["jan", "jan", "feb", "feb"])
         C = Cube(values, [ax1, ax2])
         
         D = C.groupby(0, np.mean)  # average by year
@@ -389,7 +383,7 @@ class CubeTests(unittest.TestCase):
         
     def test_align_axis(self):
         C = year_quarter_cube()
-        ax1 = Series("year", [2015, 2015, 2014, 2014])
+        ax1 = Axis("year", [2015, 2015, 2014, 2014])
         ax2 = Index("quarter", ["Q1", "Q3"])
         
         D = C.align_axis(ax1)

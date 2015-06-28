@@ -56,10 +56,10 @@ Index('year', [2013 2014 2015 2016])
 Finding index of a values
 -------------------------
 
->>> mo.index("nov")
+>>> mo.indexof("nov")
 10
 
->>> ix = mo.index(["dec", "may"])  # multiple indices are returned as numpy array of integers
+>>> ix = mo.indexof(["dec", "may"])  # multiple indices are returned as numpy array of integers
 >>> ix
 array([11,  4])
 

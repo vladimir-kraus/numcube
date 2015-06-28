@@ -1,10 +1,10 @@
 import numpy as np
 import math
 
-from .index import Index
-from .series import Series
-from .axes import Axes
-from .exceptions import AxisAlignError
+from numcube.index import Index
+from numcube.axis import Axis
+from numcube.axes import Axes
+from numcube.exceptions import AxisAlignError
 
 
 class Cube(object):
@@ -452,7 +452,7 @@ class Cube(object):
         :param new_axis: axis which the values should be aligned to
         :return: new Cube object"""
         old_axis, old_axis_index = self._axes.axis_and_index(new_axis.name)
-        indices = old_axis.index(new_axis.values)
+        indices = old_axis.indexof(new_axis.values)
         new_values = self._values.take(indices, old_axis_index)
         new_axes = self._axes.replace(old_axis_index, new_axis)
         return Cube(new_values, new_axes)
@@ -706,7 +706,7 @@ def _align_index_to_index(axis_from, axis_to):
         raise AxisAlignError("cannot align two Index axes - axes '{}' have different lengths".format(axis_to.name))
         
     try:
-        return axis_from.index(axis_to.values)
+        return axis_from.indexof(axis_to.values)
         
     except KeyError:
         raise AxisAlignError("cannot align two Index axes - axes '{}' have different values".format(axis_to.name))
@@ -716,7 +716,7 @@ def _align_index_to_series(axis_from, axis_to):
     """
     """
     try:
-        return axis_from.index(axis_to.values)
+        return axis_from.indexof(axis_to.values)
         
     except KeyError:
         raise AxisAlignError("cannot align Index to Series - axes '{}' have different values".format(axis_to.name))   
@@ -729,24 +729,35 @@ def _assert_align_series(axis_from, axis_to):
         raise AxisAlignError("cannot align Series - axes '{}' have different values".format(axis_to.name))
 
 
-def _unique_axes_from_cubes(cube_list):
+def _is_indexable(axis):
+    """Return whether the axis can be indexed."""
+    return hasattr(axis, "indexof")
+
+
+def _unique_axes_from_cubes(cubes):
+    """Creates common axis space for a collection of cubes. The following rules are observed:
+    1) axes are identified only by their name, values are ignored
+    2) axes are listed as they are listed in the cube collection
+    3) non-indexable axes have priority over the indexable with the same name
+    4) axes are not aligned by values, values are ignored
+    """
     unique_axes_list = list()
     unique_axes_dict = dict()
 
-    # create a list of unique axes - except the main axis
-    for cube in cube_list:
+    for cube in cubes:
         for axis in cube.axes:
             try:
                 base_axis_index = unique_axes_dict[axis.name]
             except KeyError:
+                # add new axis
                 unique_axes_dict[axis.name] = len(unique_axes_list)
                 unique_axes_list.append(axis)
-                continue
-            base_axis = unique_axes_list[base_axis_index]
-
-            # Series has priority over Index
-            if isinstance(base_axis, Index) and isinstance(axis, Series):
-                unique_axes_list[base_axis_index] = axis
+            else:
+                # axis with the same name was found
+                base_axis = unique_axes_list[base_axis_index]
+                if _is_indexable(base_axis) and not _is_indexable(axis):
+                    # replace indexable with non-indexable
+                    unique_axes_list[base_axis_index] = axis
 
     return unique_axes_list
 

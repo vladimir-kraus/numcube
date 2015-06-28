@@ -1,11 +1,11 @@
 import numpy as np
 
-from .axis import Axis
+from numcube.axis import Axis
 
 
 class Index(Axis):
-    """
-    A sequence of unique indexed values.
+    """A named sequence of unique indexed values. Can be used as indexable axis in Cube.
+    Name is a string. Values are stored in one-dimensional numpy array.
     """
 
     def __init__(self, name, values):
@@ -28,17 +28,8 @@ class Index(Axis):
         self._vec_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
         self._vec_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])
         
-    @property
-    def indexed(self):
-        """
-        Index values are indexed.
-        """
-        return True
-
-    # TODO: consider renaming index to index_of or indexof
-    def index(self, item):
-        """
-        If item is single value, then return a single integer value.
+    def indexof(self, item):
+        """If item is single value, then return a single integer value.
         If item is a sequence, then return numpy array of integers.
         :param item: a single value or a sequence of values
         :return: int or numpy array of ints
@@ -50,8 +41,7 @@ class Index(Axis):
         return v.item()
 
     def contains(self, item):
-        """
-        If item is single value, then return a single boolean value.
+        """If item is single value, then return a single boolean value.
         If item is a sequence, then return numpy array of booleans.
         :param item: a single value or a sequence of values
         :return: bool or numpy array of bools
@@ -60,5 +50,3 @@ class Index(Axis):
         if v.ndim > 0:
             return v
         return v.item()
-
-

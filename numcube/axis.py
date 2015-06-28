@@ -2,12 +2,12 @@ import numpy as np
 
 
 class Axis(object):
-    """
-    A named wrapper around numpy array.
+    """A named sequence of values. Can be used as non-indexable axis in Cube.
+    Name is a string. Values are stored in one-dimensional numpy array.
     """
 
     def __init__(self, name, values):
-        """
+        """Initializes Axis object.
         :param name: str
         :param values: sequence of values (need not be unique)
         """
@@ -22,6 +22,7 @@ class Axis(object):
         return "{}('{}', {})".format(self.__class__.__name__, self._name, self._values)
         
     def __len__(self):
+        """Returns the number of elements."""
         return len(self._values)
 
     def __getitem__(self, item):
@@ -37,19 +38,10 @@ class Axis(object):
 
     @property
     def values(self):
-        return self._values  # .view()
+        return self._values  # TODO: .view()?
         
-    @property
-    def indexed(self):
-        """
-        Override this in a derived class and return True if the axis class 
-        provides indexing.
-        """
-        return False
-
     def filter(self, values):
-        """
-        Filter axis elements which are contained in values. The axis order is preserved.
+        """Filter axis elements which are contained in values. The axis order is preserved.
         :param values: a value or a list, set, tuple or numpy array of values
             the order or values is irrelevant, need not be unique
         """
@@ -68,8 +60,7 @@ class Axis(object):
         return self.__class__(self._name, self._values.compress(condition))
 
     def rename(self, new_name):
-        """
-        Returns a new object (of type Series or actual derived type) with the new name and the same values.
+        """Returns a new object (of type Axis or the actual derived type) with the new name and the same values.
         :param new_name: str
         :return: new axis (instance of actual derived type)
         """

@@ -38,12 +38,12 @@ class IndexTests(unittest.TestCase):
 
     def test_index(self):
         a = Index("A", [10, 20, 30])
-        self.assertEqual(a.index(10), 0)
-        self.assertTrue(np.array_equal(a.index([10, 30]), [0, 2]))
+        self.assertEqual(a.indexof(10), 0)
+        self.assertTrue(np.array_equal(a.indexof([10, 30]), [0, 2]))
 
         b = Index("Dim", ["a", "b", "c", "d"])
-        self.assertEqual(b.index("c"), 2)
-        self.assertTrue(np.array_equal(b.index(["d", "c"]), [3, 2]))
+        self.assertEqual(b.indexof("c"), 2)
+        self.assertTrue(np.array_equal(b.indexof(["d", "c"]), [3, 2]))
 
         # invalid Index name
         self.assertRaises(TypeError, Index, 1, [1, 2, 3])

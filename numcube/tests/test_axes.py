@@ -1,17 +1,42 @@
 import unittest
 import numpy as np
 
-from numcube import Index, Series, Axes, intersect
+from numcube import Index, Axis, Axes, intersect
 
 
 def create_axes():
     # create a list of axes of different types
-    return [Series("A", [10, 20, 30, 40]), Index("B", [10, 20, 30, 40])]
+    return [Axis("A", [10, 20, 30, 40]), Index("B", [10, 20, 30, 40])]
 
 
 class AxesTests(unittest.TestCase):
 
-    def test_axis_getitem(self):
+    def test_init(self):
+        # create from a single axis
+        ax = Axes(Index("A", [10, 20]))
+        self.assertEqual(len(ax), 1)
+        self.assertEqual(ax[0].name, "A")
+        self.assertEqual(len(ax[0]), 2)
+
+        # create from a list of axes
+        ax = Axes([Index("A", [10, 20]), Index("B", ["a", "b", "c"])])
+        self.assertEqual(len(ax), 2)
+        self.assertEqual(ax[0].name, "A")
+        self.assertEqual(len(ax[1]), 3)
+
+        # create from another Axes object
+        ax2 = Axes(ax)
+        self.assertEqual(len(ax2), 2)
+        self.assertEqual(ax2[0].name, "A")
+        self.assertEqual(len(ax2[1]), 3)
+
+        # duplicate axes
+        self.assertRaises(ValueError, Axes, [Index("A", [10, 20]), Index("A", ["a", "b", "c"])])
+
+        # invalid axis type
+        self.assertRaises(TypeError, Axes, [None, Index("A", ["a", "b", "c"])])
+
+    def test_getitem(self):
         axes = create_axes()
 
         for a in axes:
@@ -37,7 +62,7 @@ class AxesTests(unittest.TestCase):
             sel = a.values > 20
             self.assertTrue(np.array_equal(a[sel].values, [30, 40]))
         
-    def test_axis_filter(self):
+    def test_filter(self):
         axes = create_axes()
         for a in axes:
             self.assertEqual(a.filter(10).values, 10)
@@ -64,32 +89,9 @@ class AxesTests(unittest.TestCase):
         #for i in array:
         #    print(i, type(i))
         #a = Index("Dim", array)
-        b = Series("Dim", array)
+        b = Axis("Dim", array)
 
-    def test_create_axes(self):
-        # create from a single axis
-        ax = Axes(Index("A", [10, 20]))
-        self.assertEqual(len(ax), 1)
-        self.assertEqual(ax[0].name, "A")
-        self.assertEqual(len(ax[0]), 2)
 
-        # create from a list of axes
-        ax = Axes([Index("A", [10, 20]), Index("B", ["a", "b", "c"])])
-        self.assertEqual(len(ax), 2)
-        self.assertEqual(ax[0].name, "A")
-        self.assertEqual(len(ax[1]), 3)
-
-        # create from another Axes object
-        ax2 = Axes(ax)
-        self.assertEqual(len(ax2), 2)
-        self.assertEqual(ax2[0].name, "A")
-        self.assertEqual(len(ax2[1]), 3)
-
-        # duplicate axes
-        self.assertRaises(ValueError, Axes, [Index("A", [10, 20]), Index("A", ["a", "b", "c"])])
-
-        # invalid axis type
-        self.assertRaises(TypeError, Axes, [None, Index("A", ["a", "b", "c"])])
 
     def test_intersect(self):
         ax1 = Index("A", ["a1", "a2", "a3"])
