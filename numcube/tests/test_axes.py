@@ -91,8 +91,6 @@ class AxesTests(unittest.TestCase):
         #a = Index("Dim", array)
         b = Axis("Dim", array)
 
-
-
     def test_intersect(self):
         ax1 = Index("A", ["a1", "a2", "a3"])
         ax2 = Index("B", ["b1", "b2", "b4", "b3"])

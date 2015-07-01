@@ -93,10 +93,7 @@ class Cube(object):
 
     @property
     def axes(self):
-        """
-        :return: tuple of axes
-        :rtype: tuple
-        """
+        """Returns cube axes as tuple."""
         return self._axes.items
 
     @property

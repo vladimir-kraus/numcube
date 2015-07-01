@@ -85,6 +85,32 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, Cube, values, [a, c])
         self.assertRaises(ValueError, Cube, values, [b, a])
 
+    def test_axes(self):
+        """Tests working with cube axes. Counting axes, axis names, accessing axes by name or index, etc."""
+        C = year_quarter_cube()
+
+        # number of dimensions (axes)
+        self.assertEqual(C.ndim, 2)
+
+        # whether axis exists
+        self.assertTrue(C.has_axis("year"))
+        self.assertFalse(C.has_axis("something"))
+
+        # get axis by index and by name
+        axis1 = C.axis(0)
+        axis2 = C.axis('year')
+        self.assertEqual(axis1, axis2)
+        axis3 = C.axis(-2)  # counting backwards
+        self.assertEqual(axis1, axis3)
+
+        # get axis names as tuple
+        self.assertEqual(C.axis_names, ("year", "quarter"))
+        self.assertEqual(C.axis_names[0], "year")
+        self.assertEqual(C.axis_names[-1], "quarter")
+
+        # get axis index
+        self.assertEqual(C.axis_index("quarter"), 1)
+
     def test_getitem(self):
         C = year_quarter_cube()
 
@@ -119,31 +145,50 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(IndexError, C.__getitem__, (0, 0, 0))
 
     def test_contains(self):
+        """Tests whether the cube contains a value using keyword 'in'.
+        Note that 'x in C' is equivalent to and is a shorter version of 'x in C.values'.
+        """
         C = year_quarter_cube()
         self.assertTrue(0 in C)
         self.assertFalse(12 in C)
 
     def test_filter(self):
-        C = year_quarter_cube()
-        D = C.filter("year", [2014, 2018])
+        """Filter will set filter a specified axis with a specified values.
+        Takes into account only values which exist on the axis. Other values are ignored.
+        """
+        C = year_quarter_cube()  # the year values are [2014, 2015, 2016]
+        D = C.filter("year", [2014, 2018])  # 2018 is ignored
+        self.assertEqual(D.ndim, 2)
         self.assertTrue((D.values == C.values[0]).all())
 
     def test_apply(self):
+        """Applies a function on each cube element."""
         C = year_quarter_weekday_cube()
         D = C.apply(np.sin)
         self.assertTrue(np.array_equal(np.sin(C.values), D.values))
         
     def test_squeeze(self):
-        a = Index("A", [1])
-        b = Index("B", [1, 2, 3])
-        C = Cube([[1, 2, 3]], [a, b])
+        """Removes axes which have only one element."""
+        axis1 = Index("A", [1])  # has only one element, thus can be collapsed
+        axis2 = Index("B", [1, 2, 3])
+
+        C = Cube([[1, 2, 3]], [axis1, axis2])
+        self.assertEqual(C.ndim, 2)
         D = C.squeeze()
         self.assertEqual(D.ndim, 1)
         self.assertEqual(D.axis(0).name, "B")
-        C = Cube([[1], [2], [3]], [b, a])
+
+        C = Cube([[1], [2], [3]], [axis2, axis1])
+        self.assertEqual(C.ndim, 2)
         D = C.squeeze()
         self.assertEqual(D.ndim, 1)
         self.assertEqual(D.axis(0).name, "B")
+
+        axis3 = Index("C", [1])  # has only one element, thus can be collapsed
+        C = Cube([[1]], [axis1, axis3])
+        self.assertEqual(C.ndim, 2)
+        D = C.squeeze()  # will collapse both axes
+        self.assertEqual(D.ndim, 0)
 
     def test_compress(self):
         c = year_quarter_cube()
