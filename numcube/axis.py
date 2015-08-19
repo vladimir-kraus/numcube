@@ -16,7 +16,7 @@ class Axis(object):
         self._name = name
         self._values = np.atleast_1d(values)
         if self._values.ndim > 1:
-            raise ValueError("values cannot have more than 1 dimension")
+            raise ValueError("values must not have more than 1 dimension")
 
     def __repr__(self):
         return "{}('{}', {})".format(self.__class__.__name__, self._name, self._values)
@@ -38,7 +38,7 @@ class Axis(object):
 
     @property
     def values(self):
-        return self._values  # TODO: .view()?
+        return self._values
         
     def filter(self, values):
         """Filter axis elements which are contained in values. The axis order is preserved.
