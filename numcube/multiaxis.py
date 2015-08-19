@@ -5,11 +5,10 @@ class MultiAxis(object):
     """A named sequence of values. Can be used as non-indexable axis in Cube.
     Name is a tuple of strings. Values are stored in one-dimensional numpy recarray.
     """
-	
-	@classmethod
-	def from_axes(cls, axes):
-		recarray = None # prepare recarray
-		return cls(recarray)
+    @classmethod
+    def from_axes(cls, axes):
+        recarray = None  # prepare recarray
+        return cls(recarray)
 
     def __init__(self, recarray):
         """Initializes MultiAxis object.
@@ -31,15 +30,18 @@ class MultiAxis(object):
 
     @property
     def name(self):
-        return self._values.names()
+        return self._values.dtype.names
 
     @property
     def size(self):
         return self._values.size
-		
+
     @property
     def values(self):
         return self._values
+
+    def nseries(self):
+        return len(self._values.dtype)
 
     def filter(self, values):
         """Filter axis elements which are contained in values. The axis order is preserved.

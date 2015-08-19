@@ -6,7 +6,7 @@ from numcube.axis import Axis
 
 class AxisTests(unittest.TestCase):
 
-    def test_create_series(self):
+    def test_create(self):
         a = Axis("A", [10, 20, 30])
         self.assertEqual(a.name, "A")
         self.assertEqual(len(a), 3)

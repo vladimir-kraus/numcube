@@ -15,6 +15,7 @@ class Axis(object):
             raise TypeError("type of {} is not str".format(repr(name)))
         self._name = name
         self._values = np.atleast_1d(values)
+        #self._values.dtype.names = name
         if self._values.ndim > 1:
             raise ValueError("values must not have more than 1 dimension")
 
@@ -39,6 +40,9 @@ class Axis(object):
     @property
     def values(self):
         return self._values
+
+    def nseries(self):
+        return 1
         
     def filter(self, values):
         """Filter axis elements which are contained in values. The axis order is preserved.
