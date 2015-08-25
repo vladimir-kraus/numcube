@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 
-from numcube import Index, Axis, Axes, intersect
+from numcube import Index, Axis
+from numcube.axes import Axes, intersect
 
 
 def create_axes():
