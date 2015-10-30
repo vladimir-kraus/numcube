@@ -1,16 +1,10 @@
 numcube package
 ===============
+Numcube extends the functionality of numpy multidimensional arrays by adding named and annotated axes. Such structures are called cubes. Numcube allows operations involving multiple cubes with automatic axis matching and alignment. It allows filtering and aggregations based on the axis values. One of the goals was to provide API similar to numpy. Internally it uses numpy arrays for the underlying array and axes as well.
 
 Cube
 ----
-- Cube is a wrapper around numpy.ndarray object and provides similar API
 - the interface of all classes is designed to support immutability
-- axes are named (name must be a string)
-- axes annotated with values (any type, but all values on one axis must have the same type)
-- cube can have axes of two types: Index and Series, both are ordered
-- Index must have unique values
-- Index can be aligned to another axis
-- Series does not need to have unique values
 - Series cannot be aligned to another axis but another axis can be aligned to a Series
 - Cube support normal operations such as multiplication, adding etc.
 - operations are among two cubes or among cube and a scalar
@@ -21,15 +15,19 @@ Cube
 
 Axis matching
 -------------
-- axes with same names are aligned (see Axis alignment)
-- axes with unique names are broadcast
-- the order of axes is the same as in the first cube followed by the unique axes from the other cube
-    
+In operations involving multiple cubes, the axes are matched and aligned. Matching means that axis names are compared and the axes with the same names are aligned (see below), while the unique axes are broadcasted (see array broadcasting). 
+
+The cube is meant to not depend on the specific order of axes in most of the features. Nevertheless, the output of the operation has the same order of axes as the first cube in the opration, followed by unique axes from the other cubes respecting their order.
+
 Axis alignment
 --------------
-- if both axes are of type Index, they must contain the same values; the values however can have different order; the result axis is the first Index object
-- if one of the axes is Series and the other is Index, then the values in Series must be subset of those in Index; the result axis is the Series
-- if both axes are Series, error is raised; two Series objects cannot be matched
+There are basically two types of axes. There are two types of axes - Index and Series. Series has a fixed order or values and the values do not need to be unique. Index must have unique values, which can be used for look up during axis alignment. 
+
+If one of the axes is Series and the other is Index, then the values in Series must be subset of those in Index; the result axis is the Series axis.
+
+If both axes are of type Index, they must contain the same values; the values however can have different order; the result axis is the first Index axis.
+
+If both axes are Series, they must be equivalent - they must contain the same values in the same order. The result axis is the first Series axis.
 
 Filtering and data selection
 ----------------------------
