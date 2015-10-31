@@ -67,6 +67,11 @@ The values can be repeated using repeated indices.
 >>> months[[1, 2, 1, 2]]
 Axis('month', ['feb' 'mar' 'feb' 'mar'])
 
+To filter axis by index, you can also use method take(), which is similar to numpy.take().
+
+>>> months.take([0, 2, 4])
+Axis('month', ['jan' 'mar' 'may'])
+
 You can filter the axis by using logical values in a numpy array.
 
 >>> years[np.array([True, False, True, False, True, False, True, False, True, False])]
@@ -80,6 +85,12 @@ Axis('year', [2010 2012 2014 2016 2018])
 
 >>> years[(years.values >= 2013) & (years.values <= 2016)]  # note the single '&', do not confuse with C/C++ '&&' style
 Axis('year', [2013 2014 2015 2016])
+
+To filter axis by logical values, you can also use method compress(), which is similar to numpy.compress().
+In this case you do not need to convert logical values to numpy array.
+
+>>> years.compress([True, False, True, False, True, False, True, False, True, False])
+Axis('year', [2010 2012 2014 2016 2018])
 
 Renaming
 --------

@@ -29,6 +29,8 @@ class IndexTests(unittest.TestCase):
         a = Index("A", ["a", "b", "c", "d"])
         selector = [True, False, True, False]
         b = a.compress(selector)
+        c = a[np.array(selector)]
+        self.assertTrue(np.array_equal(b.values, c.values))
         self.assertEqual(a.name, b.name)  # keep name
         self.assertTrue(np.array_equal(b.values, a.values.compress(selector)))
 

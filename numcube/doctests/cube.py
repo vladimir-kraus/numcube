@@ -8,7 +8,7 @@ correspond to the lengths of the axes.
 
 >>> X = Index("X", ["x1", "x2"])
 >>> Y = Index("Y", ["y1", "y2", "y3"])
->>> C = Cube(np.arange(6).reshape(2, 3), [X, Y])
+>>> C = Cube([[0, 1, 2], [3, 4, 5]], [X, Y])
 
 Axes can be accessed by index (int) or by name (str). This holds true for most
 of other functions which take axis as an argument.
