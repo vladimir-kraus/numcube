@@ -1,10 +1,10 @@
 import numpy as np
 import math
 
-from numcube.index import Index
-from numcube.axis import Axis
 from numcube.axes import Axes
+from numcube.axes import Axis
 from numcube.exceptions import AxisAlignError
+from numcube.index import Index
 
 
 class Cube(object):
@@ -72,7 +72,7 @@ class Cube(object):
         return item in self._values
 
     def __repr__(self):
-        return "axes: {}\nvalues: {}".format(self._axes, self._values)
+        return "Cube({}, {})".format(repr(self._values), repr(self.axis_names))
 
     @property
     def shape(self):
@@ -93,8 +93,9 @@ class Cube(object):
 
     @property
     def axes(self):
-        """Returns cube axes as tuple."""
-        return self._axes.items
+        """Returns cube axes as iterator, which can be converted e.g. to tuple or list."""
+        for axis in self._axes.items:
+            yield axis
 
     @property
     def axis_names(self):
@@ -330,15 +331,27 @@ class Cube(object):
         return self.aggregate(np.any, axis, keep)
 
     def aggregate(self, func, axis=None, keep=None):
-        """
-        :param axis: axis which are eliminated by the aggregation
+        """Aggregation of values in the cube along one or more axes. This function works
+        in two different modes. Either the axes to be eliminated are specified. Or the axes
+        to be kept are specified, while the other axes are elimitated.
+
+        :param axis: axis or axes to be eliminated by the aggregation
         :param keep: axis or axes which are kept after the aggregation
-        Note: if keep is not None, then axis must be None, otherwise ValueError is raised.
+
+        Only one of 'axis' and 'keep' arguments can be non-None, otherwise ValueError is raised.
+        If the both arguments are None, then the Cube is aggregated to a single scalar value.
+
+        Example:
+        # returns sum of all months, i.e. month axis is eliminated; other axes are kept
+        cube.aggregate(np.sum, "month")
+
+        # returns mean for each month, i.e. month axis is kept; other axes are eliminated
+        cube.aggregate(np.mean, keep="month")
         """
 
         # complete aggregation to a scalar
         if axis is None and keep is None:
-            return Cube(func(self._values), None)
+            return func(self._values)
 
         if keep is not None and axis is not None:
             raise ValueError("either 'keep' or 'axis' argument must be None")
@@ -365,25 +378,24 @@ class Cube(object):
 
     def groupby(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
         """
-        :param axis:
-        :param func:
-            - a function which takes two fixed arguments - array and axis (in this order) 
-            - following these two can also take a variable number of other arguments passed in *args
-            - must return array with one axes less then the input array
-            - examples are np.sum, np.mean, etc.
-        :param sorted:
+        :param axis: name (str) or index (int) of axis to group the cube values by
+        :param func: aggregation function, e.g. np.sum, np.mean etc.
+            There are the following requirements:
+            - the function takes two fixed arguments - array and axis (given by index)
+            - these two fixed arguments can be followed by a variable number of other arguments passed in *args
+            - the function must return an array with one axis less then the input array
+        :param sorted: True if the grouped axis values shall be sorted, False if the values should
+            keep the order of their first occurences
         """
-        old_axis, old_axis_index = self._axes.axis_and_index(axis)  # TODO - do not use private accessor
+        old_axis, old_axis_index = self._axes.axis_and_index(axis)
         
-        if isinstance(old_axis, Index):
-            return self  # Index already contains unique values
-            
-        sub_cubes = list()   
+        sub_cubes = list()
         
-        # unique values to be sorted
         if sorted:
+            # np.unique sorts the returned values by default
             unique_values = np.unique(old_axis.values)
         else:
+            # special handling is required if the first occurence order is to be kept
             unique_values, unique_indices = np.unique(old_axis.values, return_index=True)
             index_array = np.argsort(unique_indices)
             unique_values = unique_values[index_array]
@@ -393,7 +405,7 @@ class Cube(object):
         for value in unique_values:
             indices = all_indices[old_values == value]
             sub_cube = self._values.take(indices, old_axis_index)
-            sub_cube = np.apply_along_axis(func, old_axis_index, sub_cube, *args)  #, **kwargs) # since numpy 1.9
+            sub_cube = np.apply_along_axis(func, old_axis_index, sub_cube, *args)  # , **kwargs) # since numpy 1.9
             sub_cube = np.expand_dims(sub_cube, old_axis_index)
             sub_cubes.append(sub_cube)
         
@@ -497,7 +509,7 @@ class Cube(object):
                 new_axes.append(a)
 
         axis_indices.extend(other_indices)
-        axis_sizes = [len(self.axes[i]) for i in other_indices]
+        axis_sizes = [len(self.axis(i)) for i in other_indices]
         axis_sizes.insert(0, size)
 
         new_values = self._values.transpose(axis_indices)
@@ -660,10 +672,10 @@ def apply2(a, b, func, *args):
     """
 
     if not isinstance(a, Cube):
-        return Cube(func(a, b.values, *args), b.axes)
+        return Cube(func(a, b.values, *args), b._axes)
 
     if not isinstance(b, Cube):
-        return Cube(func(a.values, b, *args), a.axes)
+        return Cube(func(a.values, b, *args), a._axes)
 
     values_a = a.values
     values_b = b.values
@@ -672,7 +684,7 @@ def apply2(a, b, func, *args):
     for axis_index_a, axis_a in enumerate(a.axes):
         
         try:
-            axis_b, axis_index_b = b._axes.axis_and_index(axis_a.name)  # TODO - do not use private accessor
+            axis_b, axis_index_b = b._axes.axis_and_index(axis_a.name)
         except KeyError:
             # axis not found in cube b --> do not align
             axis_b = axis_a
@@ -768,7 +780,7 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis):
                 axis_index = cube.axis_index(base_axis.name)
             except KeyError:
                 continue
-            axis = cube.axes[axis_index]
+            axis = cube.axis(axis_index)
 
             if axis is base_axis:
                 # axes are identical, no need to align
@@ -777,7 +789,7 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis):
             if isinstance(axis, Index):
                 if isinstance(base_axis, Index):
                     value_indices = _align_index_to_index(axis, base_axis)
-                elif isinstance(base_axis, Series):
+                elif isinstance(base_axis, Axis):
                     value_indices = _align_index_to_series(axis, base_axis)
                 else:
                     raise TypeError("unsupported axis type")
@@ -829,7 +841,7 @@ def concatenate(cubes, axis_name, as_index=True):
         # will fail if does not have unique values
         main_axis = Index(axis_name, main_axis_values)
     else:
-        main_axis = Series(axis_name, main_axis_values)
+        main_axis = Axis(axis_name, main_axis_values)
 
     unique_axes_list = _unique_axes_from_cubes(cubes)
 

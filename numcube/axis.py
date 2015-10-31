@@ -9,13 +9,12 @@ class Axis(object):
     def __init__(self, name, values):
         """Initializes Axis object.
         :param name: str
-        :param values: sequence of values (need not be unique)
+        :param values: sequence of values of the same type
         """
         if not isinstance(name, str):
             raise TypeError("type of {} is not str".format(repr(name)))
         self._name = name
         self._values = np.atleast_1d(values)
-        #self._values.dtype.names = name
         if self._values.ndim > 1:
             raise ValueError("values must not have more than 1 dimension")
 
@@ -30,20 +29,18 @@ class Axis(object):
         return self.__class__(self._name, self._values[item])
 
     @property
-    def name(self):
-        return self._name
+    def indexable(self):
+        """Axis cannot be indexed by nor aligned to values from other axes."""
+        return False
 
     @property
-    def size(self):
-        return self._values.size
+    def name(self):
+        return self._name
 
     @property
     def values(self):
         return self._values
 
-    def nseries(self):
-        return 1
-        
     def filter(self, values):
         """Filter axis elements which are contained in values. The axis order is preserved.
         :param values: a value or a list, set, tuple or numpy array of values
@@ -69,3 +66,7 @@ class Axis(object):
         :return: new axis (instance of actual derived type)
         """
         return self.__class__(new_name, self._values)
+
+    def sort(self):
+        """Sorts the values."""
+        return self.__class__(self._name, np.sort(self._values))

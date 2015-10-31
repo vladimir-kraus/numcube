@@ -27,7 +27,11 @@ class Index(Axis):
         
         self._vec_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
         self._vec_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])
-        
+
+    @property
+    def indexable(self):
+        return True
+
     def indexof(self, item):
         """If item is single value, then return a single integer value.
         If item is a sequence, then return numpy array of integers.

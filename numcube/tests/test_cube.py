@@ -26,7 +26,7 @@ def year_quarter_weekday_cube():
 class CubeTests(unittest.TestCase):
 
     def test_empty_cube(self):
-        #C = Cube([], [])
+        # TODO C = Cube([], [])
         pass
 
     def test_create_scalar(self):
@@ -123,12 +123,12 @@ class CubeTests(unittest.TestCase):
         D = C[0]
         self.assertTrue(np.array_equal(D.values, [0, 1, 2, 3]))
         self.assertEqual(D.ndim, 1)
-        self.assertEqual(D.axes[0].name, "quarter")
+        self.assertEqual(D.axis(0).name, "quarter")
 
         D = C[:, 0]
         self.assertTrue(np.array_equal(D.values, [0, 4, 8]))
         self.assertEqual(D.ndim, 1)
-        self.assertEqual(D.axes[0].name, "year")
+        self.assertEqual(D.axis(0).name, "year")
 
         self.assertTrue(np.array_equal(C[-1].values, [8, 9, 10, 11]))
         self.assertTrue(np.array_equal(C[:, -1].values, [3, 7, 11]))
@@ -202,7 +202,7 @@ class CubeTests(unittest.TestCase):
     def test_transpose(self):
         C = year_quarter_weekday_cube()
 
-        #transpose by axis indices
+        # transpose by axis indices
         D = C.transpose([1, 0, 2])
 
         self.assertEqual(D.values.shape, (4, 3, 7))
@@ -274,21 +274,21 @@ class CubeTests(unittest.TestCase):
         values_d = np.array([0, 1])
         D = Cube(values_d, [Index("d", ["d1", "d2"])])
         X = C * D
-        self.assertEqual(len(X.axes), 3)
-        self.assertEqual(X.axes[0].name, "a")
-        self.assertEqual(X.axes[1].name, "b")
-        self.assertEqual(X.axes[2].name, "d")
+        self.assertEqual(X.ndim, 3)
+        self.assertEqual(X.axis(0).name, "a")
+        self.assertEqual(X.axis(1).name, "b")
+        self.assertEqual(X.axis(2).name, "d")
 
         self.assertTrue(np.array_equal(X.values, values.reshape(3, 4, 1) * values_d))
 
-        # operation with scalar
+        # operations with scalar
         D = 10
         X = C * D
         self.assertTrue(np.array_equal(X.values, values * D))
         X = D * C
         self.assertTrue(np.array_equal(X.values, values * D))
         
-        #operation with numpy.ndarray
+        # operations with numpy.ndarray
         D = np.arange(4)
         X = C * D
         self.assertTrue(np.array_equal(X.values, values * D))
@@ -312,7 +312,7 @@ class CubeTests(unittest.TestCase):
         X = C * D
         self.assertTrue(np.array_equal(X.values, values.take([3, 3, 2, 0], 1) * values_d))
 
-        #unary plus and minus
+        # unary plus and minus
         C = year_quarter_cube()
         self.assertTrue(np.array_equal((+C).values, C.values))
         self.assertTrue(np.array_equal((-C).values, -C.values))
@@ -343,8 +343,8 @@ class CubeTests(unittest.TestCase):
         
         D = C.groupby(0, np.mean)  # average by year
         self.assertTrue(np.array_equal(D.values, np.array([[4, 5, 6, 7]])))        
-        self.assertTrue(isinstance(D.axes[0], Index))
-        self.assertEqual(len(D.axes[0]), 1)
+        self.assertTrue(isinstance(D.axis(0), Index))
+        self.assertEqual(len(D.axis(0)), 1)
         self.assertEqual(D.values.shape, (1, 4))  # axes with length of 1 are not collapsed
         
         D = C.groupby(ax2.name, np.sum, sorted=False)  # sum by month
@@ -359,7 +359,7 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(D.values.shape, (3, 2))
         
         # testing various aggregation functions
-        funcs = [np.sum, np.mean, np.median, np.min, np.max, np.prod]  #, np.diff]
+        funcs = [np.sum, np.mean, np.median, np.min, np.max, np.prod]  # , np.diff]
         C = Cube(values, [ax1, ax2])
         for func in funcs:
             D = C.groupby(ax1.name, func)

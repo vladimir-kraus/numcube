@@ -1,8 +1,9 @@
+from numcube import __version__
 from distutils.core import setup
 
 setup(
     name='numcube',
-    version='0.1.0',
+    version=__version__,
     author='Vladimir Kraus',
     author_email='vladimir.kraus@gmail.com',
     packages=['numcube'],

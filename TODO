@@ -1,13 +1,11 @@
-1) add version
+* implement cube.overlay(cube)
 
-2) implement cube.overlay(cube)
+* implement cube.filter(cube)
 
-3) implement cube.filter(cube)
+* implement cube.filter(axes)
 
-4) implement cube.filter(axes)
+* add more operations
 
-5) add more operations
+* add performance tests
 
-6) add performance tests
-
-7) add apply function to apply numpy function on values
+* add apply function to apply numpy function on values
