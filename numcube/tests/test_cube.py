@@ -108,11 +108,9 @@ class CubeTests(unittest.TestCase):
         # get axis index by name
         self.assertEqual(C.axis_index("quarter"), 1)
 
-        # invalid axis identification raises IndexError (when accessed by index)
-        # or KeyError (when accessed by name)
-        # note: all of these can be caught by LookupError
-        self.assertRaises(KeyError, C.axis, "A")
-        self.assertRaises(IndexError, C.axis, 3)
+        # invalid axis identification raises LookupError
+        self.assertRaises(LookupError, C.axis, "A")
+        self.assertRaises(LookupError, C.axis, 3)
 
     def test_getitem(self):
         C = year_quarter_cube()
@@ -241,17 +239,15 @@ class CubeTests(unittest.TestCase):
         self.assertTrue(np.array_equal(D.values, E.values))
 
         # transpose with wrong axis indices
-        self.assertRaises(IndexError, C.transpose, [3, 0, 2])
-        self.assertRaises(IndexError, C.transpose, [-5, 0, 1])
+        self.assertRaises(LookupError, C.transpose, [3, 0, 2])
+        self.assertRaises(LookupError, C.transpose, [-5, 0, 1])
 
         # transpose with wrong axis names
-        self.assertRaises(KeyError, C.transpose, ["A", "B", "C"])
+        self.assertRaises(LookupError, C.transpose, ["A", "B", "C"])
 
-        # invalid axis identification raises IndexError (when accessed by index)
-        # or KeyError (when accessed by name) or LookupError (when accessed by axis object)
-        # note: all of these can be caught by LookupError
-        self.assertRaises(KeyError, C.transpose, ["year", "weekday", "quarter", "A"])
-        self.assertRaises(IndexError, C.transpose, [1, 0, 2, 3])
+        # invalid axis identification raises LookupError
+        self.assertRaises(LookupError, C.transpose, ["year", "weekday", "quarter", "A"])
+        self.assertRaises(LookupError, C.transpose, [1, 0, 2, 3])
 
         # duplicate axes raise ValueError
         self.assertRaises(ValueError, C.transpose, [0, 0, 2])
@@ -415,10 +411,8 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, C.rename_axis, "year", "quarter")
 
         # non-existing axes
-        self.assertRaises(IndexError, C.rename_axis, 2, "quarter")
-        self.assertRaises(KeyError, C.rename_axis, "scenario", "quarter")
         self.assertRaises(LookupError, C.rename_axis, 2, "quarter")
-        self.assertRaises(LookupError, C.rename_axis, "scenario", "quarter")
+        self.assertRaises(LookupError, C.rename_axis, "bad_axis", "quarter")
 
     def test_aggregate(self):
         C = year_quarter_cube()

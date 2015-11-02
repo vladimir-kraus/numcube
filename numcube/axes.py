@@ -91,12 +91,10 @@ class Axes(object):
         return tuple(i for i in range(len(self)) if i not in indices)
         
     def index(self, axis):
-        """Find axis index by name, by index, or by axis object. If not found then raise an exception.
-        When looked up by wrong name (str), KeyError is raised.
-        When looked up by index (int), IndexError is raised.
-        When looked up by axis object (axis), LookupError is raised.
-        Note: LookupError can be used to catch all of the above.
-        Otherwise TypeError is raised."""
+        """Find axis index by name, by index, or by axis object.
+         :param axis: int, str or Axis
+         :returns: int
+         :raises: LookupError if not found"""
         
         # find by numeric index, normalize negative numbers
         if isinstance(axis, int):
@@ -106,21 +104,21 @@ class Axes(object):
             if -axis_count <= axis:
                 # negative index is counted from the last axis backward
                 return axis_count + axis
-            raise IndexError("invalid axis index: {}".format(axis))
+            raise LookupError("invalid axis index: {}".format(axis))
         
         # find by name
         if isinstance(axis, str):
             for i, a in enumerate(self._axes):
                 if a.name == axis:
                     return i
-            raise KeyError("invalid axis name: '{}'".format(axis))
+            raise LookupError("invalid axis name: '{}'".format(axis))
         
         # find by object identity
         if isinstance(axis, Axis):
             for i, a in enumerate(self._axes):
                 if a is axis:
                     return i
-            raise ValueError("axis not found: {}".format(axis))
+            raise LookupError("axis not found: {}".format(axis))
 
         raise TypeError("invalid axis identification type")
 

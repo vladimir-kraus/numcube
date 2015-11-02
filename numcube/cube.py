@@ -476,14 +476,12 @@ class Cube(object):
         if not isinstance(old_axis, Index):
             old_axis_indices = old_axis.index(axis.values)
 
-    def rename_axis(self, old_axis_id, new_axis_name):
+    def rename_axis(self, old_id, new_name):
         """Return a cube with renamed axis.
-        :param old_axis_id: axis index (int) or name (str)
-        :param new_axis_name: the name of the new axis (str)
+        :param old_id: axis index (int), name (str) or axis object (Axis)
+        :param new_name: the name of the new axis (str)
         :return: new Cube object"""
-        old_axis = self.axis(old_axis_id)
-        new_axis = old_axis.rename(new_axis_name)
-        new_axes = self._axes.replace(old_axis_id, new_axis)
+        new_axes = self._axes.rename(old_id, new_name)
         return Cube(self._values, new_axes)
 
     def combine_axes(self, axis_names, new_axis_name, format):
@@ -624,7 +622,7 @@ def _broadcast_values(values, old_axes, new_axes):
     for axis in new_axes:
         try:
             axis_index = old_axes.index(axis.name)
-        except KeyError:
+        except LookupError:
             # if axis is not present in the cube, add virtual axis at the end
             axis_index = new_values.ndim
             new_values = np.expand_dims(new_values, axis=axis_index)
@@ -693,7 +691,7 @@ def apply2(a, b, func, *args):
         
         try:
             axis_b, axis_index_b = b._axes.axis_and_index(axis_a.name)
-        except KeyError:
+        except LookupError:
             # axis not found in cube b --> do not align
             axis_b = axis_a
 
@@ -724,7 +722,6 @@ def _align_index_to_index(axis_from, axis_to):
         
     try:
         return axis_from.indexof(axis_to.values)
-        
     except KeyError:
         raise AxisAlignError("cannot align two Index axes - axes '{}' have different values".format(axis_to.name))
         
@@ -734,7 +731,6 @@ def _align_index_to_series(axis_from, axis_to):
     """
     try:
         return axis_from.indexof(axis_to.values)
-        
     except KeyError:
         raise AxisAlignError("cannot align Index to Series - axes '{}' have different values".format(axis_to.name))   
 
