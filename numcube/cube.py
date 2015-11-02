@@ -94,7 +94,7 @@ class Cube(object):
     @property
     def axes(self):
         """Returns cube axes as iterator, which can be converted e.g. to tuple or list."""
-        for axis in self._axes.items:
+        for axis in self._axes:
             yield axis
 
     @property
@@ -108,14 +108,14 @@ class Cube(object):
     def axis(self, item):
         """Return axis by the name or by the index.
         Index can be a negative number, in that case, the axes are counted backwards from the last one."""
-        return self._axes[item]
+        return self._axes[self.axis_index(item)]
 
     def axis_index(self, axis):
         """Return numeric index of the axis specified by its name or axis object."""
         return self._axes.index(axis)
 
     def has_axis(self, axis):
-        """Return True/False indicating whether the axis specified by its name exist in the Cube."""
+        """Return True/False indicating whether the axis specified by its name or by axis object exist in the Cube."""
         return self._axes.contains(axis)
 
     def apply(self, func, *args):
@@ -481,7 +481,7 @@ class Cube(object):
         :param old_axis_id: axis index (int) or name (str)
         :param new_axis_name: the name of the new axis (str)
         :return: new Cube object"""
-        old_axis = self._axes[old_axis_id]
+        old_axis = self.axis(old_axis_id)
         new_axis = old_axis.rename(new_axis_name)
         new_axes = self._axes.replace(old_axis_id, new_axis)
         return Cube(self._values, new_axes)

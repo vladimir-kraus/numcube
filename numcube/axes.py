@@ -5,9 +5,9 @@ from .index import Index
 
 
 class Axes(object):
-    """Ordered collection of axes.
-    Axis is either a Series or an Index.
-    
+    """Axes is an internal helper class allowing easier manipulation with cube axes.
+    It is not intended to be accessed by users of numcube package.
+
     Get axis name of an axis of given index:
     ax_name = cube.axes[0].name
     
@@ -47,7 +47,6 @@ class Axes(object):
             unique_names.add(axis.name)
 
         # the sequence of axes must be immutable
-        #self._names = tuple(axis.name for axis in axes)
         self._axes = tuple(axes)
 
     def __repr__(self):
@@ -57,22 +56,23 @@ class Axes(object):
     def __len__(self):
         return len(self._axes)
 
-    def __getitem__(self, item):
-        """Return axis given by its name, by index or by axis object.
-        Note: passing axis object will return the same object if the axis is contained
-        in the Axes object, or will raise LookupError if it is not contained."""
-        return self._axes[self.index(item)]
-
-    @property
-    def items(self):
-        return self._axes
+    def __getitem__(self, index):
+        """Return an axis given by its index.
+        :param index: int
+        :returns: an Axis object
+        :raises: IndexError if not found"""
+        return self._axes[index]
 
     def axis_by_index(self, index):
         return self._axes[index]
 
+    def axis_by_name(self, name):
+        """Returns None if not found."""
+        return next((axis for axis in self._axes if axis.name == name), None)
+
     def axis_and_index(self, axis):
         index = self.index(axis)
-        return self.axis_by_index(index), index
+        return self[index], index
 
     def is_unique_subset(self, axes):
         """Tests whether all axes are contained in the Axes object and whether they are unique."""
@@ -128,7 +128,7 @@ class Axes(object):
         """Returns True/False indicating whether the axis is contained in the Axes object.
         Axis can be specified by name (str), by index (int) or by Axis object."""
         try:
-            self[axis]
+            self.index(axis)
             return True
         except LookupError:
             return False
@@ -182,6 +182,15 @@ class Axes(object):
         del new_axes[axis_index]
         return Axes(new_axes)
 
+    def rename(self, old_axis_id, new_axis_name):
+        """Return an Axes object with a renamed axis.
+        :param old_axis_id: axis index (int) or name (str)
+        :param new_axis_name: the name of the new axis (str)
+        :return: new Axes object"""
+        old_axis, old_axis_index = self.axis_and_index(old_axis_id)
+        new_axis = old_axis.rename(new_axis_name)
+        return self._replace(old_axis_index, new_axis)
+
     def replace(self, old_axis_id, new_axis):
         """Replace an existing axis with a new axis and return the new Axes object.
         The new axes collection is checked for duplicate names.
@@ -229,15 +238,14 @@ def intersect(axes1, axes2):
     :return: Axes"""
     common_axes = []
     for axis1 in axes1:
-        try:
-            axis2 = axes2[axis1.name]
-        except LookupError:
+        axis2 = axes2.axis_by_name(axis1.name)
+        if axis2 is None:
             continue
 
         if axis1 is axes2:
             axis = axis1
         else:
-            indices = np.in1d(axis1.values, axis2.values)  # assume_unique=True ?
+            indices = np.in1d(axis1.values, axis2.values)  # TODO: assume_unique=True ?
             axis = axis1[indices]
 
         common_axes.append(axis)
