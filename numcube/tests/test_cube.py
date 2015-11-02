@@ -211,8 +211,7 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(C.values.shape, (3, 4, 7))
 
         # compare with numpy transpose
-        tvalues = C.values.transpose([1, 0, 2])
-        self.assertTrue(np.array_equal(D.values, tvalues))
+        self.assertTrue(np.array_equal(D.values, C.values.transpose([1, 0, 2])))
 
         # transpose by axis names
         E = C.transpose(["quarter", "year", "weekday"])
@@ -222,6 +221,22 @@ class CubeTests(unittest.TestCase):
         E = C.transpose([-2, -3, -1])
         self.assertTrue(np.array_equal(D.values, E.values))
 
+        # specify 'front' argument
+        E = C.transpose(["quarter", "year"])
+        self.assertTrue(np.array_equal(D.values, E.values))
+        E = C.transpose([1, 0])
+        self.assertTrue(np.array_equal(D.values, E.values))
+
+        # specify 'back' argument
+        E = C.transpose(back=["year", "weekday"])
+        self.assertTrue(np.array_equal(D.values, E.values))
+        E = C.transpose(back=[0, 2])
+        self.assertTrue(np.array_equal(D.values, E.values))
+
+        # specify 'front' and 'back' argument
+        E = C.transpose(front="quarter", back="weekday")
+        self.assertTrue(np.array_equal(D.values, E.values))
+
         # transpose with wrong axis indices
         self.assertRaises(IndexError, C.transpose, [3, 0, 2])
         self.assertRaises(IndexError, C.transpose, [-5, 0, 1])
@@ -229,17 +244,17 @@ class CubeTests(unittest.TestCase):
         # transpose with wrong axis names
         self.assertRaises(KeyError, C.transpose, ["A", "B", "C"])
 
-        # invalid number of axes
-        self.assertRaises(ValueError, C.transpose, ["year", "weekday"])
-        self.assertRaises(ValueError, C.transpose, [1, 2])
-        # note that number of axes is checked before accessing the axes
-        # so the wrong number of axes is raised KeyError or IndexError
-        self.assertRaises(ValueError, C.transpose, ["year", "weekday", "quarter", "A"])
-        self.assertRaises(ValueError, C.transpose, [1, 0, 2, 3])
+        # invalid axis identification raises IndexError (when accessed by index)
+        # or KeyError (when accessed by name) or LookupError (when accessed by axis object)
+        # note: all of these can be caught by LookupError
+        self.assertRaises(KeyError, C.transpose, ["year", "weekday", "quarter", "A"])
+        self.assertRaises(IndexError, C.transpose, [1, 0, 2, 3])
 
-        # duplicate axes
+        # duplicate axes raise ValueError
         self.assertRaises(ValueError, C.transpose, [0, 0, 2])
         self.assertRaises(ValueError, C.transpose, ["year", "year", "quarter"])
+        self.assertRaises(ValueError, C.transpose, front=["year", "weekday"], back=["year", "quarter"])
+        self.assertRaises(ValueError, C.transpose, front=[1, 2], back=[0, 1])
 
         # invalid types
         self.assertRaises(TypeError, C.transpose, [1.1, 0, 2])

@@ -41,7 +41,7 @@ class Axes(object):
         for axis in axes:
             # test correct types
             if not isinstance(axis, Axis):
-                raise TypeError("axis must be instance of Index or Series")
+                raise TypeError("axis must be an instance of Axis")
             # test unique names - report the name of the first axis which is not unique
             if axis.name in unique_names:
                 raise ValueError("multiple axes with name '{}'".format(axis.name))
@@ -60,31 +60,10 @@ class Axes(object):
         return len(self._axes)
 
     def __getitem__(self, item):
-        """Items in the axis collection can be accessed by index (int) or by name (str).
-
-        Negative index can be used to access the items from the end of the collection. For example
-        calling axes[-1] returns the last axis.
-
-        If the item is not found, an exception is raised.
-        - if item is string, KeyError is raised
-        - if item is integer, IndexError is raised
-        - otherwise TypeError is raised
-
-        Note: LookupError can be used to catch both KeyError and IndexError."""
-        if isinstance(item, int):
-            axis_count = len(self._axes)
-            if 0 <= item < axis_count:
-                return self._axes[item]
-            if -axis_count <= item:
-                return self._axes[axis_count + item]
-            raise IndexError("invalid axis index: {}".format(item))
-        elif isinstance(item, str):
-            for a in self._axes:
-                if a.name == item:
-                    return a
-            raise KeyError("invalid axis name: '{}'".format(item))
-        else:
-            raise TypeError("axis can be specified by index (int) or name (str)")
+        """Return axis given by its name, by index or by axis object.
+        Note: passing axis object will return the same object if the axis is contained
+        in the Axes object, or will raise LookupError if it is not contained."""
+        return self._axes[self.index(item)]
 
     @property
     def items(self):
@@ -99,6 +78,9 @@ class Axes(object):
     @property
     def shape(self):
         return self._shape
+
+    def axis_by_index(self, index):
+        return self._axes[index]
 
     def axis_and_index(self, axis):
         if isinstance(axis, int):
@@ -118,7 +100,8 @@ class Axes(object):
         raise NotImplementedError
         
     def complement(self, axes):
-        """Return a tuple of indices of axes from Axes object which are not contained in the specified collection of axes.
+        """Return a tuple of indices of axes from Axes object which are not
+        contained in the specified collection of axes.
         :param axes: collection of axes specified by axis name or index
         :returns: tuple of int"""
         if isinstance(axes, str) or isinstance(axes, int):
@@ -129,7 +112,12 @@ class Axes(object):
         return tuple(i for i in range(len(self)) if i not in indices)
         
     def index(self, axis):
-        """Find index of an axis by the name, index, or by axis object. If not found then raise exception."""
+        """Find axis index by name, by index, or by axis object. If not found then raise an exception.
+        When looked up by wrong name (str), KeyError is raised.
+        When looked up by index (int), IndexError is raised.
+        When looked up by axis object (axis), LookupError is raised.
+        Note: LookupError can be used to catch all of the above.
+        Otherwise TypeError is raised."""
         
         # find by numeric index, normalize negative numbers
         if isinstance(axis, int):
@@ -149,11 +137,13 @@ class Axes(object):
             raise KeyError("invalid axis name: '{}'".format(axis))
         
         # find by object identity
-        for i, a in enumerate(self._axes):
-            if a is axis:
-                return i
-        
-        raise ValueError("axis not found: {}".format(axis))
+        if isinstance(axis, Axis):
+            for i, a in enumerate(self._axes):
+                if a is axis:
+                    return i
+            raise ValueError("axis not found: {}".format(axis))
+
+        raise TypeError("invalid axis identification type")
 
     def contains(self, axis_id):
         """Returns True if Axes contain an axis of the specified name. Otherwise return False."""
@@ -163,21 +153,34 @@ class Axes(object):
         except LookupError:
             return False
 
-    def transpose(self, axes):
-        """Reorder axes by specified names or indices. Return a new Axes object."""
-        axes_count = len(axes)
+    def transposed_indices(self, front, back):
+        """Reorder axes by specified names or indices. Return a list of axis
+        indices which correspond to the new order of axes."""
+        if isinstance(front, str) or isinstance(front, int) or isinstance(front, Axis):
+            front = [front]
 
-        if axes_count != len(self._axes):
-            raise ValueError("invalid number of axes")
+        if isinstance(back, str) or isinstance(back, int) or isinstance(back, Axis):
+            back = [back]
 
-        new_axes = [self[axis] for axis in axes]
+        front_axes = list()
+        back_axes = list()
+        temp_axes = list(self._axes)
+        for axis_id in front:
+            index = self.index(axis_id)
+            front_axes.append(index)
+            if temp_axes[index] is None:
+                raise ValueError("duplicate axes in transpose")
+            temp_axes[index] = None
 
-        # check duplicate axes
-        axis_set = set(new_axes)
-        if len(axis_set) != axes_count:
-            raise ValueError("duplicit axes")
+        for axis_id in back:
+            index = self.index(axis_id)
+            back_axes.append(index)
+            if temp_axes[index] is None:
+                raise ValueError("duplicate axes in transpose")
+            temp_axes[index] = None
 
-        return Axes(new_axes)
+        middle_axes = [index for index, axis in enumerate(temp_axes) if axis is not None]
+        return front_axes + middle_axes + back_axes
 
     def insert(self, axis, index=0):
         """Insert a new axis at the specified position and return the new Axes object.

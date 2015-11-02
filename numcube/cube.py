@@ -122,15 +122,17 @@ class Cube(object):
         :return: Cube"""
         return Cube(func(self._values, *args), self._axes)
 
-    def transpose(self, axes):
-        """Analogy to numpy.transpose.
-        :param axes: axis names or indices defining the new order of axes
-        :return: new Cube object"""
-        if len(axes) != self.ndim:
-            raise ValueError("invalid number of axes")
+    def transpose(self, front=[], back=[]):
+        """A generalized analogy to numpy.transpose.
+        :param front: axes which will be in the front of other axes
+        :param back: axes which will be at the back of other axes
+        :return: new Cube object with transposed axes
 
-        new_axes = self._axes.transpose(axes)
-        indices = np.array([self._axes.index(a) for a in axes])
+        The arguments 'front' and 'back' are expected in the form of an axis identifier or a collection
+        of axis identifiers. Axis identifier is a name (str), index (int) or axis object (Axis)."""
+
+        indices = self._axes.transposed_indices(front, back)
+        new_axes = tuple(self._axes.axis_by_index(index) for index in indices)
         new_values = self._values.transpose(indices)
         return Cube(new_values, new_axes)
         
