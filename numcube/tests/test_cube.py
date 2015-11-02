@@ -62,7 +62,7 @@ class CubeTests(unittest.TestCase):
         A = Cube.full([a, c], np.nan)
         np.testing.assert_equal(A.values, [[np.nan, np.nan], [np.nan, np.nan], [np.nan, np.nan]])
         
-        # create one dimension caube        
+        # create one-dimensional cube
         values = np.arange(3)
         try:
             Cube(values, (a,))
@@ -70,7 +70,7 @@ class CubeTests(unittest.TestCase):
         except Exception:
             self.fail("raised exception unexpectedly")
         
-        # two dimension cubes
+        # two-dimensional cubes
         values = np.arange(12).reshape(3, 4)
         try:
             Cube(values, (a, b))
@@ -86,7 +86,7 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, Cube, values, [b, a])
 
     def test_axes(self):
-        """Tests working with cube axes. Counting axes, axis names, accessing axes by name or index, etc."""
+        """Tests working with cube axes. Counting axes, accessing axes by name or index, etc."""
         C = year_quarter_cube()
 
         # number of dimensions (axes)
@@ -94,22 +94,25 @@ class CubeTests(unittest.TestCase):
 
         # whether axis exists
         self.assertTrue(C.has_axis("year"))
-        self.assertFalse(C.has_axis("something"))
+        self.assertFalse(C.has_axis("bad_axis"))
 
-        # get axis by index and by name
+        # get axis by index, by name and by axis object
         axis1 = C.axis(0)
         axis2 = C.axis('year')
         self.assertEqual(axis1, axis2)
         axis3 = C.axis(-2)  # counting backwards
         self.assertEqual(axis1, axis3)
+        axis4 = C.axis(axis1)
+        self.assertEqual(axis1, axis4)
 
-        # get axis names as tuple
-        self.assertEqual(C.axis_names, ("year", "quarter"))
-        self.assertEqual(C.axis_names[0], "year")
-        self.assertEqual(C.axis_names[-1], "quarter")
-
-        # get axis index
+        # get axis index by name
         self.assertEqual(C.axis_index("quarter"), 1)
+
+        # invalid axis identification raises IndexError (when accessed by index)
+        # or KeyError (when accessed by name)
+        # note: all of these can be caught by LookupError
+        self.assertRaises(KeyError, C.axis, "A")
+        self.assertRaises(IndexError, C.axis, 3)
 
     def test_getitem(self):
         C = year_quarter_cube()
@@ -221,7 +224,7 @@ class CubeTests(unittest.TestCase):
         E = C.transpose([-2, -3, -1])
         self.assertTrue(np.array_equal(D.values, E.values))
 
-        # specify 'front' argument
+        # specify 'front' argument (does not need to be specified explicitly)
         E = C.transpose(["quarter", "year"])
         self.assertTrue(np.array_equal(D.values, E.values))
         E = C.transpose([1, 0])

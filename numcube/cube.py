@@ -72,7 +72,7 @@ class Cube(object):
         return item in self._values
 
     def __repr__(self):
-        return "Cube({}, {})".format(repr(self._values), repr(self.axis_names))
+        return "Cube({}, {})".format(repr(self._values), repr(tuple(self.axis_names)))
 
     @property
     def shape(self):
@@ -99,8 +99,11 @@ class Cube(object):
 
     @property
     def axis_names(self):
-        """Return a tuple of axis names."""
-        return self._axes.names
+        """Return axis names as iterator, which can be converted e.g. to tuple or list.
+        To get the name of a specific axis, it is preferred to use cube.axis(index).name
+        rather than for example tuple(cube.axi_names)[index]."""
+        for axis in self.axes:
+            yield axis.name
 
     def axis(self, item):
         """Return axis by the name or by the index.
@@ -108,7 +111,7 @@ class Cube(object):
         return self._axes[item]
 
     def axis_index(self, axis):
-        """Return numeric index of the axis specified by its name."""
+        """Return numeric index of the axis specified by its name or axis object."""
         return self._axes.index(axis)
 
     def has_axis(self, axis):
@@ -591,7 +594,8 @@ class Cube(object):
         """Return a new cube filled with `fill_value`."""
         if not isinstance(axes, Axes):
             axes = Axes(axes)
-        values = np.full(axes.shape, fill_value, dtype)
+        shape = tuple(len(axis) for axis in axes)
+        values = np.full(shape, fill_value, dtype)
         return Cube(values, axes)
         
     @staticmethod
@@ -599,7 +603,8 @@ class Cube(object):
         """Return a new cube filled with zeros."""
         if not isinstance(axes, Axes):
             axes = Axes(axes)
-        values = np.zeros(axes.shape, dtype)
+        shape = tuple(len(axis) for axis in axes)
+        values = np.zeros(shape, dtype)
         return Cube(values, axes)
 
     @staticmethod
@@ -607,7 +612,8 @@ class Cube(object):
         """Return a new cube filled with ones."""
         if not isinstance(axes, Axes):
             axes = Axes(axes)
-        values = np.ones(axes.shape, dtype)
+        shape = tuple(len(axis) for axis in axes)
+        values = np.ones(shape, dtype)
         return Cube(values, axes)
 
 

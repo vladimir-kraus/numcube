@@ -30,7 +30,6 @@ class Axes(object):
         # special case with zero axes
         if axes is None:
             self._axes = tuple()
-            self._shape = tuple()
             return
 
         # special case with a single axis
@@ -48,9 +47,8 @@ class Axes(object):
             unique_names.add(axis.name)
 
         # the sequence of axes must be immutable
-        self._names = tuple(axis.name for axis in axes)
+        #self._names = tuple(axis.name for axis in axes)
         self._axes = tuple(axes)
-        self._shape = tuple(len(a) for a in axes)
 
     def __repr__(self):
         axes = [str(a) for a in self._axes]
@@ -69,32 +67,13 @@ class Axes(object):
     def items(self):
         return self._axes
 
-    @property
-    def names(self):
-        """Return the names of axes.
-        :return: tuple of strings"""
-        return self._names
-
-    @property
-    def shape(self):
-        return self._shape
-
     def axis_by_index(self, index):
         return self._axes[index]
 
     def axis_and_index(self, axis):
-        if isinstance(axis, int):
-            if 0 <= axis < len(self._axes):
-                return self._axes[axis], axis
-            raise IndexError("invalid axis index: {}".format(axis))
-        elif isinstance(axis, str):
-            for i, a in enumerate(self._axes):
-                if a.name == axis:
-                    return a, i
-            raise KeyError("invalid axis name: '{}'".format(axis))
-        else:
-            raise TypeError("axis can be specified by index (int) or name (str)")
-            
+        index = self.index(axis)
+        return self.axis_by_index(index), index
+
     def is_unique_subset(self, axes):
         """Tests whether all axes are contained in the Axes object and whether they are unique."""
         raise NotImplementedError
@@ -145,10 +124,11 @@ class Axes(object):
 
         raise TypeError("invalid axis identification type")
 
-    def contains(self, axis_id):
-        """Returns True if Axes contain an axis of the specified name. Otherwise return False."""
+    def contains(self, axis):
+        """Returns True/False indicating whether the axis is contained in the Axes object.
+        Axis can be specified by name (str), by index (int) or by Axis object."""
         try:
-            self[axis_id]
+            self[axis]
             return True
         except LookupError:
             return False
