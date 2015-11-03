@@ -68,32 +68,46 @@ class Cube(object):
         return bool(self._values)
 
     def __contains__(self, item):
-        """Implements the behaviour of built-in 'in' operator."""
+        """Implements the behaviour of built-in 'in' operator.
+        :returns: bool"""
+
         return item in self._values
 
     def __repr__(self):
+        """Returns a textual representation of the object.
+        :returns: str"""
+
         return "Cube({}, {})".format(repr(self._values), repr(tuple(self.axis_names)))
 
     @property
     def shape(self):
+        """Returns the lengths of dimensions of the underlying numpy.ndarray.
+        :returns: tuple of ints"""
+
         return self._values.shape
 
     @property
     def size(self):
+        """Returns the number of elements in the underlying numpy.ndarray.
+        :returns: int"""
+
         return self._values.size
 
     @property
     def ndim(self):
-        """Number of array dimensions."""
+        """Returns the number of array dimensions.
+        :returns: int"""
+
         return self._values.ndim
 
     @property
     def values(self):
-        return self._values  # .view()?
+        return self._values  # TODO: .view()?
 
     @property
     def axes(self):
         """Returns cube axes as iterator, which can be converted e.g. to tuple or list."""
+
         for axis in self._axes:
             yield axis
 
@@ -102,27 +116,32 @@ class Cube(object):
         """Return axis names as iterator, which can be converted e.g. to tuple or list.
         To get the name of a specific axis, it is preferred to use cube.axis(index).name
         rather than for example tuple(cube.axi_names)[index]."""
+
         for axis in self.axes:
             yield axis.name
 
     def axis(self, item):
         """Return axis by the name or by the index.
         Index can be a negative number, in that case, the axes are counted backwards from the last one."""
+
         return self._axes[self.axis_index(item)]
 
     def axis_index(self, axis):
         """Return numeric index of the axis specified by its name or axis object."""
+
         return self._axes.index(axis)
 
     def has_axis(self, axis):
         """Return True/False indicating whether the axis specified by its name or by axis object exist in the Cube."""
+
         return self._axes.contains(axis)
 
     def apply(self, func, *args):
         """Apply function to all values and return the new cube.
         :param func: function to be applied to values
         :param args: additional optional arguments of func
-        :return: Cube"""
+        :return: new Cube object"""
+
         return Cube(func(self._values, *args), self._axes)
 
     def transpose(self, front=[], back=[]):
@@ -268,39 +287,53 @@ class Cube(object):
     """mathematical functions"""
 
     def __abs__(self):
-        """Implements behavior for the built in abs() function."""
-        return Cube(abs(self._values), self._axes)
+        """Implements behavior for the built in abs() function.
+        :returns: new Cube object"""
 
-    def __round__(self, n):
-        """Implements behavior for the built in round() function. n is the number of decimal places to round to."""
-        return Cube(round(self._values, n), self._axes)
+        return self.apply(abs)
+
+    def __round__(self, decimals):
+        """Implements behavior for the built in round() function.
+        :param decimals: the number of decimal places to round to
+        :returns: new Cube object"""
+
+        return self.apply(round, decimals)
 
     def __floor__(self):
-        """Implements behavior for math.floor(), i.e., rounding down to the nearest integer."""
-        return Cube(math.floor(self._values), self._axes)
+        """Implements behavior for math.floor(), i.e., rounding down to the nearest integer.
+        :returns: new Cube object"""
+
+        return self.apply(math.floor)
 
     def __ceil__(self):
-        """Implements behavior for math.ceil(), i.e., rounding up to the nearest integer."""
-        return Cube(math.ceil(self._values), self._axes)
+        """Implements behavior for math.ceil(), i.e., rounding up to the nearest integer.
+        :returns: new Cube object"""
+
+        return self.apply(math.ceil)
 
     def __trunc__(self):
-        """Implements behavior for math.trunc(), i.e., truncating to an integral."""
-        return Cube(math.trunc(self._values), self._axes)
+        """Implements behavior for math.trunc(), i.e., truncating to an integral.
+        :returns: new Cube object"""
+
+        return self.apply(math.trunc)
 
     def sin(self):
-        """Sine, element-wise.
-        Can be called as numpy.sin(C) or C.sin()."""
-        return Cube(np.sin(self._values), self._axes)
+        """Sine, element-wise. Can be called as numpy.sin(C) or C.sin().
+        :returns: new Cube object"""
+
+        return self.apply(np.sin)
 
     def cos(self):
-        """Cosine, element-wise.
-        Can be called as numpy.cos(C) or C.cos()."""
-        return Cube(np.cos(self._values), self._axes)
+        """Cosine, element-wise. Can be called as numpy.cos(C) or C.cos().
+        :returns: new Cube object"""
+
+        return self.apply(np.cos)
 
     def tan(self):
-        """Tangents, element-wise.
-        Can be called as numpy.tan(C) or C.tan()."""
-        return Cube(np.tan(self._values), self._axes)
+        """Tangents, element-wise. Can be called as numpy.tan(C) or C.tan().
+        :returns: new Cube object"""
+
+        return self.apply(np.tan)
 
     """aggregation functions"""
 
