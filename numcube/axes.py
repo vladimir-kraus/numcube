@@ -1,7 +1,7 @@
 import numpy as np
 
-from .axis import Axis
-from .index import Index
+from numcube.axis import Axis
+from numcube.index import Index
 
 
 class Axes(object):
@@ -26,7 +26,8 @@ class Axes(object):
     def __init__(self, axes):
         """If for non-unique axes are found, ValueError is raised.
         If axis has invalid type, TypeError is raised.
-        :param axes: Axis or a collection of Axis objects (incl. another Axes object)"""
+        :param axes: Axis or a collection of Axis objects (incl. another Axes object)
+        """
         # special case with zero axes
         if axes is None:
             self._axes = tuple()
@@ -59,15 +60,17 @@ class Axes(object):
     def __getitem__(self, index):
         """Return an axis given by its index.
         :param index: int
-        :returns: an Axis object
-        :raises: IndexError if not found"""
+        :return: an Axis object
+        :raises: IndexError if not found
+        """
         return self._axes[index]
 
     def axis_by_index(self, index):
         return self._axes[index]
 
     def axis_by_name(self, name):
-        """Returns None if not found."""
+        """Returns None if not found.
+        """
         return next((axis for axis in self._axes if axis.name == name), None)
 
     def axis_and_index(self, axis):
@@ -75,14 +78,16 @@ class Axes(object):
         return self[index], index
 
     def is_unique_subset(self, axes):
-        """Tests whether all axes are contained in the Axes object and whether they are unique."""
+        """Tests whether all axes are contained in the Axes object and whether they are unique.
+        """
         raise NotImplementedError
         
     def complement(self, axes):
         """Return a tuple of indices of axes from Axes object which are not
         contained in the specified collection of axes.
         :param axes: collection of axes specified by axis name or index
-        :returns: tuple of int"""
+        :return: tuple of int
+        """
         if isinstance(axes, str) or isinstance(axes, int):
             axes = (axes,)
         indices = set(self.index(a) for a in axes)
@@ -93,9 +98,9 @@ class Axes(object):
     def index(self, axis):
         """Find axis index by name, by index, or by axis object.
          :param axis: int, str or Axis
-         :returns: int
-         :raises: LookupError if not found"""
-        
+         :return: int
+         :raises: LookupError if not found
+         """
         # find by numeric index, normalize negative numbers
         if isinstance(axis, int):
             axis_count = len(self._axes)
@@ -124,7 +129,8 @@ class Axes(object):
 
     def contains(self, axis):
         """Returns True/False indicating whether the axis is contained in the Axes object.
-        Axis can be specified by name (str), by index (int) or by Axis object."""
+        Axis can be specified by name (str), by index (int) or by Axis object.
+        """
         try:
             self.index(axis)
             return True
@@ -133,7 +139,8 @@ class Axes(object):
 
     def transposed_indices(self, front, back):
         """Reorder axes by specified names or indices. Return a list of axis
-        indices which correspond to the new order of axes."""
+        indices which correspond to the new order of axes.
+        """
         if isinstance(front, str) or isinstance(front, int) or isinstance(front, Axis):
             front = [front]
 
@@ -164,14 +171,16 @@ class Axes(object):
         """Insert a new axis at the specified position and return the new Axes object.
         :param axis: the new axis to be inserted
         :param index: the index of the new axis
-        :return: new Axes object"""
+        :return: new Axes object
+        """
         axis_list = list(self._axes)
         axis_list.insert(index, axis)
         return Axes(axis_list)
 
     def remove(self, axis_id):
         """Remove axis or axes with a given index or name.
-        Return new Axes object."""
+        Return new Axes object.
+        """
         axis_index = self.index(axis_id)
         return self._remove(axis_index)
 
@@ -184,7 +193,8 @@ class Axes(object):
         """Return an Axes object with a renamed axis.
         :param old_axis_id: axis index (int) or name (str)
         :param new_axis_name: the name of the new axis (str)
-        :return: new Axes object"""
+        :return: new Axes object
+        """
         old_axis, old_axis_index = self.axis_and_index(old_axis_id)
         new_axis = old_axis.rename(new_axis_name)
         return self._replace(old_axis_index, new_axis)
@@ -195,7 +205,8 @@ class Axes(object):
         The old and new axes are NOT checked for equal lengths.
         :param old_axis_id: axis index (int) or name (str)
         :param new_axis: Series or Index object
-        :return: new Axes object"""
+        :return: new Axes object
+        """
         old_axis_index = self.index(old_axis_id)
         return self._replace(old_axis_index, new_axis)
 
@@ -208,7 +219,8 @@ class Axes(object):
         """Return a new Axes object with two axes swapped.
         :param axis_id1: name or index of the first axis
         :param axis_id2: name or index of the second axis
-        :return: new Axes object"""
+        :return: new Axes object
+        """
         index1 = self.index(axis_id1)
         index2 = self.index(axis_id2)
         new_axes = list(self)
@@ -216,13 +228,15 @@ class Axes(object):
         return Axes(new_axes)
 
     def make_index(self, axis_id):
-        """Convert an axis into Index. If the axis is already an Index, then does nothing."""
+        """Convert an axis into Index. If the axis is already an Index, then does nothing.
+        """
         axis = self[axis_id]
         if not isinstance(axis, Index):
             self.replace(axis_id, Index(axis.name, axis.values))
 
     def make_series(self, axis_id):
-        """Convert an axis into Series. If the axis is already a Series, then does nothing."""
+        """Convert an axis into Series. If the axis is already a Series, then does nothing.
+        """
         axis = self[axis_id]
         if not isinstance(axis, Series):
             self.replace(axis_id, Series(axis.name, axis.values))
@@ -233,7 +247,8 @@ def intersect(axes1, axes2):
     the corresponding axis on axes1. The result can be used for inner join operations.
     :param axes1: Axes object
     :param axes2: Axes object
-    :return: Axes"""
+    :return: Axes
+    """
     common_axes = []
     for axis1 in axes1:
         axis2 = axes2.axis_by_name(axis1.name)

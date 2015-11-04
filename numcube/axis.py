@@ -66,25 +66,25 @@ class Axis(object):
         
     def take(self, indices):
         """Analogy to numpy.ndarray.take.
-        :returns: a new Axis object
+        :return: a new Axis object
         """
         return self.__class__(self._name, self._values.take(indices))
         
     def compress(self, condition):
         """Analogy to numpy.ndarray.compress.
-        :returns: a new Axis object
+        :return: a new Axis object
         """
         return self.__class__(self._name, self._values.compress(condition))
 
     def rename(self, new_name):
         """Returns a new object (of type Axis or the actual derived type) with the new name and the same values.
         :param new_name: str
-        :returns: new axis (instance of actual derived type)
+        :return: new axis (instance of actual derived type)
         """
         return self.__class__(new_name, self._values)
 
     def sort(self):
         """Sorts the values.
-        :returns: a new Axis object with sorted values
+        :return: a new Axis object with sorted values
         """
         return self.__class__(self._name, np.sort(self._values))
