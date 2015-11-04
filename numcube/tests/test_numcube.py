@@ -1,18 +1,17 @@
 import os
 import sys
-
 import unittest
 import doctest
 
-import numcube.doctests.axis
-import numcube.doctests.index
-import numcube.doctests.cube
+import numcube.tests.doctests.axis
+import numcube.tests.doctests.index
+import numcube.tests.doctests.cube
 
 
 def load_tests(loader, tests, ignore):
-    tests.addTests(doctest.DocTestSuite(numcube.doctests.axis))
-    tests.addTests(doctest.DocTestSuite(numcube.doctests.index))
-    tests.addTests(doctest.DocTestSuite(numcube.doctests.cube))
+    tests.addTests(doctest.DocTestSuite(numcube.tests.doctests.axis))
+    tests.addTests(doctest.DocTestSuite(numcube.tests.doctests.index))
+    tests.addTests(doctest.DocTestSuite(numcube.tests.doctests.cube))
     return tests
 
 if __name__ == "__main__":
