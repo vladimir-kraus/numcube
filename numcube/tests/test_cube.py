@@ -92,10 +92,6 @@ class CubeTests(unittest.TestCase):
         # number of dimensions (axes)
         self.assertEqual(C.ndim, 2)
 
-        # whether axis exists
-        self.assertTrue(C.has_axis("year"))
-        self.assertFalse(C.has_axis("bad_axis"))
-
         # get axis by index, by name and by axis object
         axis1 = C.axis(0)
         axis2 = C.axis('year')
@@ -111,6 +107,25 @@ class CubeTests(unittest.TestCase):
         # invalid axis identification raises LookupError
         self.assertRaises(LookupError, C.axis, "A")
         self.assertRaises(LookupError, C.axis, 3)
+
+    def test_has_axis(self):
+        C = year_quarter_cube()
+
+        # whether axis exists - by name
+        self.assertTrue(C.has_axis("year"))
+        self.assertFalse(C.has_axis("bad_axis"))
+
+        # whether axis exists - by index (negative index means counting backwards)
+        self.assertTrue(C.has_axis(1))
+        self.assertFalse(C.has_axis(2))
+        self.assertTrue(C.has_axis(-1))
+        self.assertFalse(C.has_axis(-3))
+
+        # whether axis exists - by Axis object
+        ax1 = C.axis(0)
+        self.assertTrue(C.has_axis(ax1))
+        ax2 = Axis("year", [])  # same name but different identity
+        self.assertFalse(C.has_axis(ax2))
 
     def test_getitem(self):
         C = year_quarter_cube()

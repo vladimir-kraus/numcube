@@ -131,7 +131,9 @@ class Cube(object):
         return self._axes.index(axis)
 
     def has_axis(self, axis):
-        """Returns True/False indicating whether the axis specified by its name or by axis object exist in the Cube.
+        """Returns True/False indicating whether the axis exists in the Cube.
+        :param axis: name (str), index (int) or Axis object
+        :return: bool
         """
         return self._axes.contains(axis)
 

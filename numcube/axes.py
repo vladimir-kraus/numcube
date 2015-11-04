@@ -106,7 +106,7 @@ class Axes(object):
             axis_count = len(self._axes)
             if 0 <= axis < axis_count:
                 return axis
-            if -axis_count <= axis:
+            if -axis_count <= axis < 0:
                 # negative index is counted from the last axis backward
                 return axis_count + axis
             raise LookupError("invalid axis index: {}".format(axis))
