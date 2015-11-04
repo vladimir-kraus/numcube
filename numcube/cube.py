@@ -910,9 +910,10 @@ def concatenate(cubes, axis_name, as_index=True):
     return _align_broadcast_and_concatenate(cubes, unique_axes_list, main_axis)
 
 
-def join(cubes, axis):
+def stack(cubes, axis):
     """
-    Note: join adds a new dimension, unlike concatenate which concatenates along axis which already exists in the cubes
+    Adds a new dimension and stack uniformly sized cubes along this axis.
+    This is different from concatenate which joins cubes along axis which already exists in all the cubes.
     :param cubes:
     :param axis:
     :return:

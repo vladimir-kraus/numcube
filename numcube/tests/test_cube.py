@@ -3,7 +3,7 @@ import functools
 import numpy as np
 
 from numcube import Index, Axis, Cube
-from numcube.cube import join, concatenate
+from numcube.cube import stack, concatenate
 
 
 def year_quarter_cube():
@@ -522,13 +522,17 @@ class CubeTests(unittest.TestCase):
 
         E = concatenate([C, D], "month")
 
-    def test_join(self):
+    def test_stack(self):
         C = year_quarter_cube()
         D = year_quarter_cube()
         ax = Index("country", ["GB", "FR"])
-        E = join([C, D], ax)
+        E = stack([C, D], ax)
         self.assertEqual(E.values.shape, (2, 3, 4))
         self.assertEqual(tuple(E.axis_names), ("country", "year", "quarter"))
+
+        # axis with the same name already exists
+        ax = Index("year", [2000, 2001])
+        self.assertRaises(ValueError, stack, [C, D], ax)
         
     def test_combine_axes(self):
         C = year_quarter_weekday_cube()
