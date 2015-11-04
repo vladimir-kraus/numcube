@@ -101,12 +101,33 @@ class CubeTests(unittest.TestCase):
         axis4 = C.axis(axis1)
         self.assertEqual(axis1, axis4)
 
-        # get axis index by name
-        self.assertEqual(C.axis_index("quarter"), 1)
-
         # invalid axis identification raises LookupError
         self.assertRaises(LookupError, C.axis, "A")
         self.assertRaises(LookupError, C.axis, 3)
+
+    def test_axis_index(self):
+        C = year_quarter_cube()
+
+        # get axis index by name
+        self.assertEqual(C.axis_index("year"), 0)
+        self.assertEqual(C.axis_index("quarter"), 1)
+
+        # get axis index by Axis object
+        self.assertEqual(C.axis_index(C.axis(0)), 0)
+        self.assertEqual(C.axis_index(C.axis(1)), 1)
+
+        # get axis index by index (negative turns to positive)
+        self.assertEqual(C.axis_index(0), 0)
+        self.assertEqual(C.axis_index(-2), 0)
+
+        # invalid axes
+        self.assertRaises(LookupError, C.axis_index, "bad_axis")
+        self.assertRaises(LookupError, C.axis_index, Axis("bad_axis", []))
+        self.assertRaises(LookupError, C.axis_index, 2)
+
+        # invalid argument types
+        self.assertRaises(TypeError, C.axis_index, 1.0)
+        self.assertRaises(TypeError, C.axis_index, None)
 
     def test_has_axis(self):
         C = year_quarter_cube()
@@ -126,6 +147,10 @@ class CubeTests(unittest.TestCase):
         self.assertTrue(C.has_axis(ax1))
         ax2 = Axis("year", [])  # same name but different identity
         self.assertFalse(C.has_axis(ax2))
+
+        # invalid argument types
+        self.assertRaises(TypeError, C.has_axis, 1.0)
+        self.assertRaises(TypeError, C.has_axis, None)
 
     def test_getitem(self):
         C = year_quarter_cube()

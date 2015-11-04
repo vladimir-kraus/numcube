@@ -126,7 +126,9 @@ class Cube(object):
         return self._axes[self.axis_index(item)]
 
     def axis_index(self, axis):
-        """Returns numeric index of the axis specified by its name or axis object.
+        """Returns the index of the axis specified by its name or axis object.
+        :param axis: name (str), index (int) or Axis object
+        :return: int
         """
         return self._axes.index(axis)
 
