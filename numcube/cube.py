@@ -66,12 +66,6 @@ class Cube(object):
         """
         return bool(self._values)
 
-    def __contains__(self, item):
-        """Implements the behaviour of built-in 'in' operator.
-        :return: bool
-        """
-        return item in self._values
-
     def __repr__(self):
         """Returns a textual representation of the object.
         :return: str

@@ -185,14 +185,6 @@ class CubeTests(unittest.TestCase):
         # eq. C[0, 0, 0] raises IndexError: too many indices
         self.assertRaises(IndexError, C.__getitem__, (0, 0, 0))
 
-    def test_contains(self):
-        """Tests whether the cube contains a value using keyword 'in'.
-        Note that 'x in C' is equivalent to and is a shorter version of 'x in C.values'.
-        """
-        C = year_quarter_cube()
-        self.assertTrue(0 in C)
-        self.assertFalse(12 in C)
-
     def test_filter(self):
         """Filter will set filter a specified axis with a specified values.
         Takes into account only values which exist on the axis. Other values are ignored.
