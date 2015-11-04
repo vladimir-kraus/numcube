@@ -100,6 +100,11 @@ class Cube(object):
     @property
     def axes(self):
         """Returns cube axes as iterator, which can be converted e.g. to tuple or list.
+        :return: iterator
+        Examples:
+        - for ax in cube.axes: print(ax.name)
+        - tuple(cube.axes)
+        - list(cube.axes)
         """
         for axis in self._axes:
             yield axis
@@ -109,15 +114,22 @@ class Cube(object):
         """Returns axis names as iterator, which can be converted e.g. to tuple or list.
         To get the name of a specific axis, it is preferred to use cube.axis(index).name
         rather than for example tuple(cube.axi_names)[index].
+        Examples:
+        - for name in cube.axis_names: print(name)
+        - tuple(cube.axis_names)
+        - list(cube.axis_names)
         """
         for axis in self.axes:
             yield axis.name
 
-    def axis(self, item):
+    def axis(self, axis):
         """Returns axis by the name or by the index.
         Index can be a negative number, in that case, the axes are counted backwards from the last one.
+        :param axis: name (str), index (int) or Axis object
+        :return: Axis object
+        :raise: LookupError if the axis does not exist, TypeError if wrong argument type is passed
         """
-        return self._axes[self.axis_index(item)]
+        return self._axes[self.axis_index(axis)]
 
     def axis_index(self, axis):
         """Returns the index of the axis specified by its name or axis object.

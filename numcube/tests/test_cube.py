@@ -92,9 +92,12 @@ class CubeTests(unittest.TestCase):
         # number of dimensions (axes)
         self.assertEqual(C.ndim, 2)
 
+    def test_axis(self):
+        C = year_quarter_cube()
+
         # get axis by index, by name and by axis object
         axis1 = C.axis(0)
-        axis2 = C.axis('year')
+        axis2 = C.axis("year")
         self.assertEqual(axis1, axis2)
         axis3 = C.axis(-2)  # counting backwards
         self.assertEqual(axis1, axis3)
@@ -102,8 +105,13 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(axis1, axis4)
 
         # invalid axis identification raises LookupError
-        self.assertRaises(LookupError, C.axis, "A")
+        self.assertRaises(LookupError, C.axis, "bad_axis")
         self.assertRaises(LookupError, C.axis, 3)
+        self.assertRaises(LookupError, C.axis, Axis("bad_axis", []))
+
+        # invalid argument types
+        self.assertRaises(TypeError, C.axis, 1.0)
+        self.assertRaises(TypeError, C.axis, None)
 
     def test_axis_index(self):
         C = year_quarter_cube()
