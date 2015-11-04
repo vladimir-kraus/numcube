@@ -129,6 +129,7 @@ class Cube(object):
         """Returns the index of the axis specified by its name or axis object.
         :param axis: name (str), index (int) or Axis object
         :return: int
+        :raise: LookupError if the axis does not exist, TypeError if wrong argument type is passed
         """
         return self._axes.index(axis)
 
@@ -136,6 +137,7 @@ class Cube(object):
         """Returns True/False indicating whether the axis exists in the Cube.
         :param axis: name (str), index (int) or Axis object
         :return: bool
+        :raise: TypeError if wrong argument type is passed
         """
         return self._axes.contains(axis)
 
@@ -514,14 +516,14 @@ class Cube(object):
         if not isinstance(old_axis, Index):
             old_axis_indices = old_axis.index(axis.values)
 
-    def rename_axis(self, old_id, new_name):
-        """Returns a cube with renamed axis.
-        :param old_id: axis index (int), name (str) or Axis object
+    def rename_axis(self, old_axis, new_name):
+        """Returns a cube with a renamed axis.
+        :param old_axis: axis index (int), name (str) or Axis object
         :param new_name: the name of the new axis (str)
         :return: new Cube object
-        :raises: ValueError is the name is duplicate
+        :raise: LookupError if the old axis does not exist, ValueError is the name is duplicate
         """
-        new_axes = self._axes.rename(old_id, new_name)
+        new_axes = self._axes.rename(old_axis, new_name)
         return Cube(self._values, new_axes)
 
     def combine_axes(self, axis_names, new_axis_name, format):

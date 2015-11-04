@@ -61,7 +61,7 @@ class Axes(object):
         """Return an axis given by its index.
         :param index: int
         :return: an Axis object
-        :raises: IndexError if not found
+        :raise: IndexError if not found
         """
         return self._axes[index]
 
@@ -99,7 +99,7 @@ class Axes(object):
         """Find axis index by name, by index, or by axis object.
          :param axis: int, str or Axis
          :return: int
-         :raises: LookupError if not found
+         :raise: LookupError if not found
          """
         # find by numeric index, normalize negative numbers
         if isinstance(axis, int):

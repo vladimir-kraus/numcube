@@ -32,7 +32,7 @@ class Index(Axis):
         If item is a sequence, then return numpy array of integers.
         :param item: a single value or a sequence of values
         :return: int or numpy array of ints
-        :raises: KeyError if value does not exist
+        :raise: KeyError if value does not exist
         """
         v = self._vec_index(item)
         if v.ndim > 0:
