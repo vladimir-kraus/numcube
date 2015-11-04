@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from numcube import MultiAxis
+from numcube.experimental import MultiAxis
 
 
 class MultiAxisTests(unittest.TestCase):

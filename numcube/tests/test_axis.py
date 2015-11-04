@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from numcube.axis import Axis
+from numcube import Axis
 
 
 class AxisTests(unittest.TestCase):
