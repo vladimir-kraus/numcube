@@ -299,51 +299,51 @@ class Cube(object):
 
     def __abs__(self):
         """Implements behavior for the built in abs() function.
-        :return: new Cube object"""
-
+        :return: new Cube object
+        """
         return self.apply(abs)
 
     def __round__(self, decimals):
         """Implements behavior for the built in round() function.
         :param decimals: the number of decimal places to round to
-        :return: new Cube object"""
-
+        :return: new Cube object
+        """
         return self.apply(round, decimals)
 
     def __floor__(self):
         """Implements behavior for math.floor(), i.e., rounding down to the nearest integer.
-        :return: new Cube object"""
-
+        :return: new Cube object
+        """
         return self.apply(math.floor)
 
     def __ceil__(self):
         """Implements behavior for math.ceil(), i.e., rounding up to the nearest integer.
-        :return: new Cube object"""
-
+        :return: new Cube object
+        """
         return self.apply(math.ceil)
 
     def __trunc__(self):
         """Implements behavior for math.trunc(), i.e., truncating to an integral.
-        :return: new Cube object"""
-
+        :return: new Cube object
+        """
         return self.apply(math.trunc)
 
     def sin(self):
         """Sine, element-wise. Can be called as numpy.sin(C) or C.sin().
-        :return: new Cube object"""
-
+        :return: new Cube object
+        """
         return self.apply(np.sin)
 
     def cos(self):
         """Cosine, element-wise. Can be called as numpy.cos(C) or C.cos().
-        :return: new Cube object"""
-
+        :return: new Cube object
+        """
         return self.apply(np.cos)
 
     def tan(self):
         """Tangents, element-wise. Can be called as numpy.tan(C) or C.tan().
-        :return: new Cube object"""
-
+        :return: new Cube object
+        """
         return self.apply(np.tan)
 
     """aggregation functions"""
@@ -355,7 +355,7 @@ class Cube(object):
         over all the dimensions of the input array. axis may be negative, in which case it counts from the last
         to the first axis. If this is a tuple of ints, a sum is performed on multiple axes, instead of a single
         axis or all the axes as before.
-         :return:
+        :return:
         """
         return self.aggregate(np.sum, axis, keep)
 

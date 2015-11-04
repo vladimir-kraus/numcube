@@ -17,6 +17,9 @@ class IndexTests(unittest.TestCase):
 
         # duplicate values
         self.assertRaises(ValueError, Index, "A", ["a", "b", "a"])
+
+        # invalid Index name
+        self.assertRaises(TypeError, Index, 1, [1, 2, 3])
         
     def test_index_take(self):
         a = Index("A", ["a", "b", "c", "d"])
@@ -35,28 +38,40 @@ class IndexTests(unittest.TestCase):
         self.assertTrue(np.array_equal(b.values, a.values.compress(selector)))
 
     def test_writeable(self):
+        # once index has been created, its values cannot be changed in order not to break lookup function
         a = Index("A", [10, 20, 30])
         self.assertRaises(ValueError, a.values.__setitem__, 0, 40)
+        self.assertRaises(ValueError, a.values.sort)
 
     def test_index(self):
         a = Index("A", [10, 20, 30])
-        self.assertEqual(a.indexof(10), 0)
-        self.assertTrue(np.array_equal(a.indexof([10, 30]), [0, 2]))
-
         b = Index("Dim", ["a", "b", "c", "d"])
+
+        # a single value
+        self.assertEqual(a.indexof(10), 0)
         self.assertEqual(b.indexof("c"), 2)
+
+        # multiple values
+        self.assertTrue(np.array_equal(a.indexof([10, 30]), [0, 2]))
         self.assertTrue(np.array_equal(b.indexof(["d", "c"]), [3, 2]))
 
-        # invalid Index name
-        self.assertRaises(TypeError, Index, 1, [1, 2, 3])
+        # non-existent value raises KeyError (similar to dictionary lookup)
+        self.assertRaises(KeyError, a.indexof, 0)
+        self.assertRaises(KeyError, b.indexof, "e")
+        self.assertRaises(KeyError, b.indexof, None)
+        self.assertRaises(KeyError, a.indexof, [0, 1])
+        self.assertRaises(KeyError, b.indexof, ["d", "e"])
 
     def test_contains(self):
         a = Index("A", [10, 20, 30])
+        b = Index("Dim", ["a", "b", "c", "d"])
+
+        # a single value
         self.assertEqual(a.contains(20), True)
         self.assertEqual(a.contains(40), False)
-        self.assertTrue(np.array_equal(a.contains([0, 10, 20, 40]), [False, True, True, False]))
+        self.assertEqual(b.contains("b"), True)
+        self.assertEqual(b.contains("e"), False)
 
-        b = Index("B", ["jan", "feb", "mar", "apr"])
-        self.assertEqual(b.contains("feb"), True)
-        self.assertEqual(b.contains("jun"), False)
-        self.assertTrue(np.array_equal(b.contains(["jan", "dec", "feb"]), [True, False, True]))
+        # multiple values returns one-dimensional numpy array of logical values
+        self.assertTrue(np.array_equal(a.contains([0, 10, 20, 40]), [False, True, True, False]))
+        self.assertTrue(np.array_equal(b.contains(["a", "e", "b"]), [True, False, True]))
