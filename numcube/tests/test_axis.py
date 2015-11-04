@@ -22,8 +22,12 @@ class AxisTests(unittest.TestCase):
             self.fail("Axis with duplicate values raised error unexpectedly")
 
     def test_indexing(self):
-        a = Axis("A", [10, 20, 30])
+        a = Axis("A", [10, 20, 30, 40])
 
-        self.assertTrue(np.array_equal(a.values == 10, [True, False, False]))
+        self.assertTrue(np.array_equal(a[1:3].values, [20, 30]))
+
+        self.assertEqual(a[-1].values, 40)
+
+        self.assertTrue(np.array_equal(a.values == 10, [True, False, False, False]))
         self.assertEqual(a[0].values, 10)
         self.assertEqual(a.values[0], 10)

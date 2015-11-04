@@ -9,8 +9,7 @@ class Index(Axis):
     """
 
     def __init__(self, name, values):
-        """
-        Initialize a new Index object. The values must be unique, otherwise ValueError is raised.
+        """Initialize a new Index object. The values must be unique, otherwise ValueError is raised.
         :param name: str
         :param values: sequence of values (must be unique)
         """
@@ -28,16 +27,12 @@ class Index(Axis):
         self._vec_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
         self._vec_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])
 
-    @property
-    def indexable(self):
-        return True
-
     def indexof(self, item):
         """If item is single value, then return a single integer value.
         If item is a sequence, then return numpy array of integers.
         :param item: a single value or a sequence of values
         :return: int or numpy array of ints
-        :raises: KeyError
+        :raises: KeyError if value does not exist
         """
         v = self._vec_index(item)
         if v.ndim > 0:
@@ -45,7 +40,8 @@ class Index(Axis):
         return v.item()
 
     def contains(self, item):
-        """If item is single value, then return a single boolean value.
+        """Tests whether item or items exist among values.
+        If item is single value, then return a single boolean value.
         If item is a sequence, then return numpy array of booleans.
         :param item: a single value or a sequence of values
         :return: bool or numpy array of bools
