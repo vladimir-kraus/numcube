@@ -456,16 +456,31 @@ class CubeTests(unittest.TestCase):
 
     def test_aggregate(self):
         C = year_quarter_cube()
+
         self.assertTrue((C.sum("quarter") == C.sum(1)).all())
         self.assertTrue((C.sum("quarter") == C.sum(-1)).all())
         self.assertTrue((C.sum("year") == C.sum(keep=1)).all())
         self.assertTrue((C.sum("year") == C.sum(keep=-1)).all())
         self.assertTrue((C.sum(["year"]) == C.sum(keep=[-1])).all())
         self.assertTrue((C.sum("quarter") == C.sum(keep="year")).all())
-        self.assertEqual(C.sum(), 66)
-        self.assertEqual(C.mean(), 5.5)
-        self.assertEqual(C.min(), 0)
-        self.assertEqual(C.max(), 11)
+
+        year_ax = C.axis("year")
+        quarter_ax = C.axis("quarter")
+        self.assertTrue((C.sum(year_ax) == C.sum("year")).all())
+        self.assertTrue((C.sum(year_ax) == C.sum(keep=quarter_ax)).all())
+        self.assertTrue((C.sum(quarter_ax) == C.sum(1)).all())
+        self.assertTrue((C.sum(quarter_ax) == C.sum(keep=0)).all())
+
+        self.assertEqual(C.sum(None), C.sum())
+        self.assertEqual(C.sum(), np.sum(C.values))
+        self.assertEqual(C.mean(), np.mean(C.values))
+        self.assertEqual(C.min(), np.min(C.values))
+        self.assertEqual(C.max(), np.max(C.values))
+
+        self.assertRaises(LookupError, C.sum, "bad_axis")
+        self.assertRaises(LookupError, C.sum, 2)
+
+        self.assertRaises(TypeError, C.sum, 1.0)
 
     def test_swap_axis(self):
         C = year_quarter_weekday_cube()

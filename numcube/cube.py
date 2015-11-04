@@ -5,6 +5,7 @@ from numcube.axes import Axes
 from numcube.axes import Axis
 from numcube.exceptions import AxisAlignError
 from numcube.index import Index
+from numcube.utils import make_axis_collection, make_Axes
 
 
 class Cube(object):
@@ -19,9 +20,7 @@ class Cube(object):
     def __init__(self, values, axes, dtype=None):
         values = np.asarray(values, dtype)
 
-        # convert a collection of axes to Axes object
-        if not isinstance(axes, Axes):
-            axes = Axes(axes)
+        axes = make_Axes(axes)
 
         # if axes dimensions and value dimension do not match
         if values.ndim != len(axes):
@@ -405,11 +404,8 @@ class Cube(object):
         if keep is not None and axis is not None:
             raise ValueError("either 'keep' or 'axis' argument must be None")
 
-        if isinstance(axis, str) or isinstance(axis, int):
-            axis = [axis]
-
-        if isinstance(keep, str) or isinstance(keep, int):
-            keep = [keep]
+        axis = make_axis_collection(axis)
+        keep = make_axis_collection(keep)
 
         if axis is not None:
             axis_indices_to_remove = tuple(self._axes.index(a) for a in axis)
@@ -643,8 +639,7 @@ class Cube(object):
         :param dtype: the value type of the new cube (usually int or float)
         :returns: new Cube object
         """
-        if not isinstance(axes, Axes):
-            axes = Axes(axes)
+        axes = make_Axes(axes)
         shape = tuple(len(axis) for axis in axes)
         values = np.full(shape, fill_value, dtype)
         return Cube(values, axes)
@@ -656,8 +651,7 @@ class Cube(object):
         :param dtype: the value type of the new cube (usually int or float)
         :returns: new Cube object
         """
-        if not isinstance(axes, Axes):
-            axes = Axes(axes)
+        axes = make_Axes(axes)
         shape = tuple(len(axis) for axis in axes)
         values = np.zeros(shape, dtype)
         return Cube(values, axes)
@@ -669,8 +663,7 @@ class Cube(object):
         :param dtype: the value type of the new cube (usually int or float)
         :returns: new Cube object
         """
-        if not isinstance(axes, Axes):
-            axes = Axes(axes)
+        axes = make_Axes(axes)
         shape = tuple(len(axis) for axis in axes)
         values = np.ones(shape, dtype)
         return Cube(values, axes)
