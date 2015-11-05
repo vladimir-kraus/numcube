@@ -1,7 +1,6 @@
 import numpy as np
 import math
 
-from numcube.axes import Axes
 from numcube.axes import Axis
 from numcube.exceptions import AxisAlignError
 from numcube.index import Index
@@ -39,7 +38,7 @@ class Cube(object):
         1) np.newaxis is not supported.
         2) axes indexed by integer are collapsed
         :param item:
-        :return: new Cube object
+        :return: new Cube instance
         """
         if not isinstance(items, tuple):
             items = (items,)
@@ -124,15 +123,15 @@ class Cube(object):
     def axis(self, axis):
         """Returns axis by the name or by the index.
         Index can be a negative number, in that case, the axes are counted backwards from the last one.
-        :param axis: name (str), index (int) or Axis object
-        :return: Axis object
+        :param axis: axis name (str), axis index (int) or Axis instance
+        :return: Axis instance
         :raise: LookupError if the axis does not exist, TypeError if wrong argument type is passed
         """
         return self._axes[self.axis_index(axis)]
 
     def axis_index(self, axis):
-        """Returns the index of the axis specified by its name or axis object.
-        :param axis: name (str), index (int) or Axis object
+        """Returns the index of the axis specified by its name or axis instance.
+        :param axis: name (str), index (int) or Axis instance
         :return: int
         :raise: LookupError if the axis does not exist, TypeError if wrong argument type is passed
         """
@@ -140,7 +139,7 @@ class Cube(object):
 
     def has_axis(self, axis):
         """Returns True/False indicating whether the axis exists in the Cube.
-        :param axis: name (str), index (int) or Axis object
+        :param axis: name (str), index (int) or Axis instance
         :return: bool
         :raise: TypeError if wrong argument type is passed
         """
@@ -150,7 +149,7 @@ class Cube(object):
         """Applies a function to all values and return the new cube.
         :param func: function to be applied to values
         :param args: additional optional arguments of func
-        :return: new Cube object
+        :return: new Cube instance
         """
         return Cube(func(self._values, *args), self._axes)
 
@@ -158,10 +157,10 @@ class Cube(object):
         """A generalized analogy to numpy.transpose.
         :param front: axes which will be in the front of other axes
         :param back: axes which will be at the back of other axes
-        :return: new Cube object with transposed axes
+        :return: new Cube instance with transposed axes
 
         The arguments 'front' and 'back' are expected in the form of an axis identifier or a collection
-        of axis identifiers. Axis identifier is a name (str), index (int) or axis object (Axis).
+        of axis identifiers. Axis identifier is a name (str), index (int) or Axis instance.
         """
         indices = self._axes.transposed_indices(front, back)
         new_axes = tuple(self._axes.axis_by_index(index) for index in indices)
@@ -297,51 +296,51 @@ class Cube(object):
     """mathematical functions"""
 
     def __abs__(self):
-        """Implements behavior for the built in abs() function.
-        :return: new Cube object
+        """Implements behaviour for the built in abs() function.
+        :return: new Cube instance
         """
         return self.apply(abs)
 
     def __round__(self, decimals):
-        """Implements behavior for the built in round() function.
+        """Implements behaviour for the built in round() function.
         :param decimals: the number of decimal places to round to
-        :return: new Cube object
+        :return: new Cube instance
         """
         return self.apply(round, decimals)
 
     def __floor__(self):
-        """Implements behavior for math.floor(), i.e., rounding down to the nearest integer.
-        :return: new Cube object
+        """Implements behaviour for math.floor(), i.e., rounding down to the nearest integer.
+        :return: new Cube instance
         """
         return self.apply(math.floor)
 
     def __ceil__(self):
-        """Implements behavior for math.ceil(), i.e., rounding up to the nearest integer.
-        :return: new Cube object
+        """Implements behaviour for math.ceil(), i.e., rounding up to the nearest integer.
+        :return: new Cube instance
         """
         return self.apply(math.ceil)
 
     def __trunc__(self):
         """Implements behavior for math.trunc(), i.e., truncating to an integral.
-        :return: new Cube object
+        :return: new Cube instance
         """
         return self.apply(math.trunc)
 
     def sin(self):
         """Sine, element-wise. Can be called as numpy.sin(C) or C.sin().
-        :return: new Cube object
+        :return: new Cube instance
         """
         return self.apply(np.sin)
 
     def cos(self):
         """Cosine, element-wise. Can be called as numpy.cos(C) or C.cos().
-        :return: new Cube object
+        :return: new Cube instance
         """
         return self.apply(np.cos)
 
     def tan(self):
         """Tangents, element-wise. Can be called as numpy.tan(C) or C.tan().
-        :return: new Cube object
+        :return: new Cube instance
         """
         return self.apply(np.tan)
 
@@ -460,32 +459,29 @@ class Cube(object):
         new_values = np.concatenate(sub_cubes, old_axis_index)
         return Cube(new_values, new_axes)
 
-    def _filter_axis(self, axis):
-        self_axis, self_axis_index = self._axes.axis_and_index(axis.name)
-        value_indices = self_axis.index(axis.values)
-        new_values = self._values.take(value_indices, self_axis_index)
-        new_axes = self._axes.replace(self_axis_index, axis)
-        return Cube(new_values, new_axes)
-
     def replace_axis(self, old_axis_id, new_axis):
-        """Replaces an existing axis with a new axis and return the new Cube object.
+        """Replaces an existing axis with a new axis and return the new Cube instance.
         The new axes collection is checked for duplicate names.
         The new axis must have the same length as the axis to be replaced.
         :param old_axis_id: axis index (int) or name (str)
-        :param new_axis: Series or Index object
-        :return: new Cube object
+        :param new_axis: Series or Index instance
+        :return: new Cube instance
         """
         new_axes = self._axes.replace(old_axis_id, new_axis)
         return Cube(self._values, new_axes)
 
     def swap_axes(self, axis1, axis2):
         """Swaps two axes.
-        :param axis1: name (str), index (int) or Axis object
-        :param axis2: name (str), index (int) or Axis object
-        :return: new Cube object with swapped axes
+        :param axis1: name (str), index (int) or Axis instance
+        :param axis2: name (str), index (int) or Axis instance
+        :return: new Cube instance with swapped axes
+        :raise: LookupError if axis1 or axis2 is not found
+        If axis1 is the same as axis2, the original Cube instance is returned.
         """
         index1 = self._axes.index(axis1)
         index2 = self._axes.index(axis2)
+        if index1 == index2:
+            return self
         new_axes = self._axes.swap(index1, index2)
         new_values = self._values.swapaxes(index1, index2)
         return Cube(new_values, new_axes)
@@ -494,7 +490,7 @@ class Cube(object):
         """Adds a new axis and repeats the values to fill the new cube.
         :param axis: the new axis to be inserted
         :param index: the index of the new axis after it is inserted
-        :return: new Cube object with inserted axis
+        :return: new Cube instance with inserted axis
         """
         new_axes = self._axes.insert(axis, index)
         new_values = np.expand_dims(self._values, index)
@@ -504,8 +500,8 @@ class Cube(object):
     def align_axis(self, new_axis):
         """Returns a cube with values aligned to a new axis. The axis to be aligned has the same name as the new
         axis. The order of the axes in the cube remains the same. The new axis will become one of the cube axes.
-        :param new_axis: Axis object
-        :return: new Cube object
+        :param new_axis: Axis instance
+        :return: new Cube instance
         """
         old_axis, old_axis_index = self._axes.axis_and_index(new_axis.name)
         indices = old_axis.indexof(new_axis.values)
@@ -517,12 +513,13 @@ class Cube(object):
         old_axis, old_axis_index = self._axes.axis_and_index(axis)
         if not isinstance(old_axis, Index):
             old_axis_indices = old_axis.index(axis.values)
+        # TODO...
 
     def rename_axis(self, old_axis, new_name):
         """Returns a cube with a renamed axis.
-        :param old_axis: axis index (int), name (str) or Axis object
+        :param old_axis: axis index (int), name (str) or Axis instance
         :param new_name: the name of the new axis (str)
-        :return: new Cube object
+        :return: new Cube instance
         :raise: LookupError if the old axis does not exist, ValueError is the name is duplicate
         """
         new_axes = self._axes.rename(old_axis, new_name)
@@ -587,10 +584,10 @@ class Cube(object):
     def filter(self, axis, values=None, exclude=None):
         """Returns a cube filtered by specified values on a given axis. Takes into account only values
         which exist on the axis. Other values are ignored.
-        :param axis: name (str), index (int) or Axis object
+        :param axis: name (str), index (int) or Axis instance
         :param values: a collection of values to be filtered (included)
         :param exclude: a collection of values to be filtered out (excluded)
-        :return: new Cube object
+        :return: new Cube instance
         The performance is dependent on the size of 'values' or 'exclude' collections. If a large collection
         is being filtered, it is beneficial to convert it to a set because it provides faster lookups.
         """
@@ -604,41 +601,54 @@ class Cube(object):
             raise ValueError("either 'values' or 'exclude' must be non-None, the other must be None")
         return self.take(value_indices, axis_index)
 
-    def take(self, indices, axis_id):
-        """Filters cube along given axis on specified indices. Analogy to numpy.ndarray.take.
+    def take(self, indices, axis):
+        """Filters the cube along an axis using specified indices. 
+        Analogy to numpy.ndarray.take.
         :param indices: a collection of ints or int
-        :param axis_id: string or int specifying the axis"""
-        axis, axis_id = self._axes.axis_and_index(axis_id)
+        :param axis: axis name (str), axis index (int) or Axis instance
+        :return: new Cube instance
+        :raise: LookupError is the axis does not exist, # TODO - error if wrong type
+        If 'indices' is a single int, then the axis is removed from the cube.
+        If 'indices' is a collection of ints, then the axis is preserved. """
+        axis, axis_index = self._axes.axis_and_index(axis)
         new_axis = axis.take(indices)
         if isinstance(indices, int):
-            # if indices is not collection,
+            # if indices is a single int,
             # then will remove one dimension
-            axes = self._axes.remove(axis_id)
+            axes = self._axes.remove(axis_index)
         else:
             # otherwise the dimension is preserved,
             # even if the collection has one element
-            axes = self._axes.replace(axis_id, new_axis)
-        values = self._values.take(indices, axis_id)
+            axes = self._axes.replace(axis_index, new_axis)
+        values = self._values.take(indices, axis_index)
         return Cube(values, axes)
 
-    def compress(self, condition, axis_id):
-        """Takes elements using a boolean mask along a specified axis. Analogy to numpy.ndarray.compress."""
-        axis, axis_id = self._axes.axis_and_index(axis_id)
+    def compress(self, condition, axis):
+        """Filters the cube along an axis using a boolean mask along a specified axis. 
+        Analogy to numpy.ndarray.compress.
+        :param condition: collection of boolean values
+        :param axis: axis name (str), axis index (int) or Axis instance
+        :return: new Cube instance
+        :raise: LookupError is the axis does not exist, # TODO - error if wrong type
+        """
+        axis, axis_index = self._axes.axis_and_index(axis)
         new_axis = axis.compress(condition)
-        axes = self._axes.replace(axis_id, new_axis)
-        values = self._values.compress(condition, axis_id)
+        axes = self._axes.replace(axis_index, new_axis)
+        values = self._values.compress(condition, axis_index)
         return Cube(values, axes)
 
-    def make_index(self, axis_id):
+    def make_index(self, axis):
         """Converts an axis into Index. If the axis is already an Index, then does nothing."""
-        self._axes.make_index(axis_id)
+        self._axes.make_index(axis)
 
-    def make_series(self, axis_id):
+    def make_series(self, axis):
         """Converts an axis into Series. If the axis is already a Series, then does nothing."""
-        self._axes.make_series(axis_id)
+        self._axes.make_series(axis)
         
     def squeeze(self):
-        """Removes the axes of size one. Analogy to numpy ndarray.squeeze()."""
+        """Removes all the axes with the size of one from the cube. 
+        Analogy to numpy ndarray.squeeze().
+        :return: new Cube instance"""
         new_axes = tuple(a for a in self.axes if len(a) != 1)
         new_values = self._values.squeeze()
         return Cube(new_values, new_axes)        
@@ -646,10 +656,10 @@ class Cube(object):
     @staticmethod
     def full(axes, fill_value, dtype=None):
         """Returns a new cube filled with a uniform value.
-        :param axes: a collection of Axis objects for form the new cube
+        :param axes: a collection of Axis instances for form the new cube
         :param fill_value: the uniform value to fill the cube
         :param dtype: the value type of the new cube (usually int or float)
-        :returns: new Cube object
+        :returns: new Cube instance
         """
         axes = make_Axes(axes)
         shape = tuple(len(axis) for axis in axes)
@@ -659,9 +669,9 @@ class Cube(object):
     @staticmethod
     def zeros(axes, dtype=float):
         """Returns a new cube filled with zeros.
-        :param axes: a collection of Axis objects for form the new cube
+        :param axes: a collection of Axis instances for form the new cube
         :param dtype: the value type of the new cube (usually int or float)
-        :returns: new Cube object
+        :returns: new Cube instance
         """
         axes = make_Axes(axes)
         shape = tuple(len(axis) for axis in axes)
@@ -671,9 +681,9 @@ class Cube(object):
     @staticmethod
     def ones(axes, dtype=float):
         """Returns a new cube filled with ones.
-        :param axes: a collection of Axis objects for form the new cube
+        :param axes: a collection of Axis instances for form the new cube
         :param dtype: the value type of the new cube (usually int or float)
-        :returns: new Cube object
+        :returns: new Cube instance
         """
         axes = make_Axes(axes)
         shape = tuple(len(axis) for axis in axes)
@@ -736,18 +746,18 @@ def _align_axes(axis1, axis2, axis_index1, axis_index2, values1, values2):
 def apply2(a, b, func, *args):
     """Apply function element-wise on values of two cubes.
     The cube axes are matched and aligned before the function is applied.
-    :param a:
-    :param b:
-    :param func:
-    :param args:
-    :return:
+    :param a: Cube instance
+    :param b: Cube instance
+    :param func: function to be applied
+    :param args: additional arguments which are passed to the function
+    :return: new Cube instance
     """
 
     if not isinstance(a, Cube):
-        return Cube(func(a, b.values, *args), b._axes)
+        return Cube(func(a, b.values, *args), tuple(b.axes))
 
     if not isinstance(b, Cube):
-        return Cube(func(a.values, b, *args), a._axes)
+        return Cube(func(a.values, b, *args), tuple(a.axes))
 
     values_a = a.values
     values_b = b.values
@@ -774,8 +784,8 @@ def apply2(a, b, func, *args):
         if not a.has_axis(axis_b.name):
             all_axes.append(axis_b)
                 
-    values_a = _broadcast_values(values_a, a._axes, all_axes)  # TODO - do not use private accessor
-    values_b = _broadcast_values(values_b, b._axes, all_axes)  # TODO - do not use private accessor
+    values_a = _broadcast_values(values_a, a._axes, all_axes)
+    values_b = _broadcast_values(values_b, b._axes, all_axes)
 
     return Cube(func(values_a, values_b, *args), all_axes)
     
@@ -882,7 +892,7 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis):
     # broadcast value arrays
     for cube_index, cube in enumerate(cube_list):
         array = array_list[cube_index]
-        array = _broadcast_values(array, cube._axes, axis_list)  # TODO - do not use private accessor
+        array = _broadcast_values(array, cube._axes, axis_list)
         array_list[cube_index] = array
 
     array_list = np.broadcast_arrays(*array_list)
@@ -923,14 +933,14 @@ def concatenate(cubes, axis_name, as_index=True):
 
 
 def stack(cubes, axis):
-    """
-    Adds a new dimension and stack uniformly sized cubes along this axis.
+    """Adds a new dimension and stack uniformly shaped cubes along this axis.
     This is different from concatenate which joins cubes along axis which already exists in all the cubes.
-    :param cubes:
-    :param axis:
-    :return:
+    :param cubes: a collection of Cube instances
+    :param axis: Axis instance which is used to stack the cubes
+    :return: new Cube instance with the new axis
+    :raise: ValueError is an axis of the same axis name already exists in any of the cubes in the collection;
+        ValueError if the axis has different length from the number of cubes in the collection
     """
-
     for cube in cubes:
         if cube.has_axis(axis.name):
             raise ValueError("cube already contains axis '{}'".format(axis.name))

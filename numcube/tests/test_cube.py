@@ -256,13 +256,37 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(D.ndim, 0)
 
     def test_compress(self):
-        c = year_quarter_cube()
-        d = c.compress([True, False, False], 0)
-        self.assertTrue(np.array_equal(d.values, [[0, 1, 2, 3]]))
-        self.assertEqual(d.ndim, 2)
-        self.assertEqual(tuple(d.axis_names), ("year", "quarter"))
-        e = c.compress([True, False, True, False], 1)
-        self.assertTrue(np.array_equal(e.values, [[0, 2], [4, 6], [8, 10]]))
+        C = year_quarter_cube()
+        
+        D = C.compress([True, False, False], 0)
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
+        self.assertEqual(D.ndim, 2)
+        self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
+        
+        E = C.compress([True, False, True, False], "quarter")
+        self.assertTrue(np.array_equal(E.values, [[0, 2], [4, 6], [8, 10]]))
+
+        # using numpy array of bools
+        E = C.compress(np.arange(1, 4) <= 1, "quarter")
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
+        self.assertEqual(D.ndim, 2)
+        self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
+        
+        # ints instead of bools; 0 = False, other = True
+        # similarly for other types; Python bool conversion is used
+        D = C.compress([1, 0, 0], 0)
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
+        self.assertEqual(D.ndim, 2)
+        self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
+
+        # wrong length of bool collection - too short ...
+        D = C.compress([True, False], 0)  # unspecified means False
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
+
+        # ... and too long
+        D = C.compress([True, False, False, False], 0)  # this is OK, the extra False is ignored
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
+        self.assertRaises(IndexError, C.compress, [True, False, False, True], 0)  # but this is not OK
 
     def test_transpose(self):
         C = year_quarter_weekday_cube()
@@ -508,14 +532,33 @@ class CubeTests(unittest.TestCase):
 
     def test_swap_axis(self):
         C = year_quarter_weekday_cube()
+        self.assertEqual(C.shape, (3, 4, 7))
 
         # swap by name
         D = C.swap_axes("year", "quarter")
         self.assertEqual(tuple(D.axis_names), ("quarter", "year", "weekday"))
+        self.assertEqual(D.shape, (4, 3, 7))
 
         # swap by index
         D = C.swap_axes(0, 2)
         self.assertEqual(tuple(D.axis_names), ("weekday", "quarter", "year"))
+        self.assertEqual(D.shape, (7, 4, 3))
+        
+        # swap by index and name
+        D = C.swap_axes(0, "quarter")
+        self.assertEqual(tuple(D.axis_names), ("quarter", "year", "weekday"))
+        self.assertEqual(D.shape, (4, 3, 7))
+        
+        # swap Axis instances
+        year_axis = C.axis("year")
+        quarter_axis = C.axis("quarter")
+        D = C.swap_axes(year_axis, quarter_axis)
+        self.assertEqual(tuple(D.axis_names), ("quarter", "year", "weekday"))
+        self.assertEqual(D.shape, (4, 3, 7))
+        
+        # wrong axis results in LookupError
+        self.assertRaises(LookupError, C.sum, "bad_axis")
+        self.assertRaises(LookupError, C.sum, 3)        
         
     def test_align_axis(self):
         C = year_quarter_cube()
