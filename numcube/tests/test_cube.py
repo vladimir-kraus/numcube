@@ -86,14 +86,11 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, Cube, values, [b, a])
 
     def test_axes(self):
-        """Tests working with cube axes. Counting axes, accessing axes by name or index, etc."""
+        """Counting axes, accessing axes by name or index, etc."""
         C = year_quarter_cube()
 
         # number of dimensions (axes)
         self.assertEqual(C.ndim, 2)
-
-    def test_axis(self):
-        C = year_quarter_cube()
 
         # get axis by index, by name and by axis object
         axis1 = C.axis(0)
@@ -161,6 +158,7 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(TypeError, C.has_axis, None)
 
     def test_getitem(self):
+        """Getting items by row and column, slicing etc. using __getitem__(item)"""
         C = year_quarter_cube()
 
         D = C[0:2, 0:3]
@@ -168,37 +166,63 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(D.ndim, 2)
         self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
         
-        # collapsing axis
+        # indexing - will collapse (i.e. remove) axis
         D = C[0]
-        self.assertTrue(np.array_equal(D.values, [0, 1, 2, 3]))
         self.assertEqual(D.ndim, 1)
         self.assertEqual(D.axis(0).name, "quarter")
+        self.assertTrue(np.array_equal(D.values, [0, 1, 2, 3]))
 
         D = C[:, 0]
-        self.assertTrue(np.array_equal(D.values, [0, 4, 8]))
         self.assertEqual(D.ndim, 1)
         self.assertEqual(D.axis(0).name, "year")
+        self.assertTrue(np.array_equal(D.values, [0, 4, 8]))
 
+        # slicing - will not collapse axis
+        D = C[0:1]
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
+
+        D = C[slice(0, 1)]
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
+
+        D = C[:, 0:1]
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue(np.array_equal(D.values, [[0], [4], [8]]))
+
+        D = C[(slice(0, None), slice(0, 1))]
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue(np.array_equal(D.values, [[0], [4], [8]]))
+
+        # using negative indices
         self.assertTrue(np.array_equal(C[-1].values, [8, 9, 10, 11]))
         self.assertTrue(np.array_equal(C[:, -1].values, [3, 7, 11]))
 
-        # not collapsing axis
-        self.assertTrue(np.array_equal(C[0:1].values, [[0, 1, 2, 3]]))
-        self.assertTrue(np.array_equal(C[:, 0:1].values, [[0], [4], [8]]))
+        # wrong index
+        self.assertRaises(IndexError, C.__getitem__, 5)
+        # eq. C[0, 0, 0] raises IndexError: too many indices
+        self.assertRaises(IndexError, C.__getitem__, (0, 0, 0))
+        # wring number of slices
+        self.assertRaises(IndexError, C.__getitem__, (slice(0, 2), slice(0, 2), slice(0, 2)))
 
         # np.newaxis is not supported
         self.assertRaises(ValueError, C.__getitem__, (0, 0, np.newaxis))
         self.assertRaises(ValueError, C.__getitem__, (np.newaxis, 0, 0))
 
-        # eq. C[0, 0, 0] raises IndexError: too many indices
-        self.assertRaises(IndexError, C.__getitem__, (0, 0, 0))
-
     def test_filter(self):
-        """Filter will set filter a specified axis with a specified values.
-        Takes into account only values which exist on the axis. Other values are ignored.
-        """
+        """Testing function Cube.filter()"""
         C = year_quarter_cube()  # the year values are [2014, 2015, 2016]
+
         D = C.filter("year", [2014, 2018])  # 2018 is ignored
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue((D.values == C.values[0]).all())
+
+        D = C.filter("year", exclude=[2015, 2016, 2018])  # 2018 is ignored
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue((D.values == C.values[0]).all())
+
+        # for large collections it is better for performance to pass the parameter as a set
+        D = C.filter("year", exclude=set(range(2015, 3000)))
         self.assertEqual(D.ndim, 2)
         self.assertTrue((D.values == C.values[0]).all())
 

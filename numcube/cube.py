@@ -584,13 +584,25 @@ class Cube(object):
         new_axes.insert(0, new_axis)
         return Cube(new_values, new_axes)
         
-    def filter(self, axis_id, values=None):
-        """Returns a filtered cube with only those elements on the axis, which are contained in the array of values.
+    def filter(self, axis, values=None, exclude=None):
+        """Returns a cube filtered by specified values on a given axis. Takes into account only values
+        which exist on the axis. Other values are ignored.
+        :param axis: name (str), index (int) or Axis object
+        :param values: a collection of values to be filtered (included)
+        :param exclude: a collection of values to be filtered out (excluded)
+        :return: new Cube object
+        The performance is dependent on the size of 'values' or 'exclude' collections. If a large collection
+        is being filtered, it is beneficial to convert it to a set because it provides faster lookups.
         """
         # TODO - consider switching argument order to be consistent with take and compress
-        axis, axis_index = self._axes.axis_and_index(axis_id)
-        indices = [i for i, v in enumerate(axis.values) if v in values]
-        return self.take(indices, axis_index)
+        axis, axis_index = self._axes.axis_and_index(axis)
+        if values is not None and exclude is None:
+            value_indices = [i for i, v in enumerate(axis.values) if v in values]
+        elif values is None and exclude is not None:
+            value_indices = [i for i, v in enumerate(axis.values) if v not in exclude]
+        else:
+            raise ValueError("either 'values' or 'exclude' must be non-None, the other must be None")
+        return self.take(value_indices, axis_index)
 
     def take(self, indices, axis_id):
         """Filters cube along given axis on specified indices. Analogy to numpy.ndarray.take.
