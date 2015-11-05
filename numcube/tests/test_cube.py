@@ -592,14 +592,28 @@ class CubeTests(unittest.TestCase):
     def test_stack(self):
         C = year_quarter_cube()
         D = year_quarter_cube()
-        ax = Index("country", ["GB", "FR"])
-        E = stack([C, D], ax)
+        country_axis = Index("country", ["GB", "FR"])
+        E = stack([C, D], country_axis)
         self.assertEqual(E.values.shape, (2, 3, 4))
         self.assertEqual(tuple(E.axis_names), ("country", "year", "quarter"))
 
         # axis with the same name already exists
-        ax = Index("year", [2000, 2001])
-        self.assertRaises(ValueError, stack, [C, D], ax)
+        C = year_quarter_cube()
+        D = year_quarter_cube()
+        year_axis = Index("year", [2000, 2001])
+        self.assertRaises(ValueError, stack, [C, D], year_axis)
+
+        # different number of cubes and axis length
+        C = year_quarter_cube()
+        D = year_quarter_cube()
+        country_axis = Index("country", ["GB", "FR", "DE"])
+        self.assertRaises(ValueError, stack, [C, D], country_axis)
+
+        # cubes do not have uniform shapes
+        C = year_quarter_cube()
+        D = year_quarter_weekday_cube()
+        country_axis = Index("country", ["GB", "FR"])
+        self.assertRaises(LookupError, stack, [C, D], country_axis)  # TODO: maybe change to different error type
         
     def test_combine_axes(self):
         C = year_quarter_weekday_cube()
