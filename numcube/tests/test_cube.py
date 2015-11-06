@@ -436,23 +436,23 @@ class CubeTests(unittest.TestCase):
             self.assertTrue(np.array_equal(op(C, D).values, op(C.values, D)))
             self.assertTrue(np.array_equal(op(D, C).values, op(D, C.values)))
 
-    def test_groupby(self):
+    def test_group(self):
         values = np.arange(12).reshape(3, 4)
         ax1 = Axis("year", [2014, 2014, 2014])
         ax2 = Axis("month", ["jan", "jan", "feb", "feb"])
         C = Cube(values, [ax1, ax2])
         
-        D = C.groupby(0, np.mean)  # average by year
+        D = C.group(0, np.mean)  # average by year
         self.assertTrue(np.array_equal(D.values, np.array([[4, 5, 6, 7]])))        
         self.assertTrue(isinstance(D.axis(0), Index))
         self.assertEqual(len(D.axis(0)), 1)
         self.assertEqual(D.values.shape, (1, 4))  # axes with length of 1 are not collapsed
         
-        D = C.groupby(ax2.name, np.sum, sorted=False)  # sum by month
+        D = C.group(ax2.name, np.sum, sorted=False)  # sum by month
         self.assertTrue(np.array_equal(D.values, np.array([[1, 5], [9, 13], [17, 21]])))
         self.assertTrue(np.array_equal(D.axis(ax2.name).values, ["jan", "feb"]))
 
-        D = C.groupby(ax2.name, np.sum)  # sum by month, sorted by default
+        D = C.group(ax2.name, np.sum)  # sum by month, sorted by default
         self.assertTrue(np.array_equal(D.values, np.array([[5, 1], [13, 9], [21, 17]])))
         self.assertTrue(np.array_equal(D.axis(ax2.name).values, ["feb", "jan"]))
         self.assertTrue(isinstance(D.axis(ax2.name), Index))
@@ -463,12 +463,12 @@ class CubeTests(unittest.TestCase):
         funcs = [np.sum, np.mean, np.median, np.min, np.max, np.prod]  # , np.diff]
         C = Cube(values, [ax1, ax2])
         for func in funcs:
-            D = C.groupby(ax1.name, func)
+            D = C.group(ax1.name, func)
             self.assertTrue(np.array_equiv(D.values, np.apply_along_axis(func, 0, C.values)))
         
         # testing function with extra parameters which cannot be passed as *args
         third_quartile = functools.partial(np.percentile, q=75)
-        D = C.groupby(ax1.name, third_quartile)
+        D = C.group(ax1.name, third_quartile)
         self.assertTrue(np.array_equiv(D.values, np.apply_along_axis(third_quartile, 0, C.values)))
 
     def test_rename_axis(self):
@@ -529,7 +529,7 @@ class CubeTests(unittest.TestCase):
 
         self.assertRaises(TypeError, C.sum, 1.0)
 
-    def test_swap_axis(self):
+    def test_swap_axes(self):
         C = year_quarter_weekday_cube()
         self.assertEqual(C.shape, (3, 4, 7))
 

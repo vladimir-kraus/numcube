@@ -420,16 +420,16 @@ class Cube(object):
 
         return Cube(new_values, new_axes)
 
-    def groupby(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
-        """
+    def group(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
+        """Group the same values along a given axis by applying a function.
         :param axis: name (str) or index (int) of axis to group the cube values by
         :param func: aggregation function, e.g. np.sum, np.mean etc.
             There are the following requirements:
             - the function takes two fixed arguments - array and axis (given by index)
             - these two fixed arguments can be followed by a variable number of other arguments passed in *args
             - the function must return an array with one axis less then the input array
-        :param sorted: True if the grouped axis values shall be sorted, False if the values should
-            keep the order of their first occurrences
+        :param sorted: True to sort the grouped values, False to keep the order of the first occurrences
+        :return: new Cube instance
         """
         old_axis, old_axis_index = self._axes.axis_and_index(axis)
         
@@ -439,7 +439,7 @@ class Cube(object):
             # np.unique sorts the returned values by default
             unique_values = np.unique(old_axis.values)
         else:
-            # special handling is required if the first occurence order is to be kept
+            # special handling is required if the first occurrence order is to be kept
             unique_values, unique_indices = np.unique(old_axis.values, return_index=True)
             index_array = np.argsort(unique_indices)
             unique_values = unique_values[index_array]
