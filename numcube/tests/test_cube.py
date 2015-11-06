@@ -614,6 +614,7 @@ class CubeTests(unittest.TestCase):
         country_axis = Index("country", ["GB", "FR"])
         E = stack([C, D], country_axis)
         self.assertEqual(E.values.shape, (2, 3, 4))
+        # the merged axis go first
         self.assertEqual(tuple(E.axis_names), ("country", "year", "quarter"))
 
         # axis with the same name already exists
@@ -632,7 +633,13 @@ class CubeTests(unittest.TestCase):
         C = year_quarter_cube()
         D = year_quarter_weekday_cube()
         country_axis = Index("country", ["GB", "FR"])
-        self.assertRaises(LookupError, stack, [C, D], country_axis)  # TODO: maybe change to different error type
+        self.assertRaises(LookupError, stack, [C, D], country_axis)
+
+        # the previous example if O, if automatic broadcasting is allowed
+        E = stack([C, D], country_axis, broadcast=True)
+        self.assertEqual(E.ndim, 4)
+        # broadcast axes go last
+        self.assertEqual(tuple(E.axis_names), ("country", "year", "quarter", "weekday"))
         
     def test_combine_axes(self):
         C = year_quarter_weekday_cube()
