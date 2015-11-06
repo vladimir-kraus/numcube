@@ -607,7 +607,7 @@ class Cube(object):
         :param indices: a collection of ints or int
         :param axis: axis name (str), axis index (int) or Axis instance
         :return: new Cube instance
-        :raise: LookupError is the axis does not exist, # TODO - error if wrong type
+        :raise: LookupError is the axis does not exist, ValueError for invalid indices
         If 'indices' is a single int, then the axis is removed from the cube.
         If 'indices' is a collection of ints, then the axis is preserved. """
         axis, axis_index = self._axes.axis_and_index(axis)

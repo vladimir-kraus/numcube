@@ -627,16 +627,39 @@ class CubeTests(unittest.TestCase):
 
     def test_take(self):
         C = year_quarter_cube()
+
+        # axis by name
         self.assertTrue(np.array_equal(C.take([0, 1], "year").values, C.values.take([0, 1], 0)))
-        self.assertTrue(np.array_equal(C.take([0, 1], 0).values, C.values.take([0, 1], 0)))
-        # do not collapse dimension
-        self.assertTrue(np.array_equal(C.take([2], 0).values, C.values.take([2], 0)))
-        # collapse dimension
-        self.assertTrue(np.array_equal(C.take(2, 0).values, C.values.take(2, 0)))
         self.assertTrue(np.array_equal(C.take([0, 1], "quarter").values, C.values.take([0, 1], 1)))
+
+        # axis by index
+        self.assertTrue(np.array_equal(C.take([0, 1], 0).values, C.values.take([0, 1], 0)))
         self.assertTrue(np.array_equal(C.take([0, 1], 1).values, C.values.take([0, 1], 1)))
-        # do not collapse dimension
-        self.assertTrue(np.array_equal(C.take([2], 1).values, C.values.take([2], 1)))
-        # collapse dimension
-        self.assertTrue(np.array_equal(C.take(2, 1).values, C.values.take(2, 1)))
+
+        # do not collapse dimension - a single int in a list or tuple
+        D = C.take([2], 0)
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue(np.array_equal(D.values, C.values.take([2], 0)))
+
+        D = C.take((2,), 0)
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue(np.array_equal(D.values, C.values.take([2], 0)))
+
+        # collapse dimension - a single int
+        D = C.take(2, 0)
+        self.assertEqual(D.ndim, 1)
+        self.assertTrue(np.array_equal(D.values, C.values.take(2, 0)))
+
+        # negative index
+        self.assertTrue(np.array_equal(C.take([-3, -2], "year").values, C.values.take([0, 1], 0)))
+
+        # wrong axes
+        self.assertRaises(LookupError, C.take, [0, 1], "bad_axis")
+        self.assertRaises(LookupError, C.take, [0, 1], 2)
+
+        # wrong indices
+        self.assertRaises(IndexError, C.take, 4, "year")
+        self.assertRaises(IndexError, C.take, [0, 4], "year")
+        self.assertRaises(ValueError, C.take, ["X"], "year")
+        self.assertRaises(TypeError, C.take, None, "year")
 
