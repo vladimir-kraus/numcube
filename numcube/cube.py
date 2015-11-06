@@ -429,7 +429,7 @@ class Cube(object):
             - these two fixed arguments can be followed by a variable number of other arguments passed in *args
             - the function must return an array with one axis less then the input array
         :param sorted: True if the grouped axis values shall be sorted, False if the values should
-            keep the order of their first occurences
+            keep the order of their first occurrences
         """
         old_axis, old_axis_index = self._axes.axis_and_index(axis)
         
@@ -491,6 +491,7 @@ class Cube(object):
         :param axis: the new axis to be inserted
         :param index: the index of the new axis after it is inserted
         :return: new Cube instance with inserted axis
+        :raise: TODO
         """
         new_axes = self._axes.insert(axis, index)
         new_values = np.expand_dims(self._values, index)

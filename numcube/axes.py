@@ -174,6 +174,10 @@ class Axes(object):
         :return: new Axes object
         """
         axis_list = list(self._axes)
+        # need to correctly handle negative values
+        # for example: index -1 means that the new axis should be the last axis after the insertion
+        if index < 0:
+            index = len(axis_list) + 1 - index
         axis_list.insert(index, axis)
         return Axes(axis_list)
 

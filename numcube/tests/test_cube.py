@@ -663,3 +663,20 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, C.take, ["X"], "year")
         self.assertRaises(TypeError, C.take, None, "year")
 
+    def test_insert_axis(self):
+        C = year_quarter_cube()
+        countries = Axis("country", ["DE", "FR"])
+
+        # add as the first axis
+        D = C.insert_axis(countries, 0)
+        self.assertEqual(D.ndim, 3)
+        self.assertEqual(tuple(D.axis_names), ("country", "year", "quarter"))
+        self.assertTrue((D.take(0, "country") == C).all())
+        self.assertTrue((D.take(1, "country") == C).all())
+
+        # add as the last axis
+        D = C.insert_axis(countries, -1)
+        self.assertEqual(D.ndim, 3)
+        self.assertEqual(tuple(D.axis_names), ("year", "quarter", "country"))
+        self.assertTrue((D.take(0, "country") == C).all())
+        self.assertTrue((D.take(1, "country") == C).all())
