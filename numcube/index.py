@@ -12,6 +12,7 @@ class Index(Axis):
         """Initialize a new Index object. The values must be unique, otherwise ValueError is raised.
         :param name: str
         :param values: sequence of values (must be unique)
+        :raise: ValueError if there are duplicate values
         """
         super(Index, self).__init__(name, values)
 
@@ -22,7 +23,7 @@ class Index(Axis):
         self._values.flags.writeable = False
         
         if len(self._indices) != len(self._values):
-            raise ValueError('index has duplicate values')
+            raise ValueError('Index cannot have duplicate values')
         
         self._vec_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
         self._vec_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])

@@ -125,7 +125,7 @@ class Cube(object):
         Index can be a negative number, in that case, the axes are counted backwards from the last one.
         :param axis: axis name (str), axis index (int) or Axis instance
         :return: Axis instance
-        :raise: LookupError if the axis does not exist, TypeError if wrong argument type is passed
+        :raise LookupError: if the axis does not exist, TypeError if wrong argument type is passed
         """
         return self._axes[self.axis_index(axis)]
 
@@ -133,7 +133,7 @@ class Cube(object):
         """Returns the index of the axis specified by its name or axis instance.
         :param axis: name (str), index (int) or Axis instance
         :return: int
-        :raise: LookupError if the axis does not exist, TypeError if wrong argument type is passed
+        :raise LookupError: if the axis does not exist, TypeError if wrong argument type is passed
         """
         return self._axes.index(axis)
 
@@ -141,7 +141,7 @@ class Cube(object):
         """Returns True/False indicating whether the axis exists in the Cube.
         :param axis: name (str), index (int) or Axis instance
         :return: bool
-        :raise: TypeError if wrong argument type is passed
+        :raise TypeError: if wrong argument type is passed
         """
         return self._axes.contains(axis)
 
@@ -475,7 +475,8 @@ class Cube(object):
         :param axis1: name (str), index (int) or Axis instance
         :param axis2: name (str), index (int) or Axis instance
         :return: new Cube instance with swapped axes
-        :raise: LookupError if axis1 or axis2 is not found
+        :raise LookupError: if axis1 or axis2 is not found
+
         If axis1 is the same as axis2, the original Cube instance is returned.
         """
         index1 = self._axes.index(axis1)
@@ -521,7 +522,7 @@ class Cube(object):
         :param old_axis: axis index (int), name (str) or Axis instance
         :param new_name: the name of the new axis (str)
         :return: new Cube instance
-        :raise: LookupError if the old axis does not exist, ValueError is the name is duplicate
+        :raise LookupError: if the old axis does not exist, ValueError is the name is duplicate
         """
         new_axes = self._axes.rename(old_axis, new_name)
         return Cube(self._values, new_axes)
@@ -608,9 +609,11 @@ class Cube(object):
         :param indices: a collection of ints or int
         :param axis: axis name (str), axis index (int) or Axis instance
         :return: new Cube instance
-        :raise: LookupError is the axis does not exist, ValueError for invalid indices
+        :raise LookupError: is the axis does not exist, ValueError for invalid indices
+
         If 'indices' is a single int, then the axis is removed from the cube.
-        If 'indices' is a collection of ints, then the axis is preserved. """
+        If 'indices' is a collection of ints, then the axis is preserved.
+        """
         axis, axis_index = self._axes.axis_and_index(axis)
         new_axis = axis.take(indices)
         if isinstance(indices, int):
@@ -630,7 +633,7 @@ class Cube(object):
         :param condition: collection of boolean values
         :param axis: axis name (str), axis index (int) or Axis instance
         :return: new Cube instance
-        :raise: LookupError is the axis does not exist, # TODO - error if wrong type
+        :raise LookupError: is the axis does not exist, # TODO - error if wrong type
         """
         axis, axis_index = self._axes.axis_and_index(axis)
         new_axis = axis.compress(condition)
@@ -692,6 +695,109 @@ class Cube(object):
         return Cube(values, axes)
 
 
+def apply2(a, b, func, *args):
+    """Apply function element-wise on values of two cubes.
+    The cube axes are matched and aligned before the function is applied.
+    :param a: Cube instance
+    :param b: Cube instance
+    :param func: function to be applied
+    :param args: additional arguments which are passed to the function
+    :return: new Cube instance
+    """
+
+    if not isinstance(a, Cube):
+        return Cube(func(a, b.values, *args), tuple(b.axes))
+
+    if not isinstance(b, Cube):
+        return Cube(func(a.values, b, *args), tuple(a.axes))
+
+    values_a = a.values
+    values_b = b.values
+    all_axes = list()
+
+    for axis_index_a, axis_a in enumerate(a.axes):
+
+        try:
+            axis_b, axis_index_b = b._axes.axis_and_index(axis_a.name)
+        except LookupError:
+            # axis not found in cube b --> do not align
+            axis_b = axis_a
+
+        # if axes are identical or if axis_b has not been found --> do not align
+        if axis_b is axis_a:
+            all_axes.append(axis_a)
+            continue
+
+        axis, values_a, values_b = _align_axes(axis_a, axis_b, axis_index_a, axis_index_b, values_a, values_b)
+        all_axes.append(axis)
+
+    # add axes from b which have not been aligned
+    for axis_b in b.axes:
+        if not a.has_axis(axis_b.name):
+            all_axes.append(axis_b)
+
+    values_a = _broadcast_values(values_a, a._axes, all_axes)
+    values_b = _broadcast_values(values_b, b._axes, all_axes)
+
+    return Cube(func(values_a, values_b, *args), all_axes)
+
+
+def concatenate(cubes, axis_name, as_index=False, broadcast=False):
+    """Joins cubes along one axis on which the cubes have non-overlapping values.
+    :param cubes: a collection of Cube instances
+    :param axis_name: the name of axis on which the cubes will be joined
+    :param as_index: if True, the new joined axis will be created as Index; otherwise it will be Axis
+    :param broadcast: allows automatic broadcasting of unique axes
+    :return: new Cube instance
+    :raise LookupError: if any cube does not contain the joined axis
+    :raise ValueError: if Index instance shall be created but the values are not unique
+
+    The joined axis becomes the first axis of the new cube regardless of its position in the original cubes.
+    """
+
+    main_axis_values_list = list()
+    for cube in cubes:
+        axis = cube.axis(axis_name)
+        main_axis_values_list.append(axis.values)
+
+    # concatenate the new main axis
+    main_axis_values = np.concatenate(main_axis_values_list)
+    if as_index:
+        # will fail if does not have unique values
+        main_axis = Index(axis_name, main_axis_values)
+    else:
+        main_axis = Axis(axis_name, main_axis_values)
+
+    unique_axes_list = _unique_axes_from_cubes(cubes)
+
+    # create a unique list without the main axis
+    unique_axes_list = [a for a in unique_axes_list if a.name != axis_name]
+
+    return _align_broadcast_and_concatenate(cubes, unique_axes_list, main_axis, broadcast)
+
+
+def stack(cubes, axis, broadcast=False):
+    """Adds a new dimension and stack uniformly shaped cubes along this axis.
+    This is different from concatenate which joins cubes along axis which already exists in all the cubes.
+    :param cubes: a collection of Cube instances
+    :param axis: Axis instance which is used to stack the cubes
+    :param broadcast: allows automatic broadcasting of unique axes
+    :return: new Cube instance with the new axis
+    :raise ValueError: is an axis of the same axis name already exists in any of the cubes in the collection;
+        ValueError if the axis has different length from the number of cubes in the collection
+    """
+    for cube in cubes:
+        if cube.has_axis(axis.name):
+            raise ValueError("cube already contains axis '{}'".format(axis.name))
+
+    if len(cubes) != len(axis):
+        raise ValueError("invalid axis length")
+
+    unique_axes_list = _unique_axes_from_cubes(cubes)
+
+    return _align_broadcast_and_concatenate(cubes, unique_axes_list, axis, broadcast)
+
+
 def _broadcast_values(values, old_axes, new_axes):
     """Add new virtual axes (length is 1) to a numpy array to correspond to the new axes."""
     new_values = values
@@ -744,74 +850,27 @@ def _align_axes(axis1, axis2, axis_index1, axis_index2, values1, values2):
     return axis, values1, values2
 
 
-def apply2(a, b, func, *args):
-    """Apply function element-wise on values of two cubes.
-    The cube axes are matched and aligned before the function is applied.
-    :param a: Cube instance
-    :param b: Cube instance
-    :param func: function to be applied
-    :param args: additional arguments which are passed to the function
-    :return: new Cube instance
-    """
-
-    if not isinstance(a, Cube):
-        return Cube(func(a, b.values, *args), tuple(b.axes))
-
-    if not isinstance(b, Cube):
-        return Cube(func(a.values, b, *args), tuple(a.axes))
-
-    values_a = a.values
-    values_b = b.values
-    all_axes = list()
-    
-    for axis_index_a, axis_a in enumerate(a.axes):
-        
-        try:
-            axis_b, axis_index_b = b._axes.axis_and_index(axis_a.name)
-        except LookupError:
-            # axis not found in cube b --> do not align
-            axis_b = axis_a
-
-        # if axes are identical or if axis_b has not been found --> do not align
-        if axis_b is axis_a:
-            all_axes.append(axis_a)
-            continue
-
-        axis, values_a, values_b = _align_axes(axis_a, axis_b, axis_index_a, axis_index_b, values_a, values_b)
-        all_axes.append(axis)
-
-    # add axes from b which have not been aligned
-    for axis_b in b.axes:
-        if not a.has_axis(axis_b.name):
-            all_axes.append(axis_b)
-                
-    values_a = _broadcast_values(values_a, a._axes, all_axes)
-    values_b = _broadcast_values(values_b, b._axes, all_axes)
-
-    return Cube(func(values_a, values_b, *args), all_axes)
-    
-    
 def _align_index_to_index(axis_from, axis_to):
     """
     """
     if len(axis_from) != len(axis_to):
         raise AxisAlignError("cannot align two Index axes - axes '{}' have different lengths".format(axis_to.name))
-        
+
     try:
         return axis_from.indexof(axis_to.values)
     except KeyError:
         raise AxisAlignError("cannot align two Index axes - axes '{}' have different values".format(axis_to.name))
-        
-        
+
+
 def _align_index_to_series(axis_from, axis_to):
     """
     """
     try:
         return axis_from.indexof(axis_to.values)
     except KeyError:
-        raise AxisAlignError("cannot align Index to Series - axes '{}' have different values".format(axis_to.name))   
+        raise AxisAlignError("cannot align Index to Series - axes '{}' have different values".format(axis_to.name))
 
-        
+
 def _assert_align_series(axis_from, axis_to):
     """Series can be aligned to another axis if and only if it has the same values, in the same order.
     No alignment indices are returned, only the equality of axes is checked.
@@ -853,15 +912,18 @@ def _unique_axes_from_cubes(cubes):
     return unique_axes_list
 
 
-def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis):
+def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis, broadcast):
     array_list = [cube.values for cube in cube_list]
 
     for base_axis in axis_list:
         for cube_index, cube in enumerate(cube_list):
             try:
                 axis_index = cube.axis_index(base_axis.name)
-            except KeyError:
-                continue
+            except LookupError:
+                if broadcast:
+                    continue
+                else:
+                    raise
             axis = cube.axis(axis_index)
 
             if axis is base_axis:
@@ -899,56 +961,3 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis):
     array_list = np.broadcast_arrays(*array_list)
     new_values = np.concatenate(array_list)
     return Cube(new_values, axis_list)
-
-
-def concatenate(cubes, axis_name, as_index=True):
-    """
-    :param cubes:
-    :param axis_name:
-    :param as_index:
-    :return:
-    """
-
-    main_axis_values_list = list()
-    for cube in cubes:
-        try:
-            axis = cube.axis(axis_name)
-        except KeyError:
-            raise ValueError("cube does not contain axis '{}'".format(axis_name))
-        main_axis_values_list.append(axis.values)
-
-    # concatenate the new main axis
-    main_axis_values = np.concatenate(main_axis_values_list)
-    if as_index:
-        # will fail if does not have unique values
-        main_axis = Index(axis_name, main_axis_values)
-    else:
-        main_axis = Axis(axis_name, main_axis_values)
-
-    unique_axes_list = _unique_axes_from_cubes(cubes)
-
-    # create a unique list without the main axis
-    unique_axes_list = [a for a in unique_axes_list if a.name != axis_name]
-
-    return _align_broadcast_and_concatenate(cubes, unique_axes_list, main_axis)
-
-
-def stack(cubes, axis):
-    """Adds a new dimension and stack uniformly shaped cubes along this axis.
-    This is different from concatenate which joins cubes along axis which already exists in all the cubes.
-    :param cubes: a collection of Cube instances
-    :param axis: Axis instance which is used to stack the cubes
-    :return: new Cube instance with the new axis
-    :raise: ValueError is an axis of the same axis name already exists in any of the cubes in the collection;
-        ValueError if the axis has different length from the number of cubes in the collection
-    """
-    for cube in cubes:
-        if cube.has_axis(axis.name):
-            raise ValueError("cube already contains axis '{}'".format(axis.name))
-
-    if len(cubes) != len(axis):
-        raise ValueError("invalid axis length")
-
-    unique_axes_list = _unique_axes_from_cubes(cubes)
-
-    return _align_broadcast_and_concatenate(cubes, unique_axes_list, axis)

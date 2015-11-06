@@ -2,8 +2,7 @@ import unittest
 import functools
 import numpy as np
 
-from numcube import Index, Axis, Cube
-from numcube.cube import stack, concatenate
+from numcube import Index, Axis, Cube, stack, concatenate
 
 
 def year_quarter_cube():
@@ -576,18 +575,38 @@ class CubeTests(unittest.TestCase):
         self.assertTrue(np.array_equal(D.values, [[4, 6], [4, 6], [0, 2], [0, 2]]))
 
     def test_concatenate(self):
-        # TODO
         values = np.arange(12).reshape(3, 4)
         ax1 = Index("year", [2014, 2015, 2016])
         ax2 = Index("month", ["jan", "feb", "mar", "apr"])
         C = Cube(values, [ax1, ax2])
 
-        values = np.arange(12).reshape(3, 4)
+        values = np.arange(12).reshape(4, 3)
         ax3 = Index("year", [2014, 2015, 2016])
         ax4 = Index("month", ["may", "jun", "jul", "aug"])
-        D = Cube(values, [ax3, ax4])
+        D = Cube(values, [ax4, ax3])
 
         E = concatenate([C, D], "month")
+        self.assertEqual(E.ndim, 2)
+        self.assertEqual(E.shape, (8, 3))  # the joined axis is always the first
+        self.assertTrue(isinstance(E.axis("month"), Axis))
+
+        E = concatenate([C, D], "month", as_index=True)
+        self.assertEqual(E.ndim, 2)
+        self.assertEqual(E.shape, (8, 3))
+        self.assertTrue(isinstance(E.axis("month"), Index))
+
+        # duplicate index values
+        self.assertRaises(ValueError, concatenate, [C, C], "month", as_index=True)
+
+        # broadcasting of an axis
+        countries = Axis("country", ["DE", "FR"])
+        F = D.insert_axis(countries)
+        G = concatenate([C, F], "month", broadcast=True)
+        self.assertEqual(G.ndim, 3)
+        self.assertEqual(G.shape, (8, 3, 2))
+
+        # if automatic broadcasting is not allowed
+        self.assertRaises(LookupError, concatenate, [C, F], "month", broadcast=False)
 
     def test_stack(self):
         C = year_quarter_cube()

@@ -17,6 +17,7 @@ class IndexTests(unittest.TestCase):
 
         # duplicate values
         self.assertRaises(ValueError, Index, "A", ["a", "b", "a"])
+        self.assertRaises(ValueError, Index, "A", [0, 1, 1])
 
         # invalid Index name
         self.assertRaises(TypeError, Index, 1, [1, 2, 3])
