@@ -2,7 +2,7 @@ from numcube.axes import Axes
 from numcube.axis import Axis
 
 
-def make_Axes(axes):
+def make_axes(axes):
     """Creates an Axes object from a collection of axes."""
     if not isinstance(axes, Axes):
         return Axes(axes)

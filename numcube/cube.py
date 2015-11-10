@@ -4,7 +4,7 @@ import math
 from numcube.axes import Axis
 from numcube.exceptions import AxisAlignError
 from numcube.index import Index
-from numcube.utils import make_axis_collection, make_Axes
+from numcube.utils import make_axis_collection, make_axes
 
 
 class Cube(object):
@@ -19,7 +19,7 @@ class Cube(object):
     def __init__(self, values, axes, dtype=None):
         values = np.asarray(values, dtype)
 
-        axes = make_Axes(axes)
+        axes = make_axes(axes)
 
         # if axes dimensions and value dimension do not match
         if values.ndim != len(axes):
@@ -499,17 +499,41 @@ class Cube(object):
         new_values = np.repeat(new_values, repeats=len(axis), axis=index)
         return Cube(new_values, new_axes)
 
-    def align_axis(self, new_axis):
+    def _align_axis(self, new_axis):
         """Returns a cube with values aligned to a new axis. The axis to be aligned has the same name as the new
         axis. The order of the axes in the cube remains the same. The new axis will become one of the cube axes.
         :param new_axis: Axis instance
         :return: new Cube instance
+        :raise LookupError if new_axis cannot be matched to any axis in the cube.
         """
         old_axis, old_axis_index = self._axes.axis_and_index(new_axis.name)
         indices = old_axis.indexof(new_axis.values)
         new_values = self._values.take(indices, old_axis_index)
         new_axes = self._axes.replace(old_axis_index, new_axis)
         return Cube(new_values, new_axes)
+
+    def align(self, align_by):
+        """Make all matching axes aligned to the axes in align_by.
+        :param align_by: Axis instance, Cube instance, collection of Axis or Cube instances
+        :return: new Cube instance
+        If called with a Cube instance, it is ensured that after this function
+        the both cubes can be used in an operation. Moreover there is no need for
+        alignment in the operation because the matching axes are identical.
+        """
+        if isinstance(align_by, Axis):
+            if self.has_axis(align_by.name):
+                return self._align_axis(align_by)
+            else:
+                return self
+        elif isinstance(align_by, Cube):
+            axes = align_by.axes
+        else:
+            axes = align_by
+
+        result = self
+        for axis in axes:
+            result = result.align(axis)
+        return result
 
     def extend(self, axis, fill):
         old_axis, old_axis_index = self._axes.axis_and_index(axis)
@@ -642,11 +666,13 @@ class Cube(object):
         return Cube(values, axes)
 
     def make_index(self, axis):
-        """Converts an axis into Index. If the axis is already an Index, then does nothing."""
+        """Converts an axis into an Index instance. If the axis is already an Index, then does nothing.
+        :return: new Cube instance"""
         self._axes.make_index(axis)
 
     def make_series(self, axis):
-        """Converts an axis into Series. If the axis is already a Series, then does nothing."""
+        """Converts an axis into a Series instance. If the axis is already a Series, then does nothing.
+        :return: new Cube instance"""
         self._axes.make_series(axis)
         
     def squeeze(self):
@@ -665,7 +691,7 @@ class Cube(object):
         :param dtype: the value type of the new cube (usually int or float)
         :returns: new Cube instance
         """
-        axes = make_Axes(axes)
+        axes = make_axes(axes)
         shape = tuple(len(axis) for axis in axes)
         values = np.full(shape, fill_value, dtype)
         return Cube(values, axes)
@@ -677,7 +703,7 @@ class Cube(object):
         :param dtype: the value type of the new cube (usually int or float)
         :returns: new Cube instance
         """
-        axes = make_Axes(axes)
+        axes = make_axes(axes)
         shape = tuple(len(axis) for axis in axes)
         values = np.zeros(shape, dtype)
         return Cube(values, axes)
@@ -689,7 +715,7 @@ class Cube(object):
         :param dtype: the value type of the new cube (usually int or float)
         :returns: new Cube instance
         """
-        axes = make_Axes(axes)
+        axes = make_axes(axes)
         shape = tuple(len(axis) for axis in axes)
         values = np.ones(shape, dtype)
         return Cube(values, axes)

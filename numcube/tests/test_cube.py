@@ -564,8 +564,8 @@ class CubeTests(unittest.TestCase):
         ax1 = Axis("year", [2015, 2015, 2014, 2014])
         ax2 = Index("quarter", ["Q1", "Q3"])
         
-        D = C.align_axis(ax1)
-        D = D.align_axis(ax2)
+        D = C.align(ax1)
+        D = D.align(ax2)
 
         # test identity of the new axis
         self.assertTrue(D.axis("year") is ax1)
