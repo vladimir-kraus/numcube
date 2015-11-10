@@ -210,18 +210,28 @@ class CubeTests(unittest.TestCase):
 
     def test_filter(self):
         """Testing function Cube.filter()"""
-        C = year_quarter_cube()  # the year values are [2014, 2015, 2016]
+
+        # TODO complete tests
+
+        C = year_quarter_cube()
 
         D = C.filter("year", [2014, 2018])  # 2018 is ignored
         self.assertEqual(D.ndim, 2)
         self.assertTrue((D.values == C.values[0]).all())
 
-        D = C.filter("year", exclude=[2015, 2016, 2018])  # 2018 is ignored
+    def test_exclude(self):
+        """Testing function Cube.exclude()"""
+
+        # TODO complete tests
+
+        C = year_quarter_cube()
+
+        D = C.exclude("year", [2015, 2016, 2018])  # 2018 is ignored
         self.assertEqual(D.ndim, 2)
         self.assertTrue((D.values == C.values[0]).all())
 
         # for large collections it is better for performance to pass the parameter as a set
-        D = C.filter("year", exclude=set(range(2015, 3000)))
+        D = C.exclude("year", set(range(2015, 3000)))
         self.assertEqual(D.ndim, 2)
         self.assertTrue((D.values == C.values[0]).all())
 
