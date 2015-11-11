@@ -63,15 +63,28 @@ class IndexTests(unittest.TestCase):
         self.assertRaises(KeyError, a.indexof, [0, 1])
         self.assertRaises(KeyError, b.indexof, ["d", "e"])
 
+    def test_operator_in(self):
+        a = Index("A", [10, 20, 30])
+        b = Index("Dim", ["a", "b", "c", "d"])
+
+        self.assertTrue(20 in a)
+        self.assertFalse(40 in a)
+        self.assertTrue("b" in b)
+        self.assertFalse("e" in b)
+
+        # unlike Index.contains() operator 'in' cannot work with multiple values
+        #self.assertRaises(TypeError, a, __contains__, [0, 10])
+        #self.assertRaises(TypeError, a, __contains__, (0, 10))
+
     def test_contains(self):
         a = Index("A", [10, 20, 30])
         b = Index("Dim", ["a", "b", "c", "d"])
 
         # a single value
-        self.assertEqual(a.contains(20), True)
-        self.assertEqual(a.contains(40), False)
-        self.assertEqual(b.contains("b"), True)
-        self.assertEqual(b.contains("e"), False)
+        self.assertTrue(a.contains(20))
+        self.assertFalse(a.contains(40))
+        self.assertTrue(b.contains("b"))
+        self.assertFalse(b.contains("e"))
 
         # multiple values returns one-dimensional numpy array of logical values
         self.assertTrue(np.array_equal(a.contains([0, 10, 20, 40]), [False, True, True, False]))

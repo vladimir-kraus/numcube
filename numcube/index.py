@@ -28,20 +28,8 @@ class Index(Axis):
         self._vec_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
         self._vec_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])
 
-    def indexof(self, item):
-        """If item is single value, then return a single integer value.
-        If item is a sequence, then return numpy array of integers.
-        :param item: a single value or a sequence of values
-        :return: int or numpy array of ints
-        :raise: KeyError if value does not exist
-        """
-        v = self._vec_index(item)
-        if v.ndim > 0:
-            return v
-        return v.item()
-
     def __contains__(self, item):
-        """Implements 'in' operator.
+        """Implementation of 'in' operator.
         :param item: a value to be looked up whether exists
         :return: bool
         """
@@ -55,6 +43,18 @@ class Index(Axis):
         :return: bool or numpy array of bools
         """
         v = self._vec_contains(item)
+        if v.ndim > 0:
+            return v
+        return v.item()
+
+    def indexof(self, item):
+        """If item is single value, then return a single integer value.
+        If item is a sequence, then return numpy array of integers.
+        :param item: a single value or a sequence of values
+        :return: int or numpy array of ints
+        :raise: KeyError if value does not exist
+        """
+        v = self._vec_index(item)
         if v.ndim > 0:
             return v
         return v.item()
