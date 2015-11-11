@@ -219,6 +219,17 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(D.ndim, 2)
         self.assertTrue((D.values == C.values[0]).all())
 
+        year_filter = Index("year", range(2010, 2015))
+        D = C.filter(year_filter)
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue((D.values == C.values[0]).all())
+
+        # filter by two axis filters
+        quarter_filter = Index("quarter", ["Q1", "Q3"])
+        D = C.filter([quarter_filter, year_filter])
+        self.assertEqual(D.ndim, 2)
+        self.assertTrue((D.values == C.values[[0,0], [0,2]]).all())
+
     def test_exclude(self):
         """Testing function Cube.exclude()"""
 

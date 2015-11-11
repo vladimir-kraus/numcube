@@ -513,7 +513,7 @@ class Cube(object):
         return Cube(new_values, new_axes)
 
     def align(self, align_to):
-        """Make all matching axes aligned to the axes in align_by.
+        """Make all matching axes aligned to the given axes.
         :param align_to: Axis instance, Cube instance, collection of Axis or Cube instances
         :return: new Cube instance
         If called with a Cube instance, it is ensured that after this function
@@ -608,13 +608,24 @@ class Cube(object):
         return Cube(new_values, new_axes)
 
     def filter(self, *args, **kwargs):
-        """
+        """Signatures:
+        filter(self, cubes)
+        filter(self, cube)
+        filter(self, axes)
+        filter(self, axis)
+        filter(axis_id, values)
         """
         if len(args) == 1:
             if isinstance(args[0], Cube):
                 return utils.filter_cube_by_axes(self, args[0].axes)
             elif isinstance(args[0], Axis):
                 return utils.filter_cube_by_axis(self, args[0])
+            else:  # args[0] is assumed to be a collection of axes or cubes
+                result = self
+                for item in args[0]:
+                    result = result.filter(item)
+                return result
+
         elif len(args) == 2:
             return utils.filter_cube_by_values(self, args[0], args[1])
         else:

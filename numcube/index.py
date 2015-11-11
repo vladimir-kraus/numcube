@@ -40,6 +40,13 @@ class Index(Axis):
             return v
         return v.item()
 
+    def __contains__(self, item):
+        """Implements 'in' operator.
+        :param item: a value to be looked up whether exists
+        :return: bool
+        """
+        return item in self._indices
+
     def contains(self, item):
         """Tests whether item or items exist among values.
         If item is single value, then return a single boolean value.
