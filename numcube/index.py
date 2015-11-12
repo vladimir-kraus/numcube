@@ -61,7 +61,7 @@ class Index(Axis):
         return v.item()
 
     def _align(self, second_axis):
-        if type(second_axis) == Axis:
+        if type(second_axis) is Axis:
             try:
                 return second_axis, self.indexof(second_axis.values), None
             except KeyError:
@@ -73,3 +73,10 @@ class Index(Axis):
                 return first_axis, None, self.indexof(first_axis.values)
             except KeyError:
                 raise AxisAlignError("axis alignment failed {0}".format(self.name))
+
+    def _superior_to(self, other_axis):
+        return None
+
+    def _inferior_to(self, other_axis):
+        if type(other_axis) is Axis:
+            return True

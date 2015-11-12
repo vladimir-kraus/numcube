@@ -5,7 +5,7 @@ from numcube.axes import make_axes
 from numcube.axis import Axis
 from numcube.exceptions import AxisAlignError
 from numcube.index import Index
-from numcube.utils import make_axis_collection, is_axis, is_index
+from numcube.utils import make_axis_collection, is_axis
 
 
 class Cube(object):
@@ -537,10 +537,8 @@ class Cube(object):
         return result
 
     def extend(self, axis, fill):
-        old_axis, old_axis_index = axis_and_index(self, axis)
-        if not is_index(old_axis):
-            old_axis_indices = old_axis.index(axis.values)
         # TODO...
+        pass
 
     def rename_axis(self, old_axis, new_name):
         """Returns a cube with a renamed axis.
@@ -739,9 +737,9 @@ class Cube(object):
         return result
 
     def _filter_by_axis(self, axis):
-        if is_index(axis):
+        if hasattr(axis, "__contains__"):
             # we intentionally do not pass axis.values because
-            # indexed axis provides 'in' operator
+            # the axis has (likely optimized) 'in' operator
             return self._filter_by_values(axis.name, axis)
         else:
             # else we provide raw values, but then the lookup is slower
@@ -946,8 +944,8 @@ def _unique_axes_from_cubes(cubes):
             else:
                 # axis with the same name was found
                 base_axis = unique_axes_list[base_axis_index]
-                if is_index(base_axis) and not is_index(axis):
-                    # replace indexable with non-indexable
+                if base_axis._inferior_to(axis) or axis._superior_to(base_axis):
+                    # replace inferior by superior axis
                     unique_axes_list[base_axis_index] = axis
 
     return unique_axes_list

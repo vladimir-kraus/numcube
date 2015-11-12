@@ -108,3 +108,9 @@ class Axis(object):
     def _ralign(self, first_axis):
         """Alignment in case when 'self' is the second axis."""
         return self._align(first_axis)  # is symmetrical for Axis
+
+    def _superior_to(self, other_axis):
+        return None
+
+    def _inferior_to(self, other_axis):
+        return None
