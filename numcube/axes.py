@@ -2,6 +2,7 @@ import numpy as np
 
 from numcube.axis import Axis
 from numcube.index import Index
+from numcube.utils import is_axis, is_index
 
 
 class Axes(object):
@@ -34,13 +35,13 @@ class Axes(object):
             return
 
         # special case with a single axis
-        if isinstance(axes, Axis):
+        if is_axis(axes):
             axes = [axes]
 
         unique_names = set()
         for axis in axes:
             # test correct types
-            if not isinstance(axis, Axis):
+            if not is_axis(axis):
                 raise TypeError("axis must be an instance of Axis")
             # test unique names - report the name of the first axis which is not unique
             if axis.name in unique_names:
@@ -119,7 +120,7 @@ class Axes(object):
             raise LookupError("invalid axis name: '{}'".format(axis))
         
         # find by object identity
-        if isinstance(axis, Axis):
+        if is_axis(axis):
             for i, a in enumerate(self._axes):
                 if a is axis:
                     return i
@@ -141,10 +142,10 @@ class Axes(object):
         """Reorder axes by specified names or indices. Return a list of axis
         indices which correspond to the new order of axes.
         """
-        if isinstance(front, str) or isinstance(front, int) or isinstance(front, Axis):
+        if isinstance(front, str) or isinstance(front, int) or is_axis(front):
             front = [front]
 
-        if isinstance(back, str) or isinstance(back, int) or isinstance(back, Axis):
+        if isinstance(back, str) or isinstance(back, int) or is_axis(back):
             back = [back]
 
         front_axes = list()
@@ -235,15 +236,15 @@ class Axes(object):
         """Convert an axis into Index. If the axis is already an Index, then does nothing.
         """
         axis = self[axis_id]
-        if not isinstance(axis, Index):
+        if not is_index(axis):
             self.replace(axis_id, Index(axis.name, axis.values))
 
     def make_series(self, axis_id):
         """Convert an axis into Series. If the axis is already a Series, then does nothing.
         """
         axis = self[axis_id]
-        if not isinstance(axis, Series):
-            self.replace(axis_id, Series(axis.name, axis.values))
+        if not is_series(axis):
+            self.replace(axis_id, Axis(axis.name, axis.values))
 
 
 def intersect(axes1, axes2):
@@ -268,3 +269,11 @@ def intersect(axes1, axes2):
         common_axes.append(axis)
 
     return Axes(common_axes)
+
+
+def make_axes(axes):
+    """Creates an Axes object from a collection of axes."""
+    if not isinstance(axes, Axes):
+        return Axes(axes)
+    else:
+        return axes
