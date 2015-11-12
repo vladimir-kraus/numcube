@@ -5,7 +5,7 @@ from numcube.axes import make_axes
 from numcube.axis import Axis
 from numcube.exceptions import AxisAlignError
 from numcube.index import Index
-from numcube.utils import make_axis_collection, is_axis, is_index, is_series
+from numcube.utils import make_axis_collection, is_axis, is_index
 
 
 class Cube(object):
@@ -792,7 +792,7 @@ def apply2(a, b, func, *args):
             all_axes.append(axis_a)
             continue
 
-        axis, values_a, values_b = _align_axes(axis_a, axis_b, axis_index_a, axis_index_b, values_a, values_b)
+        axis, values_a, values_b = _align_cubes(axis_a, axis_b, axis_index_a, axis_index_b, values_a, values_b)
         all_axes.append(axis)
 
     # add axes from b which have not been aligned
@@ -883,7 +883,7 @@ def _broadcast_values(values, old_axes, new_axes):
     return new_values.transpose(transpose_indices)
 
 
-def _align_axes(axis1, axis2, axis_index1, axis_index2, values1, values2):
+def _align_cubes(axis1, axis2, axis_index1, axis_index2, values1, values2):
     """
     :param axis1:
     :param axis2:
@@ -893,59 +893,36 @@ def _align_axes(axis1, axis2, axis_index1, axis_index2, values1, values2):
     :param values2:
     :return: tuple (axis, values1, values2)
     """
-    if is_index(axis1):
-        if is_index(axis2):
-            axis = axis1
-            value_indices = _align_index_to_index(axis2, axis1)
-            values2 = values2.take(value_indices, axis_index2)
-        elif is_series(axis2):
-            # only in this case the new axis will be from cube b
-            axis = axis2
-            value_indices = _align_index_to_series(axis1, axis2)
-            values1 = values1.take(value_indices, axis_index1)
-    elif is_series(axis1):
-        if is_index(axis2):
-            axis = axis1
-            value_indices = _align_index_to_series(axis2, axis1)
-            values2 = values2.take(value_indices, axis_index2)
-        elif is_series(axis2):
-            axis = axis1
-            _assert_align_series(axis2, axis1)
+    # if self alignment, then do nothing
+    if axis1 is axis2:
+        return axis1, values1, values2
+    axis, value_indices_1, value_indices_2 = _align_axes(axis1, axis2)
+    if value_indices_1 is not None:
+        values1 = values1.take(value_indices_1, axis_index1)
+    if value_indices_2 is not None:
+        values2 = values2.take(value_indices_2, axis_index2)
+
     return axis, values1, values2
 
 
-def _align_index_to_index(axis_from, axis_to):
+def _align_axes(axis1, axis2):
     """
+    :param axis1:
+    :param axis2:
+    :param axis_index1:
+    :param axis_index2:
+    :param values1:
+    :param values2:
+    :return: tuple (axis, values1, values2)
     """
-    if len(axis_from) != len(axis_to):
-        raise AxisAlignError("cannot align two Index axes - axes '{}' have different lengths".format(axis_to.name))
-
-    try:
-        return axis_from.indexof(axis_to.values)
-    except KeyError:
-        raise AxisAlignError("cannot align two Index axes - axes '{}' have different values".format(axis_to.name))
-
-
-def _align_index_to_series(axis_from, axis_to):
-    """
-    """
-    try:
-        return axis_from.indexof(axis_to.values)
-    except KeyError:
-        raise AxisAlignError("cannot align Index to Series - axes '{}' have different values".format(axis_to.name))
-
-
-def _assert_align_series(axis_from, axis_to):
-    """Series can be aligned to another axis if and only if it has the same values, in the same order.
-    No alignment indices are returned, only the equality of axes is checked.
-    """
-    if not np.array_equal(axis_from.values, axis_to.values):
-        raise AxisAlignError("cannot align Series - axes '{}' have different values".format(axis_to.name))
-
-
-def _is_indexable(axis):
-    """Return whether the axis can be indexed."""
-    return hasattr(axis, "indexof")
+    # try left operand alignment handling
+    result = axis1._align(axis2)
+    if result is None:
+        # try right operand alignment handling
+        result = axis2._ralign(axis1)
+    if result is None:
+        raise AxisAlignError("alignment not supported for axis types")
+    return result
 
 
 def _unique_axes_from_cubes(cubes):
@@ -969,7 +946,7 @@ def _unique_axes_from_cubes(cubes):
             else:
                 # axis with the same name was found
                 base_axis = unique_axes_list[base_axis_index]
-                if _is_indexable(base_axis) and not _is_indexable(axis):
+                if is_index(base_axis) and not is_index(axis):
                     # replace indexable with non-indexable
                     unique_axes_list[base_axis_index] = axis
 
@@ -994,21 +971,9 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis, broadcast)
                 # axes are identical, no need to align
                 continue
 
-            if is_index(axis):
-                if is_index(base_axis):
-                    value_indices = _align_index_to_index(axis, base_axis)
-                elif is_series(base_axis):
-                    value_indices = _align_index_to_series(axis, base_axis)
-                else:
-                    raise TypeError("unsupported axis type")
-            elif is_series(axis):
-                # series must have the same values
-                # if they do not, they cannot be aligned
-                # if they do, they do not need to be aligned
-                _assert_align_series(axis, base_axis)
-                continue
-            else:
-                raise TypeError("unsupported axis type")
+            base_axis_check, base_value_indices, value_indices = _align_axes(base_axis, axis)
+            assert(base_axis is base_axis_check)
+            assert(base_value_indices is None)  # means base values shall not change
 
             array = array_list[cube_index]
             array_list[cube_index] = array.take(value_indices, axis_index)
