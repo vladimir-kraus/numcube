@@ -227,21 +227,23 @@ class CubeTests(unittest.TestCase):
         self.assertEqual(d.ndim, 2)
         self.assertTrue((d.values == c.values[0]).all())
 
+        country_filter = Axis("country", ["DE", "FR"])  # this axis is ignored
+
         # filter by two axis filters
         quarter_filter = Index("quarter", ["Q1", "Q3"])
-        d = c.filter([quarter_filter, year_filter])
+        d = c.filter([quarter_filter, country_filter, year_filter])
         self.assertEqual(d.ndim, 2)
         self.assertTrue((d.values == c.values[[0, 0], [0, 2]]).all())
 
         # cube as a filter
-        yq_cube_filter = Cube.ones([quarter_filter, year_filter])
+        yq_cube_filter = Cube.ones([quarter_filter, year_filter, country_filter])
         d = c.filter(yq_cube_filter)
         self.assertEqual(d.ndim, 2)
         self.assertTrue((d.values == c.values[[0, 0], [0, 2]]).all())
 
         # a collection of cubes as a filter
-        y_cube_filter = Cube.ones(year_filter)
-        q_cube_filter = Cube.ones(quarter_filter)
+        y_cube_filter = Cube.ones([year_filter, country_filter])
+        q_cube_filter = Cube.ones([country_filter, quarter_filter])
         d = c.filter([y_cube_filter, q_cube_filter])
         self.assertEqual(d.ndim, 2)
         self.assertTrue((d.values == c.values[[0, 0], [0, 2]]).all())
