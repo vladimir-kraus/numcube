@@ -606,28 +606,38 @@ class Cube(object):
         new_axes.insert(0, new_axis)
         return Cube(new_values, new_axes)
 
-    def filter(self, *args, **kwargs):
-        """Signatures:
-        filter(self, cubes)
-        filter(self, cube)
-        filter(self, axes)
-        filter(self, axis)
-        filter(self, axis_id, values)
+    def filter(self, filter_by, values=None):
+        """Returns a new Cube instance with filtered axes.
+        :param filter_by: axis name (str), axis index (int), Axis, Cube or collection of Axis or Cube instances
+            If filter_by is Cube or collection of Axis or Cube instances, then unmatched axes are ignored.
+            If filter_by is axis name, index or Axis instance, then exception is raised if the axis cannot be matched.
+        :param values: collection of values to be filtered; defined only if filter_by is str or int
+        :return: new Cube instance
         """
-        if len(args) == 1:
-            if is_cube(args[0]):
-                return self._filter_by_axes(args[0].axes)
-            elif is_axis(args[0]):
-                return self._filter_by_axis(args[0])
-            else:  # args[0] is assumed to be a collection of axes or cubes
-                result = self
-                for item in args[0]:
-                    result = result.filter(item)
-                return result
-        elif len(args) == 2:
-            return self._filter_by_values(args[0], args[1])
-        else:
-            raise ValueError("incorrect number of arguments")
+        if isinstance(filter_by, str) or isinstance(filter_by, int):
+            return self._filter_by_values(filter_by, values)
+
+        if values is not None:
+            raise ValueError("'values' can be non-None only when filtering by axis name or index")
+
+        if is_axis(filter_by):
+            if hasattr(filter_by, "__contains__"):
+                # we intentionally do not pass axis.values because
+                # the axis has (likely optimized) 'in' operator
+                return self._filter_by_values(filter_by.name, filter_by)
+            else:
+                # else we provide raw values, but then the lookup is slower
+                return self._filter_by_values(filter_by.name, filter_by.values)
+
+        if hasattr(filter_by, "axes"):  # for cube-like objects
+            filter_by = filter_by.axes
+
+        # a collection of axes or cubes is expected
+        result = self
+        for item in filter_by:
+            if not is_axis(item) or self.has_axis(item.name):  # skip unmatched axes
+                result = result.filter(item)
+        return result
 
     def exclude(self, axis, values):
         axis, axis_index = self._axis_and_index(axis)
@@ -645,7 +655,7 @@ class Cube(object):
         If 'indices' is a single int, then the axis is removed from the cube.
         If 'indices' is a collection of ints, then the axis is preserved.
         """
-        axis, axis_index = self._axes.axis_and_index(axis)
+        axis, axis_index = self._axis_and_index(axis)
         new_axis = axis.take(indices)
         if isinstance(indices, int):
             # if indices is a single int,
@@ -688,7 +698,11 @@ class Cube(object):
         :return: new Cube instance"""
         new_axes = tuple(a for a in self.axes if len(a) != 1)
         new_values = self._values.squeeze()
-        return Cube(new_values, new_axes)        
+        return Cube(new_values, new_axes)
+
+    """******************************
+    *** Cube generating functions ***
+    ******************************"""
         
     @staticmethod
     def full(axes, fill_value, dtype=None):
@@ -727,23 +741,12 @@ class Cube(object):
         values = np.ones(shape, dtype)
         return Cube(values, axes)
 
+    """******************************
+    *** Private utility functions ***
+    ******************************"""
+
     def _axis_and_index(self, axis_id):
         return self._axes.axis_and_index(axis_id)
-
-    def _filter_cube_by_axes(self, axes):
-        result = self
-        for axis in axes:
-            result = result.filter_by_axis(axis)
-        return result
-
-    def _filter_by_axis(self, axis):
-        if hasattr(axis, "__contains__"):
-            # we intentionally do not pass axis.values because
-            # the axis has (likely optimized) 'in' operator
-            return self._filter_by_values(axis.name, axis)
-        else:
-            # else we provide raw values, but then the lookup is slower
-            return self.filter_cube_by_values(axis.name, axis.values)
 
     def _filter_by_values(self, axis_id, values):
         """Returns a cube filtered by specified values on a given axis. Takes into account only values
