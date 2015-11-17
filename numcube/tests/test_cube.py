@@ -211,25 +211,40 @@ class CubeTests(unittest.TestCase):
 
     def test_filter(self):
         """Testing function Cube.filter()"""
+        c = year_quarter_cube()
 
-        # TODO complete tests
+        d = c.filter("year", [2014, 2018])  # 2018 is ignored
+        self.assertEqual(d.ndim, 2)
+        self.assertTrue((d.values == c.values[0]).all())
 
-        C = year_quarter_cube()
-
-        D = C.filter("year", [2014, 2018])  # 2018 is ignored
-        self.assertEqual(D.ndim, 2)
-        self.assertTrue((D.values == C.values[0]).all())
+        year_filter = Axis("year", range(2010, 2015))
+        d = c.filter(year_filter)
+        self.assertEqual(d.ndim, 2)
+        self.assertTrue((d.values == c.values[0]).all())
 
         year_filter = Index("year", range(2010, 2015))
-        D = C.filter(year_filter)
-        self.assertEqual(D.ndim, 2)
-        self.assertTrue((D.values == C.values[0]).all())
+        d = c.filter(year_filter)
+        self.assertEqual(d.ndim, 2)
+        self.assertTrue((d.values == c.values[0]).all())
 
         # filter by two axis filters
         quarter_filter = Index("quarter", ["Q1", "Q3"])
-        D = C.filter([quarter_filter, year_filter])
-        self.assertEqual(D.ndim, 2)
-        self.assertTrue((D.values == C.values[[0,0], [0,2]]).all())
+        d = c.filter([quarter_filter, year_filter])
+        self.assertEqual(d.ndim, 2)
+        self.assertTrue((d.values == c.values[[0, 0], [0, 2]]).all())
+
+        # cube as a filter
+        yq_cube_filter = Cube.ones([quarter_filter, year_filter])
+        d = c.filter(yq_cube_filter)
+        self.assertEqual(d.ndim, 2)
+        self.assertTrue((d.values == c.values[[0, 0], [0, 2]]).all())
+
+        # a collection of cubes as a filter
+        y_cube_filter = Cube.ones(year_filter)
+        q_cube_filter = Cube.ones(quarter_filter)
+        d = c.filter([y_cube_filter, q_cube_filter])
+        self.assertEqual(d.ndim, 2)
+        self.assertTrue((d.values == c.values[[0, 0], [0, 2]]).all())
 
     def test_exclude(self):
         """Testing function Cube.exclude()"""
