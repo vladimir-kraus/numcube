@@ -1,7 +1,5 @@
 import numpy as np
 
-from numcube.exceptions import AxisAlignError
-
 
 class Axis(object):
     """A named sequence of values. Can be used as non-indexable axis in Cube.
@@ -90,27 +88,3 @@ class Axis(object):
         :return: a new Axis object with sorted values
         """
         return self.__class__(self._name, np.sort(self._values))
-
-    """Alignment functions.
-    return first_axis, second_axis, first_indices, second_indices
-    or returns None if axes cannot be aligned and alignment shall be handled by other axis.
-
-    returned indices can be None if no filtering of values is needed
-
-    self alignment does not need to be tested as this is handled outside -> no alignment needed"""
-
-    def _align(self, second_axis):
-        """Axis can be aligned to another axis if and only if it has the same values, in the same order."""
-        if not np.array_equal(self.values, second_axis.values):
-            raise AxisAlignError("cannot align Series - axes '{}' have different values".format(self.name))
-        return self, None
-
-    def _ralign(self, first_axis):
-        """Alignment in case when 'self' is the second axis."""
-        return self._align(first_axis)  # is symmetrical for Axis
-
-    def _superior_to(self, other_axis):
-        return None
-
-    def _inferior_to(self, other_axis):
-        return None

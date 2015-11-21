@@ -1,7 +1,6 @@
 import numpy as np
 
 from numcube.axis import Axis
-from numcube.exceptions import AxisAlignError
 
 
 class Index(Axis):
@@ -59,24 +58,3 @@ class Index(Axis):
         if v.ndim > 0:
             return v
         return v.item()
-
-    def _align(self, second_axis):
-        if type(second_axis) is Axis:
-            try:
-                return second_axis, self.indexof(second_axis.values), None
-            except KeyError:
-                raise AxisAlignError("axis alignment failed {0}".format(self.name))
-
-    def _ralign(self, first_axis):
-        if type(first_axis) in (Axis, Index):
-            try:
-                return first_axis, None, self.indexof(first_axis.values)
-            except KeyError:
-                raise AxisAlignError("axis alignment failed {0}".format(self.name))
-
-    def _superior_to(self, other_axis):
-        return None
-
-    def _inferior_to(self, other_axis):
-        if type(other_axis) is Axis:
-            return True

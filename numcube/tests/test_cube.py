@@ -3,7 +3,7 @@ import functools
 import numpy as np
 
 from numcube import Index, Axis, Cube, stack, concatenate
-from numcube.utils import is_axis, is_index
+from numcube.utils import is_axis, is_indexed
 
 
 def year_quarter_cube():
@@ -483,7 +483,7 @@ class CubeTests(unittest.TestCase):
         
         D = C.group(0, np.mean)  # average by year
         self.assertTrue(np.array_equal(D.values, np.array([[4, 5, 6, 7]])))        
-        self.assertTrue(is_index(D.axis(0)))
+        self.assertTrue(is_indexed(D.axis(0)))
         self.assertEqual(len(D.axis(0)), 1)
         self.assertEqual(D.values.shape, (1, 4))  # axes with length of 1 are not collapsed
         
@@ -494,7 +494,7 @@ class CubeTests(unittest.TestCase):
         D = C.group(ax2.name, np.sum)  # sum by month, sorted by default
         self.assertTrue(np.array_equal(D.values, np.array([[5, 1], [13, 9], [21, 17]])))
         self.assertTrue(np.array_equal(D.axis(ax2.name).values, ["feb", "jan"]))
-        self.assertTrue(is_index(D.axis(ax2.name)))
+        self.assertTrue(is_indexed(D.axis(ax2.name)))
         self.assertEqual(len(D.axis(ax2.name)), 2)
         self.assertEqual(D.values.shape, (3, 2))
         
@@ -632,7 +632,7 @@ class CubeTests(unittest.TestCase):
         E = concatenate([C, D], "month", as_index=True)
         self.assertEqual(E.ndim, 2)
         self.assertEqual(E.shape, (8, 3))
-        self.assertTrue(is_index(E.axis("month")))
+        self.assertTrue(is_indexed(E.axis("month")))
 
         # duplicate index values
         self.assertRaises(ValueError, concatenate, [C, C], "month", as_index=True)
