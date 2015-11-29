@@ -49,8 +49,9 @@ Functions take(...) and compress(...) have the same semantics as in numpy packag
 >> Q = Index("quarter", ["Q1", "Q2", "Q3", "Q4"])
 >> sales = Cube([[14, 16, 13, 20], [15, 15, 10, 19], [16, 17, 15, 21]], [Y, Q])
 >> salesH1 = sales.filter("quarter", ["Q1", "Q2"])  # by dimension attribute
->> salesH1 = sales.take([0, 1], "quarter")  # by numeric indices
->> salesH1 = sales.compress(np.array([True, True, False, False]), "quarter")  # by logical vector
+>> salesH1 = sales.take("quarter", [0, 1])  # by numeric indices
+>> filter_q = np.array([True, True, False, False]
+>> salesH1 = sales.compress("quarter", filter_q))  # by logical vector
 ```
 
 Operators
