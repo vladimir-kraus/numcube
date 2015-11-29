@@ -48,10 +48,13 @@ Functions take(...) and compress(...) have the same semantics as in numpy packag
 >> Y = Index("year", range(2014, 3))
 >> Q = Index("quarter", ["Q1", "Q2", "Q3", "Q4"])
 >> sales = Cube([[14, 16, 13, 20], [15, 15, 10, 19], [16, 17, 15, 21]], [Y, Q])
->> salesH1 = sales.filter("quarter", ["Q1", "Q2"])  # by dimension attribute
->> salesH1 = sales.take("quarter", [0, 1])  # by numeric indices
+>> # filter by dimension attribute
+>> salesH1 = sales.filter("quarter", ["Q1", "Q2"])  
+>> # filter by numeric indices
+>> salesH1 = sales.take("quarter", [0, 1]) 
+>> # filter by logical vector
 >> filter_q = np.array([True, True, False, False]
->> salesH1 = sales.compress("quarter", filter_q))  # by logical vector
+>> salesH1 = sales.compress("quarter", filter_q))  
 ```
 
 Operators
@@ -136,7 +139,10 @@ Example 3
 ---------
 
 ```python
->> revenues_y = revenues_q.sum("quarter")  # annual revenues
->> rel_revenues = revenues_y / revenues_y.mean("year")  # compare to overall annual average
->> revenue_coef = revenues_y / revenues.values[0]  # compare to first year revenue
+>> # annual revenues
+>> revenues_y = revenues_q.sum("quarter")  
+>> # compare to overall annual average
+>> rel_revenues = revenues_y / revenues_y.mean("year")
+>> # compare to first year revenue
+>> revenue_coef = revenues_y / revenues.values[0]  
 ```
