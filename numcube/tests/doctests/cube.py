@@ -115,12 +115,12 @@ Cube(array([[0, 0, 0],
        [0, 1, 2]]), ('X', 'Y'))
 
 Analogy to numpy.ndarray.compress function:
->>> E.compress([True, False, True], "Y")  # doctest: +NORMALIZE_WHITESPACE
+>>> E.compress("Y", [True, False, True])  # doctest: +NORMALIZE_WHITESPACE
 Cube(array([[0, 0],
        [0, 2]]), ('X', 'Y'))
 
 Analogy to numpy.ndarray.take function:
->>> E.take([0, 2], "Y")  # doctest: +NORMALIZE_WHITESPACE
+>>> E.take("Y", [0, 2])  # doctest: +NORMALIZE_WHITESPACE
 Cube(array([[0, 0],
        [0, 2]]), ('X', 'Y'))
 

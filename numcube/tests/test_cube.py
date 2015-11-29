@@ -296,35 +296,35 @@ class CubeTests(unittest.TestCase):
     def test_compress(self):
         C = year_quarter_cube()
         
-        D = C.compress([True, False, False], 0)
+        D = C.compress(0, [True, False, False])
         self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
         self.assertEqual(D.ndim, 2)
         self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
         
-        E = C.compress([True, False, True, False], "quarter")
+        E = C.compress("quarter", [True, False, True, False])
         self.assertTrue(np.array_equal(E.values, [[0, 2], [4, 6], [8, 10]]))
 
         # using numpy array of bools
-        E = C.compress(np.arange(1, 4) <= 1, "quarter")
+        E = C.compress("quarter", np.arange(1, 4) <= 1)
         self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
         self.assertEqual(D.ndim, 2)
         self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
         
         # ints instead of bools; 0 = False, other = True
         # similarly for other types; Python bool conversion is used
-        D = C.compress([1, 0, 0], 0)
+        D = C.compress(0, [1, 0, 0])
         self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
         self.assertEqual(D.ndim, 2)
         self.assertEqual(tuple(D.axis_names), ("year", "quarter"))
 
         # wrong length of bool collection - too short ...
-        D = C.compress([True, False], 0)  # unspecified means False
+        D = C.compress(0, [True, False])  # unspecified means False
         self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
 
         # ... and too long
-        D = C.compress([True, False, False, False], 0)  # this is OK, the extra False is ignored
+        D = C.compress(0, [True, False, False, False])  # this is OK, the extra False is ignored
         self.assertTrue(np.array_equal(D.values, [[0, 1, 2, 3]]))
-        self.assertRaises(IndexError, C.compress, [True, False, False, True], 0)  # but this is not OK
+        self.assertRaises(IndexError, C.compress, 0, [True, False, False, True])  # but this is not OK
 
     def test_transpose(self):
         C = year_quarter_weekday_cube()
@@ -694,39 +694,39 @@ class CubeTests(unittest.TestCase):
         C = year_quarter_cube()
 
         # axis by name
-        self.assertTrue(np.array_equal(C.take([0, 1], "year").values, C.values.take([0, 1], 0)))
-        self.assertTrue(np.array_equal(C.take([0, 1], "quarter").values, C.values.take([0, 1], 1)))
+        self.assertTrue(np.array_equal(C.take("year", [0, 1]).values, C.values.take([0, 1], 0)))
+        self.assertTrue(np.array_equal(C.take("quarter", [0, 1]).values, C.values.take([0, 1], 1)))
 
         # axis by index
-        self.assertTrue(np.array_equal(C.take([0, 1], 0).values, C.values.take([0, 1], 0)))
-        self.assertTrue(np.array_equal(C.take([0, 1], 1).values, C.values.take([0, 1], 1)))
+        self.assertTrue(np.array_equal(C.take(0, [0, 1]).values, C.values.take([0, 1], 0)))
+        self.assertTrue(np.array_equal(C.take(1, [0, 1]).values, C.values.take([0, 1], 1)))
 
         # do not collapse dimension - a single int in a list or tuple
-        D = C.take([2], 0)
+        D = C.take(0, [2])
         self.assertEqual(D.ndim, 2)
         self.assertTrue(np.array_equal(D.values, C.values.take([2], 0)))
 
-        D = C.take((2,), 0)
+        D = C.take(0, (2,))
         self.assertEqual(D.ndim, 2)
         self.assertTrue(np.array_equal(D.values, C.values.take([2], 0)))
 
         # collapse dimension - a single int
-        D = C.take(2, 0)
+        D = C.take(0, 2)
         self.assertEqual(D.ndim, 1)
         self.assertTrue(np.array_equal(D.values, C.values.take(2, 0)))
 
         # negative index
-        self.assertTrue(np.array_equal(C.take([-3, -2], "year").values, C.values.take([0, 1], 0)))
+        self.assertTrue(np.array_equal(C.take("year", [-3, -2]).values, C.values.take([0, 1], 0)))
 
         # wrong axes
-        self.assertRaises(LookupError, C.take, [0, 1], "bad_axis")
-        self.assertRaises(LookupError, C.take, [0, 1], 2)
+        self.assertRaises(LookupError, C.take, "bad_axis", [0, 1])
+        self.assertRaises(LookupError, C.take, 2, [0, 1])
 
         # wrong indices
-        self.assertRaises(IndexError, C.take, 4, "year")
-        self.assertRaises(IndexError, C.take, [0, 4], "year")
-        self.assertRaises(ValueError, C.take, ["X"], "year")
-        self.assertRaises(TypeError, C.take, None, "year")
+        self.assertRaises(IndexError, C.take, "year", 4)
+        self.assertRaises(IndexError, C.take, "year", [0, 4])
+        self.assertRaises(ValueError, C.take, "year", ["X"])
+        self.assertRaises(TypeError, C.take, "year", None)
 
     def test_insert_axis(self):
         C = year_quarter_cube()
@@ -736,12 +736,12 @@ class CubeTests(unittest.TestCase):
         D = C.insert_axis(countries, 0)
         self.assertEqual(D.ndim, 3)
         self.assertEqual(tuple(D.axis_names), ("country", "year", "quarter"))
-        self.assertTrue((D.take(0, "country") == C).all())
-        self.assertTrue((D.take(1, "country") == C).all())
+        self.assertTrue((D.take("country", 0) == C).all())
+        self.assertTrue((D.take("country", 1) == C).all())
 
         # add as the last axis
         D = C.insert_axis(countries, -1)
         self.assertEqual(D.ndim, 3)
         self.assertEqual(tuple(D.axis_names), ("year", "quarter", "country"))
-        self.assertTrue((D.take(0, "country") == C).all())
-        self.assertTrue((D.take(1, "country") == C).all())
+        self.assertTrue((D.take("country", 0) == C).all())
+        self.assertTrue((D.take("country", 1) == C).all())

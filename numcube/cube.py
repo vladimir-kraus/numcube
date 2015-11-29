@@ -629,9 +629,9 @@ class Cube(object):
     def exclude(self, axis, values):
         axis, axis_index = self._axis_and_index(axis)
         value_indices = [i for i, v in enumerate(axis.values) if v not in values]
-        return self.take(value_indices, axis_index)
+        return self.take(axis_index, value_indices)
 
-    def take(self, indices, axis):
+    def take(self, axis, indices):
         """Filters the cube along an axis using specified indices. 
         Analogy to numpy.ndarray.take.
         :param indices: a collection of ints or int
@@ -655,11 +655,11 @@ class Cube(object):
         values = self._values.take(indices, axis_index)
         return Cube(values, axes)
 
-    def compress(self, condition, axis):
+    def compress(self, axis, condition):
         """Filters the cube along an axis using a boolean mask along a specified axis. 
         Analogy to numpy.ndarray.compress.
-        :param condition: collection of boolean values
         :param axis: axis name (str), axis index (int) or Axis instance
+        :param condition: collection of boolean values
         :return: new Cube instance
         :raise LookupError: is the axis does not exist, # TODO - error if wrong type
         """
@@ -734,7 +734,7 @@ class Cube(object):
         """
         axis, axis_index = self._axis_and_index(axis_id)
         value_indices = [i for i, v in enumerate(axis.values) if v in values]
-        return self.take(value_indices, axis_index)
+        return self.take(axis_index, value_indices)
 
     def _align_axis(self, new_axis):
         """Returns a cube with values aligned to a new axis. The axis to be aligned has the same name as the new
