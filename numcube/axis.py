@@ -10,14 +10,17 @@ class Axis(object):
         """Initializes Axis object.
         :param name: str
         :param values: sequence of values of the same type, are converted to 1-D numpy array
+        :param args: optional arguments to be passed to numpy array initialization
+        :param kwargs: optional arguments to be passed to numpy array initialization
         :raise: ValueError is values cannot be converted, TypeError if name is not string
         """
         if not isinstance(name, str):
             raise TypeError("type of {} is not str".format(repr(name)))
-        self._name = name
-        self._values = np.atleast_1d(values)
-        if self._values.ndim > 1:
+        values = np.atleast_1d(values)
+        if values.ndim > 1:
             raise ValueError("values must not have more than 1 dimension")
+        self._name = name
+        self._values = values
 
     def __repr__(self):
         """Returns textual representation of Axis object. Can be reused by inherited classes.

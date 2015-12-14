@@ -69,7 +69,7 @@ class Cube(object):
         """Returns a textual representation of the object.
         :return: str
         """
-        return "Cube({}, {})".format(repr(self._values), repr(tuple(self.axis_names)))
+        return "Cube({}, {})".format(self._values, repr(tuple(self.axes)))
 
     @property
     def shape(self):
