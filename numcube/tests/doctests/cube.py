@@ -1,4 +1,6 @@
 """
+Cube class
+==========
 
 >>> from numcube import Index, Cube
 >>> import numpy as np

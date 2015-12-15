@@ -10,8 +10,6 @@ class Axis(object):
         """Initializes Axis object.
         :param name: str
         :param values: sequence of values of the same type, are converted to 1-D numpy array
-        :param args: optional arguments to be passed to numpy array initialization
-        :param kwargs: optional arguments to be passed to numpy array initialization
         :raise: ValueError is values cannot be converted, TypeError if name is not string
         """
         if not isinstance(name, str):
