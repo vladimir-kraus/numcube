@@ -1,12 +1,15 @@
 numcube package
 ===============
-Numcube extends the functionality of numpy multidimensional arrays by adding named and annotated axes. Such structures are called cubes. Numcube allows operations involving multiple cubes with automatic axis matching and alignment. It allows filtering and aggregations based on the axis values. One of the goals was to provide API similar to numpy. Internally it uses numpy arrays for the underlying array and axes as well.
+
+Numcube extends the functionality of numpy multidimensional arrays by adding named and annotated axes. Such
+structures are called cubes. Numcube allows operations such as multiplications or additions involving multiple cubes with automatic axis matching and
+alignment. It allows filtering and aggregations based on the axis values. One of the goals was to provide API similar
+ to numpy. Internally it uses numpy arrays for the underlying array and axes as well.
+
 
 Cube
 ----
 - the interface of all classes is designed to support immutability
-- Series cannot be aligned to another axis but another axis can be aligned to a Series
-- Cube support normal operations such as multiplication, adding etc.
 - operations are among two cubes or among cube and a scalar
 - all operations work element wise
 - Cube support aggregations such as sum, mean, min, max etc.
@@ -15,9 +18,14 @@ Cube
 
 Axis matching
 -------------
-In operations involving multiple cubes, the axes are matched and aligned. Matching means that axis names are compared and the axes with the same names are aligned (see below), while the unique axes are broadcasted (see array broadcasting). 
 
-The cube is meant to not depend on the specific order of axes in most of the features. Nevertheless, the output of the operation has the same order of axes as the first cube in the opration, followed by unique axes from the other cubes respecting their order.
+In operations involving multiple cubes, the axes are matched and aligned. Matching means that axis names are compared
+ and the axes with the same names are aligned (see below), while the unique axes are broadcasted (see array
+ broadcasting).
+
+The cube is meant to not depend on the specific order of axes in most of the features. Nevertheless, the output of
+the operation has the same order of axes as the first cube in the opration, followed by unique axes from the other
+cubes respecting their order.
 
 Axis alignment
 --------------
@@ -31,6 +39,14 @@ If both axes are Series, they must be equivalent - they must contain the same va
 
 Filtering and data selection
 ----------------------------
+
+There are three basic functions to select a subsection of a cube: filter, take and compress.
+
+- filter - filters the cube by axis values
+- take - filters the cube by index along an axis
+- compress - filters the cube by logical values indicating which items are selected
+
+These three functions correspond to their counterparts in numpy package.
 
 Example:
 ```python
