@@ -8,4 +8,8 @@
 
 * add performance tests
 
+* add free functions such as numcube.apply(c, func) or numpcube.aggregate(c, func)
+
 * add apply function to apply numpy function on values
+
+* add pretty print

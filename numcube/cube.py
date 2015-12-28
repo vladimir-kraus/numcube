@@ -5,7 +5,7 @@ from numcube.axes import make_axes
 from numcube.axis import Axis
 from numcube.exceptions import AxisAlignError
 from numcube.index import Index
-from numcube.utils import make_axis_collection, is_axis
+from numcube.utils import make_axis_collection, is_axis, is_indexed, align_arrays, broadcast_array, unique_axes_from_cubes
 
 
 class Cube(object):
@@ -69,7 +69,7 @@ class Cube(object):
         """Returns a textual representation of the object.
         :return: str
         """
-        return "Cube({}, {})".format(repr(self._values), repr(tuple(self.axis_names)))
+        return "Cube({}, {})".format(self._values, repr(tuple(self.axes)))
 
     @property
     def shape(self):
@@ -500,19 +500,6 @@ class Cube(object):
         new_values = np.repeat(new_values, repeats=len(axis), axis=index)
         return Cube(new_values, new_axes)
 
-    def _align_axis(self, new_axis):
-        """Returns a cube with values aligned to a new axis. The axis to be aligned has the same name as the new
-        axis. The order of the axes in the cube remains the same. The new axis will become one of the cube axes.
-        :param new_axis: Axis instance
-        :return: new Cube instance
-        :raise LookupError if new_axis cannot be matched to any axis in the cube.
-        """
-        old_axis, old_axis_index = self._axis_and_index(new_axis.name)
-        indices = old_axis.indexof(new_axis.values)
-        new_values = self._values.take(indices, old_axis_index)
-        new_axes = self._axes.replace(old_axis_index, new_axis)
-        return Cube(new_values, new_axes)
-
     def align(self, align_to):
         """Make all matching axes aligned to the given axes.
         :param align_to: Axis instance, Cube instance, collection of Axis or Cube instances
@@ -606,35 +593,45 @@ class Cube(object):
         new_axes.insert(0, new_axis)
         return Cube(new_values, new_axes)
 
-    def filter(self, *args, **kwargs):
-        """Signatures:
-        filter(self, cubes)
-        filter(self, cube)
-        filter(self, axes)
-        filter(self, axis)
-        filter(self, axis_id, values)
+    def filter(self, filter_by, values=None):
+        """Returns a new Cube instance with filtered axes.
+        :param filter_by: axis name (str), axis index (int), Axis, Cube or collection of Axis or Cube instances
+            If filter_by is Cube or collection of Axis or Cube instances, then unmatched axes are ignored.
+            If filter_by is axis name, index or Axis instance, then exception is raised if the axis cannot be matched.
+        :param values: collection of values to be filtered; defined only if filter_by is str or int
+        :return: new Cube instance
         """
-        if len(args) == 1:
-            if is_cube(args[0]):
-                return self._filter_by_axes(args[0].axes)
-            elif is_axis(args[0]):
-                return self._filter_by_axis(args[0])
-            else:  # args[0] is assumed to be a collection of axes or cubes
-                result = self
-                for item in args[0]:
-                    result = result.filter(item)
-                return result
-        elif len(args) == 2:
-            return self._filter_by_values(args[0], args[1])
-        else:
-            raise ValueError("incorrect number of arguments")
+        if isinstance(filter_by, str) or isinstance(filter_by, int):
+            return self._filter_by_values(filter_by, values)
+
+        if values is not None:
+            raise ValueError("'values' can be non-None only when filtering by axis name or index")
+
+        if is_axis(filter_by):
+            if hasattr(filter_by, "__contains__"):
+                # we intentionally do not pass axis.values because
+                # the axis has (likely optimized) 'in' operator
+                return self._filter_by_values(filter_by.name, filter_by)
+            else:
+                # else we provide raw values, but then the lookup is slower
+                return self._filter_by_values(filter_by.name, filter_by.values)
+
+        if hasattr(filter_by, "axes"):  # for cube-like objects
+            filter_by = filter_by.axes
+
+        # a collection of axes or cubes is expected
+        result = self
+        for item in filter_by:
+            if not is_axis(item) or self.has_axis(item.name):  # skip unmatched axes
+                result = result.filter(item)
+        return result
 
     def exclude(self, axis, values):
         axis, axis_index = self._axis_and_index(axis)
         value_indices = [i for i, v in enumerate(axis.values) if v not in values]
-        return self.take(value_indices, axis_index)
+        return self.take(axis_index, value_indices)
 
-    def take(self, indices, axis):
+    def take(self, axis, indices):
         """Filters the cube along an axis using specified indices. 
         Analogy to numpy.ndarray.take.
         :param indices: a collection of ints or int
@@ -645,7 +642,7 @@ class Cube(object):
         If 'indices' is a single int, then the axis is removed from the cube.
         If 'indices' is a collection of ints, then the axis is preserved.
         """
-        axis, axis_index = self._axes.axis_and_index(axis)
+        axis, axis_index = self._axis_and_index(axis)
         new_axis = axis.take(indices)
         if isinstance(indices, int):
             # if indices is a single int,
@@ -658,11 +655,11 @@ class Cube(object):
         values = self._values.take(indices, axis_index)
         return Cube(values, axes)
 
-    def compress(self, condition, axis):
+    def compress(self, axis, condition):
         """Filters the cube along an axis using a boolean mask along a specified axis. 
         Analogy to numpy.ndarray.compress.
-        :param condition: collection of boolean values
         :param axis: axis name (str), axis index (int) or Axis instance
+        :param condition: collection of boolean values
         :return: new Cube instance
         :raise LookupError: is the axis does not exist, # TODO - error if wrong type
         """
@@ -672,23 +669,17 @@ class Cube(object):
         values = self._values.compress(condition, axis_index)
         return Cube(values, axes)
 
-    def make_index(self, axis):
-        """Converts an axis into an Index instance. If the axis is already an Index, then does nothing.
-        :return: new Cube instance"""
-        self._axes.make_index(axis)
-
-    def make_series(self, axis):
-        """Converts an axis into a Series instance. If the axis is already a Series, then does nothing.
-        :return: new Cube instance"""
-        self._axes.make_series(axis)
-        
     def squeeze(self):
         """Removes all the axes with the size of one from the cube. 
         Analogy to numpy ndarray.squeeze().
         :return: new Cube instance"""
         new_axes = tuple(a for a in self.axes if len(a) != 1)
         new_values = self._values.squeeze()
-        return Cube(new_values, new_axes)        
+        return Cube(new_values, new_axes)
+
+    """******************************
+    *** Cube generating functions ***
+    ******************************"""
         
     @staticmethod
     def full(axes, fill_value, dtype=None):
@@ -727,23 +718,12 @@ class Cube(object):
         values = np.ones(shape, dtype)
         return Cube(values, axes)
 
+    """******************************
+    *** Private utility functions ***
+    ******************************"""
+
     def _axis_and_index(self, axis_id):
         return self._axes.axis_and_index(axis_id)
-
-    def _filter_cube_by_axes(self, axes):
-        result = self
-        for axis in axes:
-            result = result.filter_by_axis(axis)
-        return result
-
-    def _filter_by_axis(self, axis):
-        if hasattr(axis, "__contains__"):
-            # we intentionally do not pass axis.values because
-            # the axis has (likely optimized) 'in' operator
-            return self._filter_by_values(axis.name, axis)
-        else:
-            # else we provide raw values, but then the lookup is slower
-            return self.filter_cube_by_values(axis.name, axis.values)
 
     def _filter_by_values(self, axis_id, values):
         """Returns a cube filtered by specified values on a given axis. Takes into account only values
@@ -754,7 +734,20 @@ class Cube(object):
         """
         axis, axis_index = self._axis_and_index(axis_id)
         value_indices = [i for i, v in enumerate(axis.values) if v in values]
-        return self.take(value_indices, axis_index)
+        return self.take(axis_index, value_indices)
+
+    def _align_axis(self, new_axis):
+        """Returns a cube with values aligned to a new axis. The axis to be aligned has the same name as the new
+        axis. The order of the axes in the cube remains the same. The new axis will become one of the cube axes.
+        :param new_axis: Axis instance
+        :return: new Cube instance
+        :raise LookupError if new_axis cannot be matched to any axis in the cube.
+        """
+        old_axis, old_axis_index = self._axis_and_index(new_axis.name)
+        indices = old_axis.indexof(new_axis.values)
+        new_values = self._values.take(indices, old_axis_index)
+        new_axes = self._axes.replace(old_axis_index, new_axis)
+        return Cube(new_values, new_axes)
 
 
 def apply2(a, b, func, *args):
@@ -790,7 +783,7 @@ def apply2(a, b, func, *args):
             all_axes.append(axis_a)
             continue
 
-        axis, values_a, values_b = _align_cubes(axis_a, axis_b, axis_index_a, axis_index_b, values_a, values_b)
+        axis, values_a, values_b = align_arrays(axis_a, axis_b, axis_index_a, axis_index_b, values_a, values_b)
         all_axes.append(axis)
 
     # add axes from b which have not been aligned
@@ -798,8 +791,8 @@ def apply2(a, b, func, *args):
         if not a.has_axis(axis_b.name):
             all_axes.append(axis_b)
 
-    values_a = _broadcast_values(values_a, a._axes, all_axes)
-    values_b = _broadcast_values(values_b, b._axes, all_axes)
+    values_a = broadcast_array(values_a, a._axes, all_axes)
+    values_b = broadcast_array(values_b, b._axes, all_axes)
 
     return Cube(func(values_a, values_b, *args), all_axes)
 
@@ -830,7 +823,7 @@ def concatenate(cubes, axis_name, as_index=False, broadcast=False):
     else:
         main_axis = Axis(axis_name, main_axis_values)
 
-    unique_axes_list = _unique_axes_from_cubes(cubes)
+    unique_axes_list = unique_axes_from_cubes(cubes)
 
     # create a unique list without the main axis
     unique_axes_list = [a for a in unique_axes_list if a.name != axis_name]
@@ -855,100 +848,9 @@ def stack(cubes, axis, broadcast=False):
     if len(cubes) != len(axis):
         raise ValueError("invalid axis length")
 
-    unique_axes_list = _unique_axes_from_cubes(cubes)
+    unique_axes_list = unique_axes_from_cubes(cubes)
 
     return _align_broadcast_and_concatenate(cubes, unique_axes_list, axis, broadcast)
-
-
-def _broadcast_values(values, old_axes, new_axes):
-    """Add new virtual axes (length is 1) to a numpy array to correspond to the new axes."""
-    new_values = values
-    transpose_indices = []
-    for axis in new_axes:
-        try:
-            axis_index = old_axes.index(axis.name)
-        except LookupError:
-            # if axis is not present in the cube, add virtual axis at the end
-            axis_index = new_values.ndim
-            new_values = np.expand_dims(new_values, axis=axis_index)
-        transpose_indices.append(axis_index)
-
-    # handle the trailing axes
-    if new_values.ndim != len(new_axes):
-        raise ValueError("cube broadcasting axis mismatch")
-
-    # transpose the result
-    return new_values.transpose(transpose_indices)
-
-
-def _align_cubes(axis1, axis2, axis_index1, axis_index2, values1, values2):
-    """
-    :param axis1:
-    :param axis2:
-    :param axis_index1:
-    :param axis_index2:
-    :param values1:
-    :param values2:
-    :return: tuple (axis, values1, values2)
-    """
-    # if self alignment, then do nothing
-    if axis1 is axis2:
-        return axis1, values1, values2
-    axis, value_indices_1, value_indices_2 = _align_axes(axis1, axis2)
-    if value_indices_1 is not None:
-        values1 = values1.take(value_indices_1, axis_index1)
-    if value_indices_2 is not None:
-        values2 = values2.take(value_indices_2, axis_index2)
-
-    return axis, values1, values2
-
-
-def _align_axes(axis1, axis2):
-    """
-    :param axis1:
-    :param axis2:
-    :param axis_index1:
-    :param axis_index2:
-    :param values1:
-    :param values2:
-    :return: tuple (axis, values1, values2)
-    """
-    # try left operand alignment handling
-    result = axis1._align(axis2)
-    if result is None:
-        # try right operand alignment handling
-        result = axis2._ralign(axis1)
-    if result is None:
-        raise AxisAlignError("alignment not supported for axis types")
-    return result
-
-
-def _unique_axes_from_cubes(cubes):
-    """Creates common axis space for a collection of cubes. The following rules are observed:
-    1) axes are identified only by their name, values are ignored
-    2) axes are listed as they are listed in the cube collection
-    3) non-indexable axes have priority over the indexable with the same name
-    4) axes are not aligned by values, values are ignored
-    """
-    unique_axes_list = list()
-    unique_axes_dict = dict()
-
-    for cube in cubes:
-        for axis in cube.axes:
-            try:
-                base_axis_index = unique_axes_dict[axis.name]
-            except KeyError:
-                # add new axis
-                unique_axes_dict[axis.name] = len(unique_axes_list)
-                unique_axes_list.append(axis)
-            else:
-                # axis with the same name was found
-                base_axis = unique_axes_list[base_axis_index]
-                if base_axis._inferior_to(axis) or axis._superior_to(base_axis):
-                    # replace inferior by superior axis
-                    unique_axes_list[base_axis_index] = axis
-
-    return unique_axes_list
 
 
 def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis, broadcast):
@@ -969,12 +871,13 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis, broadcast)
                 # axes are identical, no need to align
                 continue
 
-            base_axis_check, base_value_indices, value_indices = _align_axes(base_axis, axis)
-            assert(base_axis is base_axis_check)
-            assert(base_value_indices is None)  # means base values shall not change
-
-            array = array_list[cube_index]
-            array_list[cube_index] = array.take(value_indices, axis_index)
+            if is_indexed(axis):
+                value_indices = axis.indexof(base_axis.values)
+                array = array_list[cube_index]
+                array_list[cube_index] = array.take(value_indices, axis_index)
+            else:
+                if not np.array_equal(axis.values, base_axis.values):
+                    raise AxisAlignError("cannot align axes '{}' with unequal values".format(axis.name))
 
     # put the new main axis in front of the list
     axis_list.insert(0, main_axis)
@@ -982,7 +885,7 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis, broadcast)
     # broadcast value arrays
     for cube_index, cube in enumerate(cube_list):
         array = array_list[cube_index]
-        array = _broadcast_values(array, cube._axes, axis_list)
+        array = broadcast_array(array, cube._axes, axis_list)
         array_list[cube_index] = array
 
     array_list = np.broadcast_arrays(*array_list)
@@ -992,3 +895,4 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis, broadcast)
 
 def is_cube(obj):
     return isinstance(obj, Cube)
+

@@ -17,64 +17,67 @@ dataarray
 * require the same order of axes (no automatic matching)
 * interface experimental and no development since 2012, a dead project
 
-
-1) protection against breaking the structure consistency
-
-numcube     YES ("99 %")
-larry       ?
-dataarray   ?
-
-2) named axes
-
-numcube     YES (string only)
-larry       NO
-dataarray   YES (any object, including None)
-
-3) labeled axes
-
-numcube     YES (stored in 1D numpy array)
-larry       YES (stored as list of lists)
-dataarray   YES ?
-
-4) unique and nonunique labels
-
-numcube     BOTH
-larry       UNIQUE
-dataarray   ?
-
-5) protection against implicit inner join
-
-numcube     YES
-larry       NO
-dataarray   NO
-
-6) automatic axis matching
+* automatic axis matching
 
 numcube     YES
 larry       NO
 dataarray   ?
 
-7) automatic axis alignment
+* automatic axis alignment
 
 numcube     YES
 larry       YES
 dataarray   YES
 
-8) access to axes as attributes
+* named axes
 
-numcube     NO
+numcube     YES (string only)
+larry       NO
+dataarray   YES (any object, including None)
+
+* annotated axes
+
+numcube     YES (stored in 1D numpy array)
+larry       YES (stored as list of lists)
+dataarray   YES ?
+
+* protection against breaking the structure consistency
+
+numcube     YES ("99 %")
 larry       ?
 dataarray   ?
 
-9) operators
+* unique and non-unique labels
+
+numcube     BOTH
+larry       UNIQUE
+dataarray   ?
+
+* protection against implicit inner join (i.e. danger of unintentional leaving out of values)
+
+numcube     YES
+larry       NO
+dataarray   NO
+
+* access to axes as attributes, e.g. cube.x do denote axis 'x'
+
+numcube     NO
+larry       NO (does not have named axes)
+dataarray   YES
+
+* operators
 
 numcube     YES
 larry       ?
 dataarray   ?
 
-10) aggregations
+* aggregations
 
-11) inheritance from numpy array
+numcube     YES
+larry       ?
+dataarray   ?
+
+* inheritance from numpy array
 
 numcube     NO (wrapper around numpy array)
 larry       YES

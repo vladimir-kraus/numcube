@@ -1,8 +1,6 @@
 import numpy as np
 
-from numcube.axis import Axis
-from numcube.index import Index
-from numcube.utils import is_axis, is_index
+from numcube.utils import is_axis
 
 
 class Axes(object):
@@ -231,20 +229,6 @@ class Axes(object):
         new_axes = list(self)
         new_axes[index1], new_axes[index2] = new_axes[index2], new_axes[index1]
         return Axes(new_axes)
-
-    def make_index(self, axis_id):
-        """Convert an axis into Index. If the axis is already an Index, then does nothing.
-        """
-        axis = self[axis_id]
-        if not is_index(axis):
-            self.replace(axis_id, Index(axis.name, axis.values))
-
-    def make_series(self, axis_id):
-        """Convert an axis into Series. If the axis is already a Series, then does nothing.
-        """
-        axis = self[axis_id]
-        if not is_series(axis):
-            self.replace(axis_id, Axis(axis.name, axis.values))
 
 
 def intersect(axes1, axes2):
