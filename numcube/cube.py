@@ -356,29 +356,29 @@ class Cube(object):
         axis or all the axes as before.
         :return:
         """
-        return self.aggregate(np.sum, axis, keep)
+        return self.reduce(np.sum, axis, keep)
 
     def mean(self, axis=None, keep=None):
         """Returns the arithmetic mean along the specified axis."""
-        return self.aggregate(np.mean, axis, keep)
+        return self.reduce(np.mean, axis, keep)
 
     def min(self, axis=None, keep=None):
         """Returns the minimum of a cube or minimum along an axis."""
-        return self.aggregate(np.min, axis, keep)
+        return self.reduce(np.min, axis, keep)
 
     def max(self, axis=None, keep=None):
         """Returns the maximum of a cube or maximum along an axis."""
-        return self.aggregate(np.max, axis, keep)
+        return self.reduce(np.max, axis, keep)
 
     def all(self, axis=None, keep=None):
         """Tests whether all cube elements along a given axis evaluate to True."""
-        return self.aggregate(np.all, axis, keep)
+        return self.reduce(np.all, axis, keep)
 
     def any(self, axis=None, keep=None):
         """Tests whether any cube element along a given axis evaluates to True."""
-        return self.aggregate(np.any, axis, keep)
+        return self.reduce(np.any, axis, keep)
 
-    def aggregate(self, func, axis=None, keep=None):
+    def reduce(self, func, axis=None, keep=None):
         """Aggregation of values in the cube along one or more axes. This function works
         in two different modes. Either the axes to be eliminated are specified. Or the axes
         to be kept are specified, while the other axes are elimitated.
