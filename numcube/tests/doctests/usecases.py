@@ -16,8 +16,8 @@ Create cube with measured temperatures.
 
 Replace outliers with NaNs. Use lambda to pass extra arguments to aggregation function.
 
->>> decile_1 = temperature.aggregate(func=lambda a: np.percentile(a, 10.0))
->>> decile_9 = temperature.aggregate(func=lambda a: np.percentile(a, 90.0))
+>>> decile_1 = temperature.reduce(func=lambda a: np.percentile(a, 10.0))
+>>> decile_9 = temperature.reduce(func=lambda a: np.percentile(a, 90.0))
 
 Use lambda and np.vectorize to create a function which is applied to each cube element.
 
