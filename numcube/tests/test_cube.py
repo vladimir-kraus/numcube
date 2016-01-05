@@ -442,40 +442,49 @@ class CubeTests(unittest.TestCase):
             self.assertTrue(np.array_equal(op(C, D).values, op(C.values, D)))
             self.assertTrue(np.array_equal(op(D, C).values, op(D, C.values)))
 
-    def test_group(self):
+    def test_group_by(self):
         values = np.arange(12).reshape(3, 4)
         ax1 = Axis("year", [2014, 2014, 2014])
         ax2 = Axis("month", ["jan", "jan", "feb", "feb"])
-        C = Cube(values, [ax1, ax2])
+        c = Cube(values, [ax1, ax2])
         
-        D = C.group(0, np.mean)  # average by year
-        self.assertTrue(np.array_equal(D.values, np.array([[4, 5, 6, 7]])))        
-        self.assertTrue(is_indexed(D.axis(0)))
-        self.assertEqual(len(D.axis(0)), 1)
-        self.assertEqual(D.values.shape, (1, 4))  # axes with length of 1 are not collapsed
-        
-        D = C.group(ax2.name, np.sum, sorted=False)  # sum by month
-        self.assertTrue(np.array_equal(D.values, np.array([[1, 5], [9, 13], [17, 21]])))
-        self.assertTrue(np.array_equal(D.axis(ax2.name).values, ["jan", "feb"]))
+        d = c.reduce(np.mean, group=0)  # average by year
+        self.assertTrue(np.array_equal(d.values, np.array([[4, 5, 6, 7]])))
+        self.assertTrue(is_indexed(d.axis(0)))
+        self.assertEqual(len(d.axis(0)), 1)
+        self.assertEqual(d.values.shape, (1, 4))  # axes with length of 1 are not collapsed
 
-        D = C.group(ax2.name, np.sum)  # sum by month, sorted by default
-        self.assertTrue(np.array_equal(D.values, np.array([[5, 1], [13, 9], [21, 17]])))
-        self.assertTrue(np.array_equal(D.axis(ax2.name).values, ["feb", "jan"]))
-        self.assertTrue(is_indexed(D.axis(ax2.name)))
-        self.assertEqual(len(D.axis(ax2.name)), 2)
-        self.assertEqual(D.values.shape, (3, 2))
+        d = c.reduce(np.sum, group=ax2.name, sort_grp=False)  # sum by month
+        self.assertTrue(np.array_equal(d.values, np.array([[1, 5], [9, 13], [17, 21]])))
+        self.assertTrue(np.array_equal(d.axis(ax2.name).values, ["jan", "feb"]))
+
+        d = c.reduce(np.sum, group=ax2.name)  # sum by month, sorted by default
+        self.assertTrue(np.array_equal(d.values, np.array([[5, 1], [13, 9], [21, 17]])))
+        self.assertTrue(np.array_equal(d.axis(ax2.name).values, ["feb", "jan"]))
+        self.assertTrue(is_indexed(d.axis(ax2.name)))
+        self.assertEqual(len(d.axis(ax2.name)), 2)
+        self.assertEqual(d.values.shape, (3, 2))
         
-        # testing various aggregation functions
-        funcs = [np.sum, np.mean, np.median, np.min, np.max, np.prod]  # , np.diff]
-        C = Cube(values, [ax1, ax2])
-        for func in funcs:
-            D = C.group(ax1.name, func)
-            self.assertTrue(np.array_equiv(D.values, np.apply_along_axis(func, 0, C.values)))
-        
+        # testing various aggregation functions using direct calling, e.g. c.sum(group=0),
+        # or indirect calling, e.g. reduce(func=np.sum, group=0)
+        funcs_indirect = [np.sum, np.mean, np.median, np.min, np.max, np.prod]  # , np.diff]
+        funcs_direct = [c.sum, c.mean, c.median, c.min, c.max, c.prod]  # , np.diff]
+        for func_indirect, func_direct in zip(funcs_indirect, funcs_direct):
+            result = np.apply_along_axis(func_indirect, 0, c.values)
+            d = c.reduce(func_indirect, group=ax1.name)
+            self.assertTrue(np.array_equiv(d.values, result))
+            e = func_direct(group=ax1.name)
+            self.assertTrue(np.array_equiv(e.values, result))
+
         # testing function with extra parameters which cannot be passed as *args
         third_quartile = functools.partial(np.percentile, q=75)
-        D = C.group(ax1.name, third_quartile)
-        self.assertTrue(np.array_equiv(D.values, np.apply_along_axis(third_quartile, 0, C.values)))
+        d = c.reduce(third_quartile, group=ax1.name)
+        self.assertTrue(np.array_equiv(d.values, np.apply_along_axis(third_quartile, 0, c.values)))
+
+        # the same but using lambda - this is actually simpler and more powerful way
+        third_quartile_lambda = lambda sample: np.percentile(sample, q=75)
+        d = c.reduce(third_quartile_lambda, group=ax1.name)
+        self.assertTrue(np.array_equiv(d.values, np.apply_along_axis(third_quartile_lambda, 0, c.values)))
 
     def test_rename_axis(self):
         C = year_quarter_cube()
