@@ -347,47 +347,60 @@ class Cube(object):
 
     """aggregation functions"""
 
-    def sum(self, axis=None, keep=None):
+    def sum(self, axis=None, keep=None, group=None, sort_grp=True):
         """Sum of array elements over a given axis.
 
         :param axis: Axis or axes along which a sum is performed. The default (axis = None) is perform a sum
         over all the dimensions of the input array. axis may be negative, in which case it counts from the last
         to the first axis. If this is a tuple of ints, a sum is performed on multiple axes, instead of a single
         axis or all the axes as before.
-        :return:
+        :return: new Cube instance or a scalar value
         """
-        return self.reduce(np.sum, axis, keep)
+        return self.reduce(np.sum, axis, keep, group, sort_grp)
 
-    def mean(self, axis=None, keep=None):
+    def mean(self, axis=None, keep=None, group=None, sort_grp=True):
         """Returns the arithmetic mean along the specified axis."""
-        return self.reduce(np.mean, axis, keep)
+        return self.reduce(np.mean, axis, keep, group, sort_grp)
 
-    def min(self, axis=None, keep=None):
+    def median(self, axis=None, keep=None, group=None, sort_grp=True):
+        """Returns the arithmetic mean along the specified axis."""
+        return self.reduce(np.median, axis, keep, group, sort_grp)
+
+    def min(self, axis=None, keep=None, group=None, sort_grp=True):
         """Returns the minimum of a cube or minimum along an axis."""
-        return self.reduce(np.min, axis, keep)
+        return self.reduce(np.min, axis, keep, group, sort_grp)
 
-    def max(self, axis=None, keep=None):
+    def max(self, axis=None, keep=None, group=None, sort_grp=True):
         """Returns the maximum of a cube or maximum along an axis."""
-        return self.reduce(np.max, axis, keep)
+        return self.reduce(np.max, axis, keep, group, sort_grp)
 
-    def all(self, axis=None, keep=None):
+    def all(self, axis=None, keep=None, group=None, sort_grp=True):
         """Tests whether all cube elements along a given axis evaluate to True."""
-        return self.reduce(np.all, axis, keep)
+        return self.reduce(np.all, axis, keep, group, sort_grp)
 
-    def any(self, axis=None, keep=None):
+    def any(self, axis=None, keep=None, group=None, sort_grp=True):
         """Tests whether any cube element along a given axis evaluates to True."""
-        return self.reduce(np.any, axis, keep)
+        return self.reduce(np.any, axis, keep, group, sort_grp)
 
-    def reduce(self, func, axis=None, keep=None):
+    def prod(self, axis=None, keep=None, group=None, sort_grp=True):
+        """Tests whether any cube element along a given axis evaluates to True."""
+        return self.reduce(np.prod, axis, keep, group, sort_grp)
+
+    def reduce(self, func, axis=None, keep=None, group=None, sort_grp=True):
         """Aggregation of values in the cube along one or more axes. This function works
         in two different modes. Either the axes to be eliminated are specified. Or the axes
-        to be kept are specified, while the other axes are elimitated.
+        to be kept are specified, while the other axes are eliminated.
 
+        :param func: the function which is used to aggregate the values
+            It must take two values
         :param axis: axis or axes to be eliminated by the aggregation
         :param keep: axis or axes which are kept after the aggregation
+        :param group: axis for which values are the results grouped
+        :param sort_grp: True to sort the grouped values, False to keep the order of the first occurrences
+            This is applicable only when 'group' is defined
 
-        Only one of 'axis' and 'keep' arguments can be non-None, otherwise ValueError is raised.
-        If the both arguments are None, then the Cube is aggregated to a single scalar value.
+        No more than one of 'axis', 'keep' and 'group' arguments can be non-None, otherwise ValueError is raised.
+        If none of these is defined, then the Cube is aggregated to a single scalar value.
 
         Example:
         # returns sum of all months, i.e. month axis is eliminated; other axes are kept
@@ -397,41 +410,45 @@ class Cube(object):
         cube.aggregate(np.mean, keep="month")
         """
 
-        # complete aggregation to a scalar
-        if axis is None and keep is None:
+        aggr_params = int(axis is not None) + int(keep is not None) + int(group is not None)
+        if aggr_params == 0:
+            # complete aggregation into a scalar
             return func(self._values)
+        elif aggr_params > 1:
+            raise ValueError("no more than one of 'axis', 'keep' or 'group' arguments can be defined")
 
-        if keep is not None and axis is not None:
-            raise ValueError("either 'keep' or 'axis' argument must be None")
+        if axis is not None or keep is not None:
+            axis = make_axis_collection(axis)
+            keep = make_axis_collection(keep)
 
-        axis = make_axis_collection(axis)
-        keep = make_axis_collection(keep)
+            if axis is not None:
+                axis_indices_to_remove = tuple(self._axes.index(a) for a in axis)
+                new_axes = list(a for i, a in enumerate(self._axes) if i not in axis_indices_to_remove)
+            else:
+                axis_index_set = set(self._axes.index(a) for a in keep)
+                new_axes = list(a for i, a in enumerate(self._axes) if i in axis_index_set)
+                axis_indices_to_remove = tuple(set(range(self.ndim)) - axis_index_set)
+            return self._aggregate(func, new_axes, axis_indices_to_remove)
 
-        if axis is not None:
-            axis_indices_to_remove = tuple(self._axes.index(a) for a in axis)
-            new_axes = list(a for i, a in enumerate(self._axes) if i not in axis_indices_to_remove)
-        else:
-            axis_index_set = set(self._axes.index(a) for a in keep)
-            new_axes = list(a for i, a in enumerate(self._axes) if i in axis_index_set)
-            axis_indices_to_remove = tuple(set(range(self.ndim)) - axis_index_set)
+        elif group is not None:
+            return self._group(group, func, sort_grp)
 
+    def _aggregate(self, func, new_axes, axis_indices_to_remove):
+        # new_axes - collection of axes in the result
+        # axis_indices_to_remove - which axes should be removed by the aggregation
         new_values = self._values
         if axis_indices_to_remove:
             new_values = func(new_values, axis_indices_to_remove)
-
         return Cube(new_values, new_axes)
 
-    def group(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
-        """Group the same values along a given axis by applying a function.
-        :param axis: name (str) or index (int) of axis to group the cube values by
-        :param func: aggregation function, e.g. np.sum, np.mean etc.
-            There are the following requirements:
-            - the function takes two fixed arguments - array and axis (given by index)
-            - these two fixed arguments can be followed by a variable number of other arguments passed in *args
-            - the function must return an array with one axis less then the input array
-        :param sorted: True to sort the grouped values, False to keep the order of the first occurrences
-        :return: new Cube instance
-        """
+    def _group(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
+        # Group the same values along a given axis by applying a function.
+        # :param axis: name (str) or index (int) of axis to group the cube values by
+        # :param func: aggregation function, e.g. np.sum, np.mean etc.
+        #    There are the following requirements:
+        #    - the function takes two fixed arguments - array and axis (given by index)
+        #    - these two fixed arguments can be followed by a variable number of other arguments passed in *args
+        #    - the function must return an array with one axis less then the input array
         old_axis, old_axis_index = self._axis_and_index(axis)
         
         sub_cubes = list()
