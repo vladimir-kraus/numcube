@@ -15,13 +15,11 @@ Create cube with measured temperatures.
 # print(temperature)
 
 Replace outliers with NaNs. Use lambda to pass extra arguments to aggregation function.
+Values less than 1st decile and greater than 9th decile are treated as outliers.
 
 >>> decile_1 = temperature.reduce(func=lambda a: np.percentile(a, 10.0))
 >>> decile_9 = temperature.reduce(func=lambda a: np.percentile(a, 90.0))
-
-Use lambda and np.vectorize to create a function which is applied to each cube element.
-
->>> outlier_replacement = np.vectorize(lambda x: x if decile_1 <= x <= decile_9 else np.nan)
+>>> outlier_replacement = lambda x: x if decile_1 <= x <= decile_9 else np.nan
 >>> temperature_adjusted = temperature.apply(func=outlier_replacement)
 
 # >>> print(temperature_adjusted)

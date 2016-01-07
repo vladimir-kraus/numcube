@@ -147,11 +147,17 @@ class Cube(object):
         return self._axes.contains(axis)
 
     def apply(self, func, *args):
-        """Applies a function to all values and return the new cube.
+        """Applies a function to each element individually and return the new cube with the same dimensions.
         :param func: function to be applied to values
         :param args: additional optional arguments of func
         :return: new Cube instance
+
+        Examples:
+        cube.apply(np.sin)
+        cube.apply(np.percentile, 10)  # i.e. 1st decile
+        cube.apply(lambda x: x ^ 2 if x > 0 else 0)  # quadratic function for positive values, otherwise zero
         """
+        func = np.vectorize(func)  # TODO: or is there a better solution?
         return Cube(func(self._values, *args), self._axes)
 
     def transpose(self, front=[], back=[]):
