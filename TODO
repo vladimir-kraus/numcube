@@ -13,3 +13,5 @@
 * add apply function to apply numpy function on values
 
 * add pretty print
+
+* group_by where axis is Index does not make sense -> shortcut...

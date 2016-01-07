@@ -89,8 +89,14 @@ Cube values can be aggregated along axes using aggregation functions sum, mean, 
 
 ```python
 >> total_revenues = revenues.sum()
->> annual_revenues = revenues.sum(keep="year")
->> avg_annual_revenues = revenues.mean("quarter")
+>> average_annual_revenues = revenues.mean("quarter")
+>> total_annual_revenues = revenues.sum(keep="year")
+...
+>> subject = Axis('subject', [math', 'biology', 'math', 'physics', 'math', 'biology', 'math', 'physics'])
+>> score = Cube([65, 80, 95, 52, 35, 50, 89, 95], subject)
+>> score_by_subject = score.reduce(func=np.mean, group='subject')
+or
+>> score_by_subject = score.mean(group='subject')
 ```
 
 Other

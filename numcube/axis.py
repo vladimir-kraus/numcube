@@ -10,7 +10,7 @@ class Axis(object):
         """Initializes Axis object.
         :param name: str
         :param values: sequence of values of the same type, are converted to 1-D numpy array
-        :raise: ValueError is values cannot be converted, TypeError if name is not string
+        :raise: ValueError if values cannot be converted, TypeError if name is not string
         """
         if not isinstance(name, str):
             raise TypeError("type of {} is not str".format(repr(name)))
