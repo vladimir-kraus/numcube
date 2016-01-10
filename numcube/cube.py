@@ -18,7 +18,9 @@ class Cube(object):
     __array_priority__ = 10
 
     def __init__(self, values, axes, dtype=None):
-        values = np.asarray(values, dtype)
+        if not isinstance(values, np.ndarray):
+            # masked arrays will not be affected
+            values = np.asarray(values, dtype)
 
         axes = make_axes(axes)
 
@@ -351,6 +353,12 @@ class Cube(object):
         """
         return self.apply(np.tan)
 
+    def isnan(self):
+        return self.apply(np.isnan)
+
+    def count_nonzero(self):
+        return self.apply(np.count_nonzero)
+
     """aggregation functions"""
 
     def sum(self, axis=None, keep=None, group=None, sort_grp=True):
@@ -482,6 +490,16 @@ class Cube(object):
         new_axes = self._axes.replace(old_axis_index, new_axis)
         new_values = np.concatenate(sub_cubes, old_axis_index)
         return Cube(new_values, new_axes)
+
+    def masked(self, func):
+        """
+
+        :param func: function which is applied to each
+        :return: new Cube instance with masked values
+        """
+        mask = self.apply(func)._values
+        masked_values = np.ma.masked_array(self._values, mask)
+        return self.__class__(masked_values, self._axes)
 
     def replace_axis(self, old_axis_id, new_axis):
         """Replaces an existing axis with a new axis and return the new Cube instance.
