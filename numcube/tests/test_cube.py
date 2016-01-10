@@ -266,9 +266,20 @@ class CubeTests(unittest.TestCase):
 
     def test_apply(self):
         """Applies a function on each cube element."""
-        C = year_quarter_weekday_cube()
-        D = C.apply(np.sin)
-        self.assertTrue(np.array_equal(np.sin(C.values), D.values))
+        c = year_quarter_weekday_cube()
+
+        # apply vectorized function
+        d = c.apply(np.sin)
+        self.assertTrue(np.array_equal(np.sin(c.values), d.values))
+
+        # apply non-vectorized function
+        import math
+        e = c.apply(math.sin)
+        self.assertTrue((e == d).all())
+
+        # apply lambda
+        f = c.apply(lambda v: 1 if 6 <= v <= 8 else 0)
+        self.assertTrue(f.sum(), 3)
         
     def test_squeeze(self):
         """Removes axes which have only one element."""

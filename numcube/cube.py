@@ -159,8 +159,13 @@ class Cube(object):
         cube.apply(np.percentile, 10)  # i.e. 1st decile
         cube.apply(lambda x: x ^ 2 if x > 0 else 0)  # quadratic function for positive values, otherwise zero
         """
-        func = np.vectorize(func)  # TODO: or is there a better solution?
-        return Cube(func(self._values, *args), self._axes)
+        try:
+            values = func(self._values, *args)
+        # except (ValueError, ):  # or TypeError
+        except (ValueError, TypeError):  # or TypeError
+            func = np.vectorize(func)
+            values = func(self._values, *args)
+        return Cube(values, self._axes)
 
     def transpose(self, front=[], back=[]):
         """A generalized analogy to numpy.transpose.
