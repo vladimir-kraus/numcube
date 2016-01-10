@@ -497,10 +497,13 @@ class Cube(object):
         return Cube(new_values, new_axes)
 
     def masked(self, func):
-        """
+        """Returns a cube with masked values.
 
         :param func: function which is applied to each
         :return: new Cube instance with masked values
+
+        Example: to calculate mean of non-Nan values
+        r = cube.masked(np.isnan).mean()
         """
         mask = self.apply(func)._values
         masked_values = np.ma.masked_array(self._values, mask)

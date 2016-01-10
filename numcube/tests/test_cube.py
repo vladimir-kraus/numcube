@@ -280,6 +280,11 @@ class CubeTests(unittest.TestCase):
         # apply lambda
         f = c.apply(lambda v: 1 if 6 <= v <= 8 else 0)
         self.assertTrue(f.sum(), 3)
+
+    def test_masked(self):
+        """Masking cube values."""
+        # TODO
+        pass
         
     def test_squeeze(self):
         """Removes axes which have only one element."""
