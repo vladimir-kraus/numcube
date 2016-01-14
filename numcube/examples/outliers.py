@@ -17,6 +17,11 @@ if __name__ == "__main__":
 
     # Now calculate the average with excluding the NaNs.
     avg_temperature = np.nanmean(temperature_adjusted.values)
+    print("avg_temp =", avg_temperature)
     avg_temperature = temperature.masked(lambda c: c < decile_1 or c > decile_9).mean()
+    print("avg_temp =", avg_temperature)
+    avg_temperature = temperature.masked(lambda c: (c < decile_1) | (c > decile_9)).mean()  # note the brackets!
+    print("avg_temp =", avg_temperature)
     avg_temperature = temperature_adjusted.masked(np.isnan).mean()
+    print("avg_temp =", avg_temperature)
 
