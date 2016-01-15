@@ -359,10 +359,9 @@ class Cube(object):
         return self.apply(np.tan)
 
     def isnan(self):
+        """Returns True for all NaN values and False for all non-NaN values.
+        :return: new Cube instance with True/False values"""
         return self.apply(np.isnan)
-
-    def count_nonzero(self):
-        return self.apply(np.count_nonzero)
 
     """aggregation functions"""
 
@@ -378,37 +377,46 @@ class Cube(object):
         return self.reduce(np.sum, axis, keep, group, sort_grp)
 
     def mean(self, axis=None, keep=None, group=None, sort_grp=True):
-        """Returns the arithmetic mean along the specified axis."""
+        """Returns the arithmetic mean."""
         return self.reduce(np.mean, axis, keep, group, sort_grp)
 
+    def nanmean(self, axis=None, keep=None, group=None, sort_grp=True):
+        """Returns the arithmetic mean excluding NaN values."""
+        return self.reduce(np.nanmean, axis, keep, group, sort_grp)
+
     def median(self, axis=None, keep=None, group=None, sort_grp=True):
-        """Returns the arithmetic mean along the specified axis."""
+        """Returns the median (i.e. the middle value)."""
         return self.reduce(np.median, axis, keep, group, sort_grp)
 
     def min(self, axis=None, keep=None, group=None, sort_grp=True):
-        """Returns the minimum of a cube or minimum along an axis."""
+        """Returns the minimum values."""
         return self.reduce(np.min, axis, keep, group, sort_grp)
 
     def max(self, axis=None, keep=None, group=None, sort_grp=True):
-        """Returns the maximum of a cube or maximum along an axis."""
+        """Returns the maximum value."""
         return self.reduce(np.max, axis, keep, group, sort_grp)
 
     def all(self, axis=None, keep=None, group=None, sort_grp=True):
-        """Tests whether all cube elements along a given axis evaluate to True."""
+        """Tests whether all elements evaluate to True."""
         return self.reduce(np.all, axis, keep, group, sort_grp)
 
     def any(self, axis=None, keep=None, group=None, sort_grp=True):
-        """Tests whether any cube element along a given axis evaluates to True."""
+        """Tests whether any element evaluates to True."""
         return self.reduce(np.any, axis, keep, group, sort_grp)
 
     def prod(self, axis=None, keep=None, group=None, sort_grp=True):
-        """Tests whether any cube element along a given axis evaluates to True."""
+        """Returns the product (i.e. multiplication) of the values."""
         return self.reduce(np.prod, axis, keep, group, sort_grp)
+
+    def count_nonzero(self, axis=None, keep=None, group=None, sort_grp=True):
+        return self.reduce(np.count_nonzero, axis, keep, group, sort_grp)
 
     def reduce(self, func, axis=None, keep=None, group=None, sort_grp=True):
         """Aggregation of values in the cube along one or more axes. This function works
-        in two different modes. Either the axes to be eliminated are specified. Or the axes
-        to be kept are specified, while the other axes are eliminated.
+        in three different modes:
+         1) the axes to be eliminated are specified
+         2) the axes to be kept are specified, while the other axes are eliminated
+         3) values are grouped along a specified axis
 
         :param func: the function which is used to aggregate the values
             It must take two values
