@@ -48,7 +48,7 @@ if __name__ == "__main__":
     # Replace outliers with NaNs. Use lambda to pass extra arguments to aggregation function.
     adjusted_measurements = measurements.apply(func=lambda x: x if lower <= x <= upper else np.nan)
 
-    print("\nAfter exclusion of outliers:")
+    print("\nAfter exclusion of outliers (various methods):")
 
     # Now calculate the average with excluding the NaNs.
     avg = np.nanmean(adjusted_measurements.values)
@@ -101,10 +101,13 @@ if __name__ == "__main__":
     print("\nComparison of speed of masking operations:")
     repeat = 1
     setup = "from __main__ import measurements, lower, upper"
-    func = "measurements.masked(lambda c: (c < lower) | (c > upper))"
-    t = timeit.Timer(func, setup)
-    print("vectorized mask: t={0} secs".format(t.timeit(repeat)))
+    func = "measurements.masked(lambda c: (c < lower) | (c > upper))"  # Note the brackets!!!
+    timer = timeit.Timer(func, setup)
+    t_vectorized = timer.timeit(repeat)
+    print("vectorized mask: t={0} secs".format(t_vectorized))
     func = "measurements.masked(lambda c: c < lower or c > upper)"
-    t = timeit.Timer(func, setup)
-    print("non-vectorized mask: t={0} secs".format(t.timeit(repeat)))
+    timer = timeit.Timer(func, setup)
+    t_non_vectorized = timer.timeit(repeat)
+    print("non-vectorized mask: t={0} secs".format(t_non_vectorized))
+    print("speed gain={0}x".format(int(t_non_vectorized / t_vectorized)))
 
