@@ -8,6 +8,7 @@ We are going to use two approaches:
 
 import numpy as np
 from numcube import Index, Cube
+import timeit
 
 if __name__ == "__main__":
     # The cube will contain measurements taken each second during a period of 24 hours.
@@ -94,6 +95,16 @@ if __name__ == "__main__":
     sigma = masked_measurements.std()
     print("avg={0} sigma={1}".format(avg, sigma))
 
-
-
+    # Here we are going to document the speed difference when masking with vectorized and non-vectorized
+    # functions. As you can see, the vectorized operation is significantly (around 100x) faster.
+    # Therefore use non-vectorized only when absolutely necessary!
+    print("\nComparison of speed of masking operations:")
+    repeat = 1
+    setup = "from __main__ import measurements, lower, upper"
+    func = "measurements.masked(lambda c: (c < lower) | (c > upper))"
+    t = timeit.Timer(func, setup)
+    print("vectorized mask: t={0} secs".format(t.timeit(repeat)))
+    func = "measurements.masked(lambda c: c < lower or c > upper)"
+    t = timeit.Timer(func, setup)
+    print("non-vectorized mask: t={0} secs".format(t.timeit(repeat)))
 
