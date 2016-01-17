@@ -381,7 +381,7 @@ class Cube(object):
         return self.reduce(np.mean, axis, keep, group, sort_grp)
 
     def nanmean(self, axis=None, keep=None, group=None, sort_grp=True):
-        """Returns the arithmetic mean excluding NaN values."""
+        """Returns the arithmetic mean with exclusion of NaN values."""
         return self.reduce(np.nanmean, axis, keep, group, sort_grp)
 
     def median(self, axis=None, keep=None, group=None, sort_grp=True):
@@ -410,6 +410,22 @@ class Cube(object):
 
     def count_nonzero(self, axis=None, keep=None, group=None, sort_grp=True):
         return self.reduce(np.count_nonzero, axis, keep, group, sort_grp)
+
+    def std(self, axis=None, keep=None, group=None, sort_grp=True):
+        """Returns the standard deviation."""
+        return self.reduce(np.std, axis, keep, group, sort_grp)
+
+    def nanstd(self, axis=None, keep=None, group=None, sort_grp=True):
+        """Returns the standard deviation with exclusion of NaN values."""
+        return self.reduce(np.nanstd, axis, keep, group, sort_grp)
+
+    def var(self, axis=None, keep=None, group=None, sort_grp=True):
+        """Returns the variance."""
+        return self.reduce(np.var, axis, keep, group, sort_grp)
+
+    def nanvar(self, axis=None, keep=None, group=None, sort_grp=True):
+        """Returns the variance with exclusion of NaN values."""
+        return self.reduce(np.nanvar, axis, keep, group, sort_grp)
 
     def reduce(self, func, axis=None, keep=None, group=None, sort_grp=True):
         """Aggregation of values in the cube along one or more axes. This function works
