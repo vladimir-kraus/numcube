@@ -16,3 +16,5 @@ date.year or date.day
 * add pretty print
 
 * group_by where axis is Index does not make sense -> shortcut...
+
+* reverse(axis)

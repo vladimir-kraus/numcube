@@ -540,7 +540,17 @@ class Cube(object):
 
     def growth(self, axis, axis_shift_back=False):
         old_axis, axis_index = self._axis_and_index(axis)
-
+        slices = [slice(None)] * self.ndim
+        forth_slice = slice(1, None)  # except the first one
+        slices[axis_index] = forth_slice
+        forth_values = self.values[slices]
+        back_slice = slice(-1)  # except the last one
+        slices[axis_index] = back_slice
+        back_values = self.values[slices]
+        growth_values = forth_values / back_values
+        new_axis = old_axis[back_slice] if axis_shift_back else old_axis[forth_slice]
+        new_axes = self._axes.replace(axis_index, new_axis)
+        return self.__class__(growth_values, new_axes)
 
     def masked(self, func):
         """Returns a cube with masked values.

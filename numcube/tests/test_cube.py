@@ -546,6 +546,20 @@ class CubeTests(unittest.TestCase):
         self.assertTrue(np.array_equal(d.values, np.diff(c.values, n=4, axis=2)))
         self.assertTrue(np.array_equal(d.axis("weekday").values, ["mon", "tue", "wed"]))
 
+    def test_growth(self):
+        c = year_quarter_cube() + 1  # to prevent division by zero
+
+        d = c.growth("year")
+        self.assertTrue(np.array_equal(d.values, c.values[1:, :] / c.values[:-1, :]))
+        self.assertTrue(np.array_equal(d.axis("year").values, c.axis("year").values[1:]))
+
+        d = c.growth(1)  # 1 = quarter axis
+        self.assertTrue(np.array_equal(d.values, c.values[:, 1:] / c.values[:, :-1]))
+
+        d = c.growth("year", axis_shift_back=True)
+        self.assertTrue(np.array_equal(d.values, c.values[1:, :] / c.values[:-1, :]))
+        self.assertTrue(np.array_equal(d.axis("year").values, c.axis("year").values[:-1]))
+
     def test_aggregate(self):
         C = year_quarter_cube()
 
@@ -727,7 +741,7 @@ class CubeTests(unittest.TestCase):
         # slicing of an arbitrary axis
         d = c.take("year", slice(-1))  # except the last one
         self.assertTrue(np.array_equal(d.values, c.values[:-1, :]))
-        d = c.take(1, slice(1, 5, 2))
+        d = c.take(1, slice(1, 5, 2))  # 1 = quarter axis
         self.assertTrue(np.array_equal(d.values, c.values[:, 1: 5: 2]))
 
         # wrong axes
