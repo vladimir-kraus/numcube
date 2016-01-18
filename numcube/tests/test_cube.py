@@ -724,6 +724,12 @@ class CubeTests(unittest.TestCase):
         # negative index
         self.assertTrue(np.array_equal(c.take("year", [-3, -2]).values, c.values.take([0, 1], 0)))
 
+        # slicing of an arbitrary axis
+        d = c.take("year", slice(-1))  # except the last one
+        self.assertTrue(np.array_equal(d.values, c.values[:-1, :]))
+        d = c.take(1, slice(1, 5, 2))
+        self.assertTrue(np.array_equal(d.values, c.values[:, 1: 5: 2]))
+
         # wrong axes
         self.assertRaises(LookupError, c.take, "bad_axis", [0, 1])
         self.assertRaises(LookupError, c.take, 2, [0, 1])

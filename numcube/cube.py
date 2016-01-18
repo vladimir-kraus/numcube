@@ -538,6 +538,10 @@ class Cube(object):
         new_axes = self._axes.replace(axis_index, new_axis)
         return self.__class__(new_values, new_axes)
 
+    def growth(self, axis, axis_shift_back=False):
+        old_axis, axis_index = self._axis_and_index(axis)
+
+
     def masked(self, func):
         """Returns a cube with masked values.
 
@@ -725,7 +729,7 @@ class Cube(object):
     def take(self, axis, indices):
         """Filters the cube along an axis using specified indices. 
         Analogy to numpy.ndarray.take.
-        :param indices: a collection of ints or int
+        :param indices: a collection of ints or int or slice
         :param axis: axis name (str), axis index (int) or Axis instance
         :return: new Cube instance
         :raise LookupError: is the axis does not exist, ValueError for invalid indices
@@ -734,6 +738,15 @@ class Cube(object):
         If 'indices' is a collection of ints, then the axis is preserved.
         """
         axis, axis_index = self._axis_and_index(axis)
+
+        # slicing of an arbitrary axis
+        if isinstance(indices, slice):
+            slices = [slice(None)] * self.ndim
+            slices[axis_index] = indices
+            new_axis = axis[indices]
+            new_axes = self._axes.replace(axis_index, new_axis)
+            return self.__class__(self.values[slices], new_axes)
+
         new_axis = axis.take(indices)
         if isinstance(indices, int):
             # if indices is a single int,
