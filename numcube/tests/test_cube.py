@@ -738,12 +738,6 @@ class CubeTests(unittest.TestCase):
         # negative index
         self.assertTrue(np.array_equal(c.take("year", [-3, -2]).values, c.values.take([0, 1], 0)))
 
-        # slicing of an arbitrary axis
-        d = c.take("year", slice(-1))  # except the last one
-        self.assertTrue(np.array_equal(d.values, c.values[:-1, :]))
-        d = c.take(1, slice(1, 5, 2))  # 1 = quarter axis
-        self.assertTrue(np.array_equal(d.values, c.values[:, 1: 5: 2]))
-
         # wrong axes
         self.assertRaises(LookupError, c.take, "bad_axis", [0, 1])
         self.assertRaises(LookupError, c.take, 2, [0, 1])
@@ -753,6 +747,20 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(IndexError, c.take, "year", [0, 4])
         self.assertRaises(ValueError, c.take, "year", ["X"])
         self.assertRaises(TypeError, c.take, "year", None)
+
+    def test_slice(self):
+        c = year_quarter_cube()
+
+        d = c.slice("year", -1)  # except the last one
+        self.assertTrue(np.array_equal(d.values, c.values[:-1, :]))
+
+        d = c.slice(1, 0, 3, 2)  # 1 = quarter axis
+        self.assertTrue(np.array_equal(d.values, c.values[:, 0: 3: 2]))
+
+        # accepting a slice as an argument
+        slc = slice(0, 3, 2)
+        d = c.slice(1, slc)  # 1 = quarter axis
+        self.assertTrue(np.array_equal(d.values, c.values[:, 0: 3: 2]))
 
     def test_compress(self):
         c = year_quarter_cube()

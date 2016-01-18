@@ -748,15 +748,6 @@ class Cube(object):
         If 'indices' is a collection of ints, then the axis is preserved.
         """
         axis, axis_index = self._axis_and_index(axis)
-
-        # slicing of an arbitrary axis
-        if isinstance(indices, slice):
-            slices = [slice(None)] * self.ndim
-            slices[axis_index] = indices
-            new_axis = axis[indices]
-            new_axes = self._axes.replace(axis_index, new_axis)
-            return self.__class__(self.values[slices], new_axes)
-
         new_axis = axis.take(indices)
         if isinstance(indices, int):
             # if indices is a single int,
@@ -768,6 +759,34 @@ class Cube(object):
             axes = self._axes.replace(axis_index, new_axis)
         values = self._values.take(indices, axis_index)
         return self.__class__(values, axes)
+
+    def slice(self, axis, *args):
+        """
+        :param axis: axis name or index
+        :param args: slice object or one to three parameters to create a slice object
+        :return: new Cube instance
+
+        Examples:
+        c.slice(ax, 1)  # first item
+        c.slice(ax, -1, None)  # last item
+        c.slice(ax, 1, None)  # all except first item
+        c.slice(ax, 0, -1)  # all except last item
+        c.slice(ax, 0, None, 2)  # every odd item
+        c.slice(ax, 1, None, 2)  # every even item
+        c.slice(ax, None, None, -1)  # reversed items
+        """
+        axis, axis_index = self._axis_and_index(axis)
+
+        if len(args) == 1 and isinstance(args[0], slice):
+            slc = args[0]
+        else:
+            slc = slice(*args)
+
+        slices = [slice(None)] * self.ndim
+        slices[axis_index] = slc
+        new_axis = axis[slc]
+        new_axes = self._axes.replace(axis_index, new_axis)
+        return self.__class__(self.values[slices], new_axes)
 
     def compress(self, axis, condition):
         """Filters the cube along an axis using a boolean mask along a specified axis. 
