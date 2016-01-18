@@ -193,52 +193,52 @@ class Cube(object):
 
     # A + B
     def __add__(self, other):
-        return apply2(self, other, np.add)
+        return apply_op(self, other, np.add)
 
     def __radd__(self, other):
-        return apply2(other, self, np.add)
+        return apply_op(other, self, np.add)
 
     # A * B
     def __mul__(self, other):
-        return apply2(self, other, np.multiply)
+        return apply_op(self, other, np.multiply)
 
     def __rmul__(self, other):
-        return apply2(other, self, np.multiply)
+        return apply_op(other, self, np.multiply)
 
     # A - B
     def __sub__(self, other):
-        return apply2(self, other, np.subtract)
+        return apply_op(self, other, np.subtract)
 
     def __rsub__(self, other):
-        return apply2(other, self, np.subtract)
+        return apply_op(other, self, np.subtract)
 
     # A / B
     def __truediv__(self, other):
-        return apply2(self, other, np.true_divide)
+        return apply_op(self, other, np.true_divide)
 
     def __rtruediv__(self, other):
-        return apply2(other, self, np.true_divide)
+        return apply_op(other, self, np.true_divide)
 
     # A // B
     def __floordiv__(self, other):
-        return apply2(self, other, np.floor_divide)
+        return apply_op(self, other, np.floor_divide)
 
     def __rfloordiv__(self, other):
-        return apply2(other, self, np.floor_divide)
+        return apply_op(other, self, np.floor_divide)
 
     # A ** B
     def __pow__(self, other):
-        return apply2(self, other, np.power)
+        return apply_op(self, other, np.power)
 
     def __rpow__(self, other):
-        return apply2(other, self, np.power)
+        return apply_op(other, self, np.power)
 
     # A % B
     def __mod__(self, other):
-        return apply2(self, other, np.mod)
+        return apply_op(self, other, np.mod)
 
     def __rmod__(self, other):
-        return apply2(other, self, np.mod)
+        return apply_op(other, self, np.mod)
 
     """bitwise operators"""
 
@@ -248,64 +248,64 @@ class Cube(object):
 
     # A & B
     def __and__(self, other):
-        return apply2(self, other, np.bitwise_and)
+        return apply_op(self, other, np.bitwise_and)
 
     def __rand__(self, other):
-        return apply2(other, self, np.bitwise_and)
+        return apply_op(other, self, np.bitwise_and)
 
     # A | B
     def __or__(self, other):
-        return apply2(self, other, np.bitwise_or)
+        return apply_op(self, other, np.bitwise_or)
 
     def __ror__(self, other):
-        return apply2(other, self, np.bitwise_or)
+        return apply_op(other, self, np.bitwise_or)
 
     # A ^ B
     def __xor__(self, other):
-        return apply2(self, other, np.bitwise_xor)
+        return apply_op(self, other, np.bitwise_xor)
 
     def __rxor__(self, other):
-        return apply2(other, self, np.bitwise_xor)
+        return apply_op(other, self, np.bitwise_xor)
 
     # A >> B
     def __lshift__(self, other):
-        return apply2(self, other, np.left_shift)
+        return apply_op(self, other, np.left_shift)
 
     def __rlshift__(self, other):
-        return apply2(other, self, np.left_shift)
+        return apply_op(other, self, np.left_shift)
 
     # A << B
     def __rshift__(self, other):
-        return apply2(self, other, np.right_shift)
+        return apply_op(self, other, np.right_shift)
 
     def __rrshift__(self, other):
-        return apply2(other, self, np.right_shift)
+        return apply_op(other, self, np.right_shift)
 
     """comparison operators"""
 
     # A == B
     def __eq__(self, other):
-        return apply2(self, other, np.equal)
+        return apply_op(self, other, np.equal)
 
     # A != B
     def __ne__(self, other):
-        return apply2(self, other, np.not_equal)
+        return apply_op(self, other, np.not_equal)
 
     # A < B
     def __lt__(self, other):
-        return apply2(self, other, np.less)
+        return apply_op(self, other, np.less)
 
     # A <= B
     def __le__(self, other):
-        return apply2(self, other, np.less_equal)
+        return apply_op(self, other, np.less_equal)
 
     # A > B
     def __gt__(self, other):
-        return apply2(self, other, np.greater)
+        return apply_op(self, other, np.greater)
 
     # A >= B
     def __ge__(self, other):
-        return apply2(self, other, np.greater_equal)
+        return apply_op(self, other, np.greater_equal)
 
     """mathematical functions"""
 
@@ -841,7 +841,7 @@ class Cube(object):
         return self.__class__(new_values, new_axes)
 
 
-def apply2(a, b, func, *args):
+def apply_op(a, b, func, *args):
     """Apply function element-wise on values of two cubes.
     The cube axes are matched and aligned before the function is applied.
     :param a: Cube instance
