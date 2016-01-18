@@ -520,6 +520,24 @@ class Cube(object):
         new_values = np.concatenate(sub_cubes, old_axis_index)
         return Cube(new_values, new_axes)
 
+    def diff(self, axis, n=1, axis_shift=None):
+        """Calculate the n-th order discrete difference along given axis.
+        The first order difference is given by out[n] = a[n+1] - a[n] along the given axis,
+        higher order differences are calculated by using diff recursively.
+        :param axis: axis index or name
+        :param n: difference order
+        :param axis_shift: by how many values is the new axis to be shifted; by default is equal to n
+        :return: new Cube instance
+        """
+        if axis_shift is None:
+            axis_shift = n
+        old_axis, axis_index = self._axis_and_index(axis)
+        new_values = np.diff(self.values, n=n, axis=axis_index)
+        new_length = len(old_axis) - n
+        new_axis = old_axis[axis_shift: (axis_shift + new_length)]
+        new_axes = self._axes.replace(axis_index, new_axis)
+        return self.__class__(new_values, new_axes)
+
     def masked(self, func):
         """Returns a cube with masked values.
 

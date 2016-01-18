@@ -483,8 +483,8 @@ class CubeTests(unittest.TestCase):
         
         # testing various aggregation functions using direct calling, e.g. c.sum(group=0),
         # or indirect calling, e.g. reduce(func=np.sum, group=0)
-        funcs_indirect = [np.sum, np.mean, np.median, np.min, np.max, np.prod]  # , np.diff]
-        funcs_direct = [c.sum, c.mean, c.median, c.min, c.max, c.prod]  # , np.diff]
+        funcs_indirect = [np.sum, np.mean, np.median, np.min, np.max, np.prod]
+        funcs_direct = [c.sum, c.mean, c.median, c.min, c.max, c.prod]
         for func_indirect, func_direct in zip(funcs_indirect, funcs_direct):
             result = np.apply_along_axis(func_indirect, 0, c.values)
             d = c.reduce(func_indirect, group=ax1.name)
@@ -531,6 +531,20 @@ class CubeTests(unittest.TestCase):
         # non-existing axes
         self.assertRaises(LookupError, C.rename_axis, 2, "quarter")
         self.assertRaises(LookupError, C.rename_axis, "bad_axis", "quarter")
+
+    def test_diff(self):
+        c = year_quarter_weekday_cube()
+        d = c.diff("year")
+        self.assertTrue(np.array_equal(d.values, np.diff(c.values, n=1, axis=0)))
+        self.assertTrue(np.array_equal(d.axis("year").values, [2015, 2016]))
+
+        d = c.diff("quarter", n=2)
+        self.assertTrue(np.array_equal(d.values, np.diff(c.values, n=2, axis=1)))
+        self.assertTrue(np.array_equal(d.axis("quarter").values, ["Q3", "Q4"]))
+
+        d = c.diff("weekday", n=4, axis_shift=0)
+        self.assertTrue(np.array_equal(d.values, np.diff(c.values, n=4, axis=2)))
+        self.assertTrue(np.array_equal(d.axis("weekday").values, ["mon", "tue", "wed"]))
 
     def test_aggregate(self):
         C = year_quarter_cube()
