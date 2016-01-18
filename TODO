@@ -1,3 +1,6 @@
+* implement multiaxis, i.e. numpy 1D array with named fields, which would allow to address axes by names such as
+date.year or date.day
+
 * implement cube.overlay(cube)
 
 * implement cube.filter(cube)

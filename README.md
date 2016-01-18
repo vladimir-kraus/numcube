@@ -85,19 +85,35 @@ Cube can also be in operation with a scalar value, which is treated as dimension
 Aggregations
 ------------
 
-Cube values can be aggregated along axes using aggregation functions sum, mean, min, max, etc.
+Cube values can be aggregated along axes using aggregation functions sum, mean, min, max, etc. All aggregation
+functions allow defining which axes are going to be aggregated, which are to be kept or values on which are going
+to be grouped.
 
 ```python
 >> total_revenues = revenues.sum()
 >> average_annual_revenues = revenues.mean("quarter")
 >> total_annual_revenues = revenues.sum(keep="year")
-...
+```
+
+Aggregations can be also used to group values along an axis with non-unique values., for example:
+```python
 >> subject = Axis('subject', [math', 'biology', 'math', 'physics', 'math', 'biology', 'math', 'physics'])
 >> score = Cube([65, 80, 95, 52, 35, 50, 89, 95], subject)
->> score_by_subject = score.reduce(func=np.mean, group='subject')
-or
 >> score_by_subject = score.mean(group='subject')
 ```
+
+General aggregation function is reduce(), which it is possible to provide with a user defined aggregation function.
+```python
+>> decile_9th = score.reduce(func=lambda x: np.percentile(x, 90.0))
+```
+
+Logical aggregation functions all() and any() can be used to test whether all or any logical value in a cube is True.
+```python
+>> c = Cube(...)
+>> d = Cube(...)
+>> if (c > d).all():  # to test if all values in c are greater than respective values in d
+```
+Note that comparison operators use the same axis matching, alignment adn broadcasting as normal arithmetic operators.
 
 Other
 -----
@@ -105,50 +121,3 @@ Other
 - the interface of all classes is designed to support immutability
 - Cube supports numerical functions such as sin, cos, log, exp etc.
 - transposition (in n-dimensional space) changes the order of axes
-
-
-Example 1
----------
-
-We want to calculate the likely price of the fuel mix given we are using two fuels - gas and oil.
-
-```python
->> fuels = Index("fuel", ["gas", "oil"])
->> fuel_heat_rates = ([10, 15.5], fuels)  # in GJ / kg
-
->> countries = Index("country", ["CZ", "HU", "PL", "SK"])
->> exchange_rates = Cube([28.1, 290, 45, 1], countries)  # in local currency / EUR
-
->> local_prices = ([...], [countries, fuels])  # in local currency / kg
-
->> eu_prices_per_GJ = local_prices / exchange_rates / fuel_heat_rates  # in EUR / GJ
-```
-
-Example 2
----------
-
-Working with multiple scenarios.
-
-```python
->> years = Index("year", range(2014, 2020))
->> geom_growth_exp = Cube(range[len(years)], years)
-
->> scenarios = Index("scenario", ["low", "mid", "high"])
->> growth_rate = Cube([0.9, 1, 1.1], scenarios)
-
->> growth_coef = growth_rate ** geom_growth_exp
-
->> gas_scenario_prices = ...
-```
-
-Example 3
----------
-
-```python
->> # annual revenues
->> revenues_y = revenues_q.sum("quarter")  
->> # compare to overall annual average
->> rel_revenues = revenues_y / revenues_y.mean("year")
->> # compare to first year revenue
->> revenue_coef = revenues_y / revenues.values[0]  
-```
