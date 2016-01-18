@@ -56,7 +56,7 @@ class Cube(object):
         for i in range(len(items), len(self._axes)):
             new_axes.append(self._axes[i])
 
-        return Cube(self._values[items], new_axes)
+        return self.__class__(self._values[items], new_axes)
 
     def __bool__(self):
         """Return the truth value of the cube.
@@ -165,7 +165,7 @@ class Cube(object):
         except (ValueError, TypeError):  # or TypeError
             func = np.vectorize(func)
             values = func(self._values, *args)
-        return Cube(values, self._axes)
+        return self.__class__(values, self._axes)
 
     def transpose(self, front=[], back=[]):
         """A generalized analogy to numpy.transpose.
@@ -179,7 +179,7 @@ class Cube(object):
         indices = self._axes.transposed_indices(front, back)
         new_axes = tuple(self._axes.axis_by_index(index) for index in indices)
         new_values = self._values.transpose(indices)
-        return Cube(new_values, new_axes)
+        return self.__class__(new_values, new_axes)
         
     """arithmetic operators"""
 
@@ -189,7 +189,7 @@ class Cube(object):
 
     # unary -
     def __neg__(self):
-        return Cube(-self._values, self._axes)
+        return self.__class__(-self._values, self._axes)
 
     # A + B
     def __add__(self, other):
@@ -244,7 +244,7 @@ class Cube(object):
 
     def __invert__(self):
         """Returns bit-wise inversion, or bit-wise NOT, element-wise."""
-        return Cube(np.invert(self._values), self._axes)
+        return self.__class__(np.invert(self._values), self._axes)
 
     # A & B
     def __and__(self, other):
@@ -482,7 +482,7 @@ class Cube(object):
         new_values = self._values
         if axis_indices_to_remove:
             new_values = func(new_values, axis_indices_to_remove)
-        return Cube(new_values, new_axes)
+        return self.__class__(new_values, new_axes)
 
     def _group(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
         # Group the same values along a given axis by applying a function.
@@ -518,7 +518,7 @@ class Cube(object):
         new_axis = Index(old_axis.name, unique_values)
         new_axes = self._axes.replace(old_axis_index, new_axis)
         new_values = np.concatenate(sub_cubes, old_axis_index)
-        return Cube(new_values, new_axes)
+        return self.__class__(new_values, new_axes)
 
     def diff(self, axis, n=1, axis_shift=None):
         """Calculate the n-th order discrete difference along given axis.
@@ -560,7 +560,7 @@ class Cube(object):
         :return: new Cube instance
         """
         new_axes = self._axes.replace(old_axis_id, new_axis)
-        return Cube(self._values, new_axes)
+        return self.__class__(self._values, new_axes)
 
     def swap_axes(self, axis1, axis2):
         """Swaps two axes.
@@ -577,7 +577,7 @@ class Cube(object):
             return self
         new_axes = self._axes.swap(index1, index2)
         new_values = self._values.swapaxes(index1, index2)
-        return Cube(new_values, new_axes)
+        return self.__class__(new_values, new_axes)
 
     def insert_axis(self, axis, index=0):
         """Adds a new axis and repeats the values to fill the new cube.
@@ -589,7 +589,7 @@ class Cube(object):
         new_axes = self._axes.insert(axis, index)
         new_values = np.expand_dims(self._values, index)
         new_values = np.repeat(new_values, repeats=len(axis), axis=index)
-        return Cube(new_values, new_axes)
+        return self.__class__(new_values, new_axes)
 
     def align(self, align_to):
         """Make all matching axes aligned to the given axes.
@@ -626,7 +626,7 @@ class Cube(object):
         :raise LookupError: if the old axis does not exist, ValueError is the name is duplicate
         """
         new_axes = self._axes.rename(old_axis, new_name)
-        return Cube(self._values, new_axes)
+        return self.__class__(self._values, new_axes)
 
     def combine_axes(self, axis_names, new_axis_name, format):
         count = len(axis_names)
@@ -682,7 +682,7 @@ class Cube(object):
 
         new_axis = Index(new_axis_name, new_axis_values)
         new_axes.insert(0, new_axis)
-        return Cube(new_values, new_axes)
+        return self.__class__(new_values, new_axes)
 
     def filter(self, filter_by, values=None):
         """Returns a new Cube instance with filtered axes.
@@ -744,7 +744,7 @@ class Cube(object):
             # even if the collection has one element
             axes = self._axes.replace(axis_index, new_axis)
         values = self._values.take(indices, axis_index)
-        return Cube(values, axes)
+        return self.__class__(values, axes)
 
     def compress(self, axis, condition):
         """Filters the cube along an axis using a boolean mask along a specified axis. 
@@ -758,7 +758,7 @@ class Cube(object):
         new_axis = axis.compress(condition)
         axes = self._axes.replace(axis_index, new_axis)
         values = self._values.compress(condition, axis_index)
-        return Cube(values, axes)
+        return self.__class__(values, axes)
 
     def squeeze(self):
         """Removes all the axes with the size of one from the cube. 
@@ -766,7 +766,7 @@ class Cube(object):
         :return: new Cube instance"""
         new_axes = tuple(a for a in self.axes if len(a) != 1)
         new_values = self._values.squeeze()
-        return Cube(new_values, new_axes)
+        return self.__class__(new_values, new_axes)
 
     """******************************
     *** Cube generating functions ***
@@ -838,7 +838,7 @@ class Cube(object):
         indices = old_axis.indexof(new_axis.values)
         new_values = self._values.take(indices, old_axis_index)
         new_axes = self._axes.replace(old_axis_index, new_axis)
-        return Cube(new_values, new_axes)
+        return self.__class__(new_values, new_axes)
 
 
 def apply2(a, b, func, *args):
