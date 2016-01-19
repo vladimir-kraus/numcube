@@ -539,6 +539,11 @@ class Cube(object):
         return self.__class__(new_values, new_axes)
 
     def growth(self, axis, axis_shift_back=False):
+        """Returns relative growth rate in the direction of specified axis.
+        :param axis: axis name, index or object
+        :param axis_shift_back:
+        :return: new Cube instance
+        """
         old_axis, axis_index = self._axis_and_index(axis)
         slices = [slice(None)] * self.ndim
         forth_slice = slice(1, None)  # except the first one
@@ -604,6 +609,29 @@ class Cube(object):
         new_values = np.expand_dims(self._values, index)
         new_values = np.repeat(new_values, repeats=len(axis), axis=index)
         return self.__class__(new_values, new_axes)
+
+    def first(self, axis, n):
+        """Returns the subsection of the cube which corresponds to the first n values on the specified axis.
+        :param axis: axis name, index or object
+        :param n: number of values along the axis
+        :return: new Cube instance
+        """
+        return self.slice(axis, 0, n)
+
+    def last(self, axis, n):
+        """Returns the subsection of the cube which corresponds to the last n values on the specified axis.
+        :param axis: axis name, index or object
+        :param n: number of values along the axis
+        :return: new Cube instance
+        """
+        return self.slice(axis, -n, None)
+
+    def reversed(self, axis):
+        """Reverse the order of values along the axis.
+        :param axis: axis name, index or object
+        :return: new Cube instance
+        """
+        return self.slice(axis, None, None, -1)
 
     def align(self, align_to):
         """Make all matching axes aligned to the given axes.

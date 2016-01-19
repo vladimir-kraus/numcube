@@ -1,20 +1,20 @@
-* implement multiaxis, i.e. numpy 1D array with named fields, which would allow to address axes by names such as
+* implement multi-axis, i.e. numpy 1D array with named fields, which would allow to address axes by names such as
 date.year or date.day
 
 * implement cube.overlay(cube)
 
-* implement cube.filter(cube)
+* add performance tests and benchmarks
 
-* implement cube.filter(axes)
-
-* add more operations
-
-* add performance tests
-
-* add tests and benchmarks for free functions such as nc.reduce or nc.apply
+* add tests for free functions such as nc.reduce or nc.apply
 
 * add pretty print
 
 * group_by where axis is Index does not make sense -> shortcut...
 
 * reverse(axis)
+
+* implement roll, accumulate, nonzero, filled, argmax, where, choose
+
+* tests for first, last, reversed
+
+* explain and test comparisons with NaNs
