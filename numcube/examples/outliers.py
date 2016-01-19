@@ -19,12 +19,12 @@ if __name__ == "__main__":
 
     # correct values which would ideally be measured
     values = np.random.rand(*shape)
-    print("Theoretical sample:")
+    print("Theoretical sample (without measurement errors):")
     print("avg={0} sigma={1}".format(np.mean(values), np.std(values)))
 
     # Measurements of correct values corrupted with outliers, e.g. every 20th value will be multiplied by 100.
     corrupted_values = values + np.random.binomial(n=1, p=0.01, size=shape) * 100
-    print("\nCorrupted sample:")
+    print("\nCorrupted sample (with measurement errors):")
     print("avg={0} sigma={1}".format(np.mean(corrupted_values), np.std(corrupted_values)))
 
     # create a Cube instance
