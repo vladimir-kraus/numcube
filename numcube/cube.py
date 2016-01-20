@@ -181,7 +181,9 @@ class Cube(object):
         new_values = self._values.transpose(indices)
         return self.__class__(new_values, new_axes)
         
-    """arithmetic operators"""
+    # ****************************
+    # *** Arithmetic operators ***
+    # ****************************
 
     # unary +
     def __pos__(self):
@@ -254,7 +256,10 @@ class Cube(object):
     def __rmod__(self, other):
         return apply_op(other, self, np.mod)
 
-    """bitwise operators"""
+    # *************************
+    # *** Bitwise operators ***
+    # *************************
+
 
     def __invert__(self):
         """Returns bit-wise inversion, or bit-wise NOT, element-wise."""
@@ -295,7 +300,9 @@ class Cube(object):
     def __rrshift__(self, other):
         return apply_op(other, self, np.right_shift)
 
-    """comparison operators"""
+    # ****************************
+    # *** Comparison operators ***
+    # ****************************
 
     # A == B
     def __eq__(self, other):
@@ -321,7 +328,9 @@ class Cube(object):
     def __ge__(self, other):
         return apply_op(self, other, np.greater_equal)
 
-    """mathematical functions"""
+    # ******************************
+    # *** Mathematical functions ***
+    # ******************************
 
     def __abs__(self):
         """Implements behaviour for the built in abs() function.
@@ -377,7 +386,9 @@ class Cube(object):
         :return: new Cube instance with True/False values"""
         return self.apply(np.isnan)
 
-    """aggregation functions"""
+    # *****************************
+    # *** Aggregation functions ***
+    # *****************************
 
     def sum(self, axis=None, keep=None, group=None, sort_grp=True):
         """Sum of array elements over a given axis.
@@ -852,9 +863,9 @@ class Cube(object):
         new_values = self._values.squeeze()
         return self.__class__(new_values, new_axes)
 
-    """******************************
-    *** Cube generating functions ***
-    ******************************"""
+    # *********************************
+    # *** Cube generating functions ***
+    # *********************************
         
     @staticmethod
     def full(axes, fill_value, dtype=None):
@@ -893,9 +904,9 @@ class Cube(object):
         values = np.ones(shape, dtype)
         return Cube(values, axes)
 
-    """******************************
-    *** Private utility functions ***
-    ******************************"""
+    # *********************************
+    # *** Private utility functions ***
+    # *********************************
 
     def _axis_and_index(self, axis_id):
         return self._axes.axis_and_index(axis_id)
