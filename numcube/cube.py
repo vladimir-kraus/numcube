@@ -212,14 +212,28 @@ class Cube(object):
     def __rsub__(self, other):
         return apply_op(other, self, np.subtract)
 
-    # A / B
+    # A / B - division for Python 2
+    # if both operands are int then result is int, otherwise it is float
+    def __div__(self, other):
+        print("div")
+        return apply_op(self, other, np.divide)
+
+    def __rdiv__(self, other):
+        print("rdiv")
+        return apply_op(other, self, np.divide)
+
+    # A / B - division for Python 3
+    # result is always float even if both operands are int
     def __truediv__(self, other):
+        print("truediv")
         return apply_op(self, other, np.true_divide)
 
     def __rtruediv__(self, other):
+        print("rtruediv")
         return apply_op(other, self, np.true_divide)
 
-    # A // B
+    # A // B - divide and floor down
+    # if both operands are int then result is int, otherwise it is float (for both Python 2 and Python 3)
     def __floordiv__(self, other):
         return apply_op(self, other, np.floor_divide)
 
@@ -233,7 +247,7 @@ class Cube(object):
     def __rpow__(self, other):
         return apply_op(other, self, np.power)
 
-    # A % B
+    # A % B (modulo)
     def __mod__(self, other):
         return apply_op(self, other, np.mod)
 

@@ -18,3 +18,5 @@ date.year or date.day
 * tests for first, last, reversed
 
 * explain and test comparisons with NaNs
+
+* add more math functions such as exp, log, etc.

@@ -21,10 +21,10 @@ if __name__ == "__main__":
 
     # ...and vice versa, if we want to analyze data as geometric growth
     # we can calculate base indices, i.e. index relative to the first value in the series
-    base_indices = price / price.take("year", 0)
+    base_indices = price // price.take("year", 0)
 
     # or we can calculate running indices, i.e. index relative to the previous value
-    # running_indices = ???
+    running_indices = price.growth("year")
 
 
 
