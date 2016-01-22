@@ -111,8 +111,8 @@ class Table:
         else:
             col_axis_indices = cube._axes.complement(row_axes)
 
-        row_axis_list = tuple(cube.axes[i] for i in row_axis_indices)
-        col_axis_list = tuple(cube.axes[i] for i in col_axis_indices)
+        row_axis_list = tuple(cube._axes[i] for i in row_axis_indices)
+        col_axis_list = tuple(cube._axes[i] for i in col_axis_indices)
 
         row_header = Header.from_axes(row_axis_list, row_label)
         col_header = Header.from_axes(col_axis_list, col_label)

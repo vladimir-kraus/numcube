@@ -217,21 +217,17 @@ class Cube(object):
     # A / B - division for Python 2
     # if both operands are int then result is int, otherwise it is float
     def __div__(self, other):
-        print("div")
         return apply_op(self, other, np.divide)
 
     def __rdiv__(self, other):
-        print("rdiv")
         return apply_op(other, self, np.divide)
 
     # A / B - division for Python 3
     # result is always float even if both operands are int
     def __truediv__(self, other):
-        print("truediv")
         return apply_op(self, other, np.true_divide)
 
     def __rtruediv__(self, other):
-        print("rtruediv")
         return apply_op(other, self, np.true_divide)
 
     # A // B - divide and floor down
@@ -259,7 +255,6 @@ class Cube(object):
     # *************************
     # *** Bitwise operators ***
     # *************************
-
 
     def __invert__(self):
         """Returns bit-wise inversion, or bit-wise NOT, element-wise."""
@@ -584,10 +579,8 @@ class Cube(object):
 
     def masked(self, func):
         """Returns a cube with masked values.
-
         :param func: function which is applied to each
         :return: new Cube instance with masked values
-
         Example: to calculate mean of non-Nan values
         r = cube.masked(np.isnan).mean()
         """
@@ -612,7 +605,6 @@ class Cube(object):
         :param axis2: name (str), index (int) or Axis instance
         :return: new Cube instance with swapped axes
         :raise LookupError: if axis1 or axis2 is not found
-
         If axis1 is the same as axis2, the original Cube instance is returned.
         """
         index1 = self._axes.index(axis1)
@@ -796,7 +788,6 @@ class Cube(object):
         :param axis: axis name (str), axis index (int) or Axis instance
         :return: new Cube instance
         :raise LookupError: is the axis does not exist, ValueError for invalid indices
-
         If 'indices' is a single int, then the axis is removed from the cube.
         If 'indices' is a collection of ints, then the axis is preserved.
         """
@@ -858,7 +849,8 @@ class Cube(object):
     def squeeze(self):
         """Removes all the axes with the size of one from the cube. 
         Analogy to numpy ndarray.squeeze().
-        :return: new Cube instance"""
+        :return: new Cube instance
+        """
         new_axes = tuple(a for a in self.axes if len(a) != 1)
         new_values = self._values.squeeze()
         return self.__class__(new_values, new_axes)
@@ -992,7 +984,6 @@ def concatenate(cubes, axis_name, as_index=False, broadcast=False):
     :return: new Cube instance
     :raise LookupError: if any cube does not contain the joined axis
     :raise ValueError: if Index instance shall be created but the values are not unique
-
     The joined axis becomes the first axis of the new cube regardless of its position in the original cubes.
     """
 

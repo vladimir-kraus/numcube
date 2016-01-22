@@ -9,6 +9,5 @@ class AxisAlignError(ValueError):
     - A and B are both Index objects and one of them contains a value which is not in the other one 
       (this is also the case when they have different lengths); 
       note that the order of the values can be arbitrary      
-    
     """
     pass
