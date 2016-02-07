@@ -532,6 +532,34 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(LookupError, C.rename_axis, 2, "quarter")
         self.assertRaises(LookupError, C.rename_axis, "bad_axis", "quarter")
 
+    def test_slice(self):
+        c = year_quarter_weekday_cube()
+        ax = 0
+        d = c.slice(ax, None, None, 2)  # every even item
+        self.assertTrue(np.array_equal(d.values, c.values[:, :, ::2]))
+        self.assertTrue(np.array_equal(d.axis(ax).values, c.axis(ax).values[::2]))
+
+    def test_first(self):
+        c = year_quarter_weekday_cube()
+        ax = "year"
+        d = c.first(ax, 2)
+        self.assertTrue(np.array_equal(d.values, c.values[0: 2]))
+        self.assertTrue(np.array_equal(d.axis(ax).values, c.axis(ax).values[0: 2]))
+
+    def test_last(self):
+        c = year_quarter_weekday_cube()
+        ax = "quarter"
+        d = c.last(ax, 2)
+        self.assertTrue(np.array_equal(d.values, c.values[:, -2:]))
+        self.assertTrue(np.array_equal(d.axis(ax).values, c.axis(ax).values[-2:]))
+
+    def test_reversed(self):
+        c = year_quarter_weekday_cube()
+        ax = "weekday"
+        d = c.reversed(ax)
+        self.assertTrue(np.array_equal(d.values, c.values[:, :, ::-1]))
+        self.assertTrue(np.array_equal(d.axis(ax).values, c.axis(ax).values[::-1]))
+
     def test_diff(self):
         c = year_quarter_weekday_cube()
         d = c.diff("year")
@@ -556,7 +584,7 @@ class CubeTests(unittest.TestCase):
         d = c.growth(1)  # 1 = quarter axis
         self.assertTrue(np.array_equal(d.values, c.values[:, 1:] / c.values[:, :-1]))
 
-        d = c.growth("year", axis_shift_back=True)
+        d = c.growth("year", axis_shift=0)
         self.assertTrue(np.array_equal(d.values, c.values[1:, :] / c.values[:-1, :]))
         self.assertTrue(np.array_equal(d.axis("year").values, c.axis("year").values[:-1]))
 

@@ -558,24 +558,25 @@ class Cube(object):
         new_axes = self._axes.replace(axis_index, new_axis)
         return self.__class__(new_values, new_axes)
 
-    def growth(self, axis, axis_shift_back=False):
+    def growth(self, axis, n=1, axis_shift=None):
         """Returns relative growth rate in the direction of specified axis.
-        :param axis: axis name, index or object
-        :param axis_shift_back:
+        :param axis: axis index or name
+        :param n: growth order
+        :param axis_shift: by how many values is the new axis to be shifted; by default is equal to n
         :return: new Cube instance
+        Example:
+        If you have quarterly values by you want to calculate year-to-year index, use n=4.
         """
+        if axis_shift is None:
+            axis_shift = n
         old_axis, axis_index = self._axis_and_index(axis)
-        slices = [slice(None)] * self.ndim
-        forth_slice = slice(1, None)  # except the first one
-        slices[axis_index] = forth_slice
-        forth_values = self.values[slices]
-        back_slice = slice(-1)  # except the last one
-        slices[axis_index] = back_slice
-        back_values = self.values[slices]
-        growth_values = forth_values / back_values
-        new_axis = old_axis[back_slice] if axis_shift_back else old_axis[forth_slice]
+        new_length = len(old_axis) - n
+        forth_values = self.last(axis_index, new_length).values
+        back_values = self.first(axis_index, new_length).values
+        new_values = forth_values / back_values
+        new_axis = old_axis[axis_shift: (axis_shift + new_length)]
         new_axes = self._axes.replace(axis_index, new_axis)
-        return self.__class__(growth_values, new_axes)
+        return self.__class__(new_values, new_axes)
 
     def masked(self, func):
         """Returns a cube with masked values.
@@ -626,29 +627,6 @@ class Cube(object):
         new_values = np.expand_dims(self._values, index)
         new_values = np.repeat(new_values, repeats=len(axis), axis=index)
         return self.__class__(new_values, new_axes)
-
-    def first(self, axis, n):
-        """Returns the subsection of the cube which corresponds to the first n values on the specified axis.
-        :param axis: axis name, index or object
-        :param n: number of values along the axis
-        :return: new Cube instance
-        """
-        return self.slice(axis, 0, n)
-
-    def last(self, axis, n):
-        """Returns the subsection of the cube which corresponds to the last n values on the specified axis.
-        :param axis: axis name, index or object
-        :param n: number of values along the axis
-        :return: new Cube instance
-        """
-        return self.slice(axis, -n, None)
-
-    def reversed(self, axis):
-        """Reverse the order of values along the axis.
-        :param axis: axis name, index or object
-        :return: new Cube instance
-        """
-        return self.slice(axis, None, None, -1)
 
     def align(self, align_to):
         """Make all matching axes aligned to the given axes.
@@ -815,8 +793,8 @@ class Cube(object):
         c.slice(ax, -1, None)  # last item
         c.slice(ax, 1, None)  # all except first item
         c.slice(ax, 0, -1)  # all except last item
-        c.slice(ax, 0, None, 2)  # every odd item
-        c.slice(ax, 1, None, 2)  # every even item
+        c.slice(ax, None, None, 2)  # every even item
+        c.slice(ax, 1, None, 2)  # every odd item
         c.slice(ax, None, None, -1)  # reversed items
         """
         axis, axis_index = self._axis_and_index(axis)
@@ -831,6 +809,29 @@ class Cube(object):
         new_axis = axis[slc]
         new_axes = self._axes.replace(axis_index, new_axis)
         return self.__class__(self.values[slices], new_axes)
+
+    def first(self, axis, n=1):
+        """Returns the subsection of the cube which corresponds to the first n values on the specified axis.
+        :param axis: axis name, index or object
+        :param n: number of values along the axis
+        :return: new Cube instance
+        """
+        return self.slice(axis, 0, n)
+
+    def last(self, axis, n=1):
+        """Returns the subsection of the cube which corresponds to the last n values on the specified axis.
+        :param axis: axis name, index or object
+        :param n: number of values along the axis
+        :return: new Cube instance
+        """
+        return self.slice(axis, -n, None)
+
+    def reversed(self, axis):
+        """Reverse the order of values along the axis.
+        :param axis: axis name, index or object
+        :return: new Cube instance
+        """
+        return self.slice(axis, None, None, -1)
 
     def compress(self, axis, condition):
         """Filters the cube along an axis using a boolean mask along a specified axis. 
