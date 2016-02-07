@@ -180,6 +180,15 @@ class Cube(object):
         new_axes = tuple(self._axes.axis_by_index(index) for index in indices)
         new_values = self._values.transpose(indices)
         return self.__class__(new_values, new_axes)
+
+    def squeeze(self):
+        """Removes all the axes with the size equal to 1 from the cube.
+        Analogy to numpy ndarray.squeeze().
+        :return: new Cube instance
+        """
+        new_axes = tuple(a for a in self.axes if len(a) != 1)
+        new_values = self._values.squeeze()
+        return self.__class__(new_values, new_axes)
         
     # ****************************
     # *** Arithmetic operators ***
@@ -589,6 +598,10 @@ class Cube(object):
         masked_values = np.ma.masked_array(self._values, mask)
         return self.__class__(masked_values, self._axes)
 
+    # **************************
+    # *** Axes manipulations ***
+    # **************************
+
     def replace_axis(self, old_axis_id, new_axis):
         """Replaces an existing axis with a new axis and return the new Cube instance.
         The new axes collection is checked for duplicate names.
@@ -721,6 +734,10 @@ class Cube(object):
         new_axes.insert(0, new_axis)
         return self.__class__(new_values, new_axes)
 
+    # ***************************************
+    # *** Filtering, indexing and slicing ***
+    # ***************************************
+
     def filter(self, filter_by, values=None):
         """Returns a new Cube instance with filtered axes.
         :param filter_by: axis name (str), axis index (int), Axis, Cube or collection of Axis or Cube instances
@@ -755,6 +772,12 @@ class Cube(object):
         return result
 
     def exclude(self, axis, values):
+        """Remove slices from cube which correspond to given values on an axis.
+        :param axis: axis on which the values are to be removed
+        :param values: values to remove
+        :return: new Cube instance
+        Note: Values which do not exist on the given axis are ignored. I.e. no error is raised.
+        """
         axis, axis_index = self._axis_and_index(axis)
         value_indices = [i for i, v in enumerate(axis.values) if v not in values]
         return self.take(axis_index, value_indices)
@@ -783,7 +806,7 @@ class Cube(object):
         return self.__class__(values, axes)
 
     def slice(self, axis, *args):
-        """
+        """Return sliced cube, the arguments have the same meaning as in standard slice() function.
         :param axis: axis name or index
         :param args: slice object or one to three parameters to create a slice object
         :return: new Cube instance
@@ -846,15 +869,6 @@ class Cube(object):
         axes = self._axes.replace(axis_index, new_axis)
         values = self._values.compress(condition, axis_index)
         return self.__class__(values, axes)
-
-    def squeeze(self):
-        """Removes all the axes with the size of one from the cube. 
-        Analogy to numpy ndarray.squeeze().
-        :return: new Cube instance
-        """
-        new_axes = tuple(a for a in self.axes if len(a) != 1)
-        new_values = self._values.squeeze()
-        return self.__class__(new_values, new_axes)
 
     # *********************************
     # *** Cube generating functions ***
