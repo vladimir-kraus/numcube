@@ -11,3 +11,11 @@ class AxisAlignError(ValueError):
       note that the order of the values can be arbitrary      
     """
     pass
+
+
+class InvalidAxisLengthError(ValueError):
+    pass
+
+
+class NonUniqueDimNamesError(ValueError):
+    pass

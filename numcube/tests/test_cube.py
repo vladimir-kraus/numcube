@@ -3,6 +3,7 @@ import functools
 import numpy as np
 
 from numcube import Index, Axis, Cube, stack, concatenate
+from numcube.exceptions import InvalidAxisLengthError, NonUniqueDimNamesError
 from numcube.utils import is_axis, is_indexed
 
 
@@ -844,3 +845,17 @@ class CubeTests(unittest.TestCase):
         # the values in each sub-cube must be equal to the original cube
         self.assertTrue((d.take("country", 0) == c).all())
         self.assertTrue((d.take("country", 1) == c).all())
+
+    def test_replace_axis(self):
+        c = year_quarter_cube()
+        self.assertEqual(tuple(c.axis_names), ("year", "quarter"))
+        ax = Axis("Y", [2000, 2010, 2020])
+        d = c.replace_axis("year", ax)
+        e = c.replace_axis(0, ax)
+        f = c.replace_axis(c.axis("year"), ax)
+        self.assertEqual(tuple(d.axis_names), ("Y", "quarter"))
+        self.assertEqual(tuple(d.axis_names), tuple(e.axis_names))
+        self.assertEqual(tuple(d.axis_names), tuple(f.axis_names))
+        self.assertRaises(NonUniqueDimNamesError, c.replace_axis, "year", Axis("quarter", [1, 2, 3]))
+        self.assertRaises(InvalidAxisLengthError, c.replace_axis, "year", Axis("Y", [2010, 2020]))
+        self.assertRaises(InvalidAxisLengthError, c.replace_axis, "year", Axis("Y", [2010, 2020, 2030, 2040]))

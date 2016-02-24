@@ -6,6 +6,7 @@ from numcube.axis import Axis
 from numcube.exceptions import AxisAlignError
 from numcube.index import Index
 from numcube.utils import make_axis_collection, is_axis, is_indexed, align_arrays, broadcast_array, unique_axes_from_cubes
+from numcube.exceptions import InvalidAxisLengthError
 
 
 class Cube(object):
@@ -30,7 +31,7 @@ class Cube(object):
 
         for n, axis in zip(values.shape, axes):
             if n != len(axis):
-                raise ValueError("invalid length of axis '{}'".format(axis.name))
+                raise InvalidAxisLengthError("invalid length of axis '{}'".format(axis.name))
 
         self._values = values
         self._axes = axes
@@ -602,15 +603,16 @@ class Cube(object):
     # *** Axes manipulations ***
     # **************************
 
-    def replace_axis(self, old_axis_id, new_axis):
-        """Replaces an existing axis with a new axis and return the new Cube instance.
-        The new axes collection is checked for duplicate names.
-        The new axis must have the same length as the axis to be replaced.
-        :param old_axis_id: axis index (int) or name (str)
-        :param new_axis: Series or Index instance
+    def replace_axis(self, old_axis, new_axis):
+        """Replaces an existing axis with a new axis of the same length and returns the new Cube instance.
+        The new axis may have different name but it must be unique among the other axes.
+        :param old_axis: name (str), index (int) or Axis instance
+        :param new_axis: Axis instance
         :return: new Cube instance
+        :raise InvalidAxisLengthError: if the new axis has wrong length
+        :raise NonUniqueDimNamesError: if the new axis has a name which already exists in the cube
         """
-        new_axes = self._axes.replace(old_axis_id, new_axis)
+        new_axes = self._axes.replace(old_axis, new_axis)
         return self.__class__(self._values, new_axes)
 
     def swap_axes(self, axis1, axis2):

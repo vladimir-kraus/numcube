@@ -1,5 +1,6 @@
 import numpy as np
 
+from numcube.exceptions import NonUniqueDimNamesError
 from numcube.utils import is_axis
 
 
@@ -43,7 +44,7 @@ class Axes(object):
                 raise TypeError("axis must be an instance of Axis")
             # test unique names - report the name of the first axis which is not unique
             if axis.name in unique_names:
-                raise ValueError("multiple axes with name '{}'".format(axis.name))
+                raise NonUniqueDimNamesError("multiple axes with name '{}'".format(axis.name))
             unique_names.add(axis.name)
 
         # the sequence of axes must be immutable
