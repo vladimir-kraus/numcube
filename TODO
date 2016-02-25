@@ -18,3 +18,5 @@ date.year or date.day
 * explain and test comparisons with NaNs
 
 * add more math functions...
+
+* check whether Index.__contains__ and Index.contains are not duplicating each other
