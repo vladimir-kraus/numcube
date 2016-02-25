@@ -127,7 +127,7 @@ class Cube(object):
     def axis(self, axis):
         """Returns axis by the name or by the index.
         Index can be a negative number, in that case, the axes are counted backwards from the last one.
-        :param axis: axis name (str), axis index (int) or Axis instance
+        :param axis: axis name (str), index (int) or instance
         :return: Axis instance
         :raise LookupError: if the axis does not exist, TypeError if wrong argument type is passed
         """
@@ -135,7 +135,7 @@ class Cube(object):
 
     def axis_index(self, axis):
         """Returns the index of the axis specified by its name or axis instance.
-        :param axis: name (str), index (int) or Axis instance
+        :param axis: axis name (str), index (int) or instance
         :return: int
         :raise LookupError: if the axis does not exist, TypeError if wrong argument type is passed
         """
@@ -143,7 +143,7 @@ class Cube(object):
 
     def has_axis(self, axis):
         """Returns True/False indicating whether the axis exists in the Cube.
-        :param axis: name (str), index (int) or Axis instance
+        :param axis: axis name (str), index (int) or instance
         :return: bool
         :raise TypeError: if wrong argument type is passed
         """
@@ -333,9 +333,9 @@ class Cube(object):
     def __ge__(self, other):
         return apply_op(self, other, np.greater_equal)
 
-    # ******************************
-    # *** Mathematical functions ***
-    # ******************************
+    # ***************************************
+    # *** Built-in mathematical functions ***
+    # ***************************************
 
     def __abs__(self):
         """Implements behaviour for the built in abs() function.
@@ -368,27 +368,44 @@ class Cube(object):
         """
         return self.apply(math.trunc)
 
+    # ************************************
+    # *** Numpy mathematical functions ***
+    # ************************************
+
+    # The following applies to most of the functions listed below:
+    # 1) The function is performed element-wise, the axes are left untouched and a new instance of cube is returned.
+    # 2) Function func can be applied on cube c by calling np.func(c) or c.func().
+
     def sin(self):
-        """Sine, element-wise. Can be called as numpy.sin(C) or C.sin().
-        :return: new Cube instance
-        """
+        """Sine."""
         return self.apply(np.sin)
 
     def cos(self):
-        """Cosine, element-wise. Can be called as numpy.cos(C) or C.cos().
-        :return: new Cube instance
-        """
+        """Cosine."""
         return self.apply(np.cos)
 
     def tan(self):
-        """Tangents, element-wise. Can be called as numpy.tan(C) or C.tan().
-        :return: new Cube instance
-        """
+        """Tangent."""
         return self.apply(np.tan)
 
+    def exp(self):
+        """Exponential."""
+        return self.apply(np.exp)
+
+    def log(self):
+        """Logarithm with natural base."""
+        return self.apply(np.log)
+
+    def log2(self):
+        """Logarithm with base of 2."""
+        return self.apply(np.log2)
+
+    def log10(self):
+        """Logarithm with base of 10."""
+        return self.apply(np.log10)
+
     def isnan(self):
-        """Returns True for all NaN values and False for all non-NaN values.
-        :return: new Cube instance with True/False values"""
+        """Returns True for all NaN values and False for all non-NaN values."""
         return self.apply(np.isnan)
 
     # *****************************
@@ -506,55 +523,11 @@ class Cube(object):
         elif group is not None:
             return self._group(group, func, sort_grp)
 
-    def _aggregate(self, func, new_axes, axis_indices_to_remove):
-        # new_axes - collection of axes in the result
-        # axis_indices_to_remove - which axes should be removed by the aggregation
-        new_values = self._values
-        if axis_indices_to_remove:
-            new_values = func(new_values, axis_indices_to_remove)
-        return self.__class__(new_values, new_axes)
-
-    def _group(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
-        # Group the same values along a given axis by applying a function.
-        # :param axis: name (str) or index (int) of axis to group the cube values by
-        # :param func: aggregation function, e.g. np.sum, np.mean etc.
-        #    There are the following requirements:
-        #    - the function takes two fixed arguments - array and axis (given by index)
-        #    - these two fixed arguments can be followed by a variable number of other arguments passed in *args
-        #    - the function must return an array with one axis less then the input array
-        old_axis, old_axis_index = self._axis_and_index(axis)
-        
-        sub_cubes = list()
-        
-        if sorted:
-            # np.unique sorts the returned values by default
-            unique_values = np.unique(old_axis.values)
-        else:
-            # special handling is required if the first occurrence order is to be kept
-            unique_values, unique_indices = np.unique(old_axis.values, return_index=True)
-            index_array = np.argsort(unique_indices)
-            unique_values = unique_values[index_array]
-        
-        old_values = old_axis.values
-        all_indices = np.arange(len(old_values))
-        for value in unique_values:
-            indices = all_indices[old_values == value]
-            sub_cube = self._values.take(indices, old_axis_index)
-            sub_cube = np.apply_along_axis(func, old_axis_index, sub_cube, *args)  # , **kwargs) # since numpy 1.9
-            sub_cube = np.expand_dims(sub_cube, old_axis_index)
-            sub_cubes.append(sub_cube)
-        
-        # the created axis is Index because it has unique values
-        new_axis = Index(old_axis.name, unique_values)
-        new_axes = self._axes.replace(old_axis_index, new_axis)
-        new_values = np.concatenate(sub_cubes, old_axis_index)
-        return self.__class__(new_values, new_axes)
-
     def diff(self, axis, n=1, axis_shift=None):
         """Calculate the n-th order discrete difference along given axis.
         The first order difference is given by out[n] = a[n+1] - a[n] along the given axis,
         higher order differences are calculated by using diff recursively.
-        :param axis: axis index or name
+        :param axis: axis name (str), index (int) or instance
         :param n: difference order
         :param axis_shift: by how many values is the new axis to be shifted; by default is equal to n
         :return: new Cube instance
@@ -570,7 +543,7 @@ class Cube(object):
 
     def growth(self, axis, n=1, axis_shift=None):
         """Returns relative growth rate in the direction of specified axis.
-        :param axis: axis index or name
+        :param axis: axis name (str), index (int) or instance
         :param n: growth order
         :param axis_shift: by how many values is the new axis to be shifted; by default is equal to n
         :return: new Cube instance
@@ -606,8 +579,8 @@ class Cube(object):
     def replace_axis(self, old_axis, new_axis):
         """Replaces an existing axis with a new axis of the same length and returns the new Cube instance.
         The new axis may have different name but it must be unique among the other axes.
-        :param old_axis: name (str), index (int) or Axis instance
-        :param new_axis: Axis instance
+        :param old_axis: axis name (str), index (int) or instance
+        :param new_axis: axis instance to replace the old axis
         :return: new Cube instance
         :raise InvalidAxisLengthError: if the new axis has wrong length
         :raise NonUniqueDimNamesError: if the new axis has a name which already exists in the cube
@@ -617,8 +590,8 @@ class Cube(object):
 
     def swap_axes(self, axis1, axis2):
         """Swaps two axes.
-        :param axis1: name (str), index (int) or Axis instance
-        :param axis2: name (str), index (int) or Axis instance
+        :param axis1: axis name (str), index (int) or instance
+        :param axis2: axis name (str), index (int) or instance
         :return: new Cube instance with swapped axes
         :raise LookupError: if axis1 or axis2 is not found
         If axis1 is the same as axis2, the original Cube instance is returned.
@@ -672,7 +645,7 @@ class Cube(object):
 
     def rename_axis(self, old_axis, new_name):
         """Returns a cube with a renamed axis.
-        :param old_axis: axis index (int), name (str) or Axis instance
+        :param old_axis: axis name (str), index (int) or instance
         :param new_name: the name of the new axis (str)
         :return: new Cube instance
         :raise LookupError: if the old axis does not exist, ValueError is the name is duplicate
@@ -788,7 +761,7 @@ class Cube(object):
         """Filters the cube along an axis using specified indices. 
         Analogy to numpy.ndarray.take.
         :param indices: a collection of ints or int or slice
-        :param axis: axis name (str), axis index (int) or Axis instance
+        :param axis: axis name (str), index (int) or instance
         :return: new Cube instance
         :raise LookupError: is the axis does not exist, ValueError for invalid indices
         If 'indices' is a single int, then the axis is removed from the cube.
@@ -809,7 +782,7 @@ class Cube(object):
 
     def slice(self, axis, *args):
         """Return sliced cube, the arguments have the same meaning as in standard slice() function.
-        :param axis: axis name or index
+        :param axis: axis name (str), index (int) or instance
         :param args: slice object or one to three parameters to create a slice object
         :return: new Cube instance
 
@@ -837,7 +810,7 @@ class Cube(object):
 
     def first(self, axis, n=1):
         """Returns the subsection of the cube which corresponds to the first n values on the specified axis.
-        :param axis: axis name, index or object
+        :param axis: axis name (str), index (int) or instance
         :param n: number of values along the axis
         :return: new Cube instance
         """
@@ -845,7 +818,7 @@ class Cube(object):
 
     def last(self, axis, n=1):
         """Returns the subsection of the cube which corresponds to the last n values on the specified axis.
-        :param axis: axis name, index or object
+        :param axis: axis name (str), index (int) or instance
         :param n: number of values along the axis
         :return: new Cube instance
         """
@@ -853,7 +826,7 @@ class Cube(object):
 
     def reversed(self, axis):
         """Reverse the order of values along the axis.
-        :param axis: axis name, index or object
+        :param axis: axis name (str), index (int) or instance
         :return: new Cube instance
         """
         return self.slice(axis, None, None, -1)
@@ -861,7 +834,7 @@ class Cube(object):
     def compress(self, axis, condition):
         """Filters the cube along an axis using a boolean mask along a specified axis. 
         Analogy to numpy.ndarray.compress.
-        :param axis: axis name (str), axis index (int) or Axis instance
+        :param axis: axis name (str), index (int) or instance
         :param condition: collection of boolean values
         :return: new Cube instance
         :raise LookupError: is the axis does not exist, # TODO - error if wrong type
@@ -920,14 +893,14 @@ class Cube(object):
     def _axis_and_index(self, axis_id):
         return self._axes.axis_and_index(axis_id)
 
-    def _filter_by_values(self, axis_id, values):
+    def _filter_by_values(self, axis, values):
         """Returns a cube filtered by specified values on a given axis. Takes into account only values
         which exist on the axis. Other values are ignored.
-        :param axis: axis index (int) or name (str)
+        :param axis: axis name (str), index (int) or instance
         :param values: a collection of values providing 'in' operator
         :return: new Cube instance
         """
-        axis, axis_index = self._axis_and_index(axis_id)
+        axis, axis_index = self._axis_and_index(axis)
         value_indices = [i for i, v in enumerate(axis.values) if v in values]
         return self.take(axis_index, value_indices)
 
@@ -942,6 +915,50 @@ class Cube(object):
         indices = old_axis.indexof(new_axis.values)
         new_values = self._values.take(indices, old_axis_index)
         new_axes = self._axes.replace(old_axis_index, new_axis)
+        return self.__class__(new_values, new_axes)
+
+    def _aggregate(self, func, new_axes, axis_indices_to_remove):
+        # new_axes - collection of axes in the result
+        # axis_indices_to_remove - which axes should be removed by the aggregation
+        new_values = self._values
+        if axis_indices_to_remove:
+            new_values = func(new_values, axis_indices_to_remove)
+        return self.__class__(new_values, new_axes)
+
+    def _group(self, axis, func, sorted=True, *args):  # **kwargs): # since numpy 1.9
+        # Group the same values along a given axis by applying a function.
+        # :param axis: name (str) or index (int) of axis to group the cube values by
+        # :param func: aggregation function, e.g. np.sum, np.mean etc.
+        #    There are the following requirements:
+        #    - the function takes two fixed arguments - array and axis (given by index)
+        #    - these two fixed arguments can be followed by a variable number of other arguments passed in *args
+        #    - the function must return an array with one axis less then the input array
+        old_axis, old_axis_index = self._axis_and_index(axis)
+
+        sub_cubes = list()
+
+        if sorted:
+            # np.unique sorts the returned values by default
+            unique_values = np.unique(old_axis.values)
+        else:
+            # special handling is required if the first occurrence order is to be kept
+            unique_values, unique_indices = np.unique(old_axis.values, return_index=True)
+            index_array = np.argsort(unique_indices)
+            unique_values = unique_values[index_array]
+
+        old_values = old_axis.values
+        all_indices = np.arange(len(old_values))
+        for value in unique_values:
+            indices = all_indices[old_values == value]
+            sub_cube = self._values.take(indices, old_axis_index)
+            sub_cube = np.apply_along_axis(func, old_axis_index, sub_cube, *args)  # , **kwargs) # since numpy 1.9
+            sub_cube = np.expand_dims(sub_cube, old_axis_index)
+            sub_cubes.append(sub_cube)
+
+        # the created axis is Index because it has unique values
+        new_axis = Index(old_axis.name, unique_values)
+        new_axes = self._axes.replace(old_axis_index, new_axis)
+        new_values = np.concatenate(sub_cubes, old_axis_index)
         return self.__class__(new_values, new_axes)
 
 

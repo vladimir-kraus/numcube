@@ -11,12 +11,10 @@ date.year or date.day
 
 * group_by where axis is Index does not make sense -> shortcut...
 
-* reverse(axis)
-
 * implement roll, accumulate, nonzero, filled, argmax, where, choose
 
 * tests for first, last, reversed
 
 * explain and test comparisons with NaNs
 
-* add more math functions such as exp, log, etc.
+* add more math functions...
