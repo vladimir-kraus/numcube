@@ -489,8 +489,8 @@ class Cube(object):
         :param sort_grp: True to sort the grouped values, False to keep the order of the first occurrences
             This is applicable only when 'group' is defined
 
-        No more than one of 'axis', 'keep' and 'group' arguments can be non-None, otherwise ValueError is raised.
-        If none of these is defined, then the Cube is aggregated to a single scalar value.
+        No more than one of 'axis', 'keep' and 'group' arguments can be defined (i.e. non-None), otherwise
+        ValueError is raised. If none of these is defined, then the Cube is aggregated to a single scalar value.
 
         Example:
         # returns sum of all months, i.e. month axis is eliminated; other axes are kept
@@ -502,7 +502,7 @@ class Cube(object):
 
         aggr_params = int(axis is not None) + int(keep is not None) + int(group is not None)
         if aggr_params == 0:
-            # complete aggregation into a scalar
+            # total aggregation from cube to scalar
             return func(self._values)
         elif aggr_params > 1:
             raise ValueError("no more than one of 'axis', 'keep' or 'group' arguments can be defined")
@@ -934,6 +934,10 @@ class Cube(object):
         #    - these two fixed arguments can be followed by a variable number of other arguments passed in *args
         #    - the function must return an array with one axis less then the input array
         old_axis, old_axis_index = self._axis_and_index(axis)
+
+        # shortcut evaluation
+        if isinstance(old_axis, Index):
+            return self
 
         sub_cubes = list()
 

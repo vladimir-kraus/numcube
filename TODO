@@ -9,8 +9,6 @@ date.year or date.day
 
 * add pretty print
 
-* group_by where axis is Index does not make sense -> shortcut...
-
 * implement roll, accumulate, nonzero, filled, argmax, where, choose
 
 * explain and test comparisons with NaNs
