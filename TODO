@@ -13,8 +13,6 @@ date.year or date.day
 
 * implement roll, accumulate, nonzero, filled, argmax, where, choose
 
-* tests for first, last, reversed
-
 * explain and test comparisons with NaNs
 
 * add more math functions...
