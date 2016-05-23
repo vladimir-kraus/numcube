@@ -44,33 +44,34 @@ class IndexTests(unittest.TestCase):
         self.assertRaises(ValueError, a.values.__setitem__, 0, 40)
         self.assertRaises(ValueError, a.values.sort)
 
-    def test_index(self):
+    def test_indexof(self):
         a = Index("A", [10, 20, 30])
-        b = Index("Dim", ["a", "b", "c", "d"])
+        b = Index("Dim", ["ab", "bc", "cd", "de"])
 
         # a single value
         self.assertEqual(a.indexof(10), 0)
-        self.assertEqual(b.indexof("c"), 2)
+        self.assertEqual(b.indexof("cd"), 2)
+        self.assertEqual(b.indexof(["cd"]), 2)
 
         # multiple values
         self.assertTrue(np.array_equal(a.indexof([10, 30]), [0, 2]))
-        self.assertTrue(np.array_equal(b.indexof(["d", "c"]), [3, 2]))
+        self.assertTrue(np.array_equal(b.indexof(["de", "cd"]), [3, 2]))
 
         # non-existent value raises KeyError (similar to dictionary lookup)
         self.assertRaises(KeyError, a.indexof, 0)
-        self.assertRaises(KeyError, b.indexof, "e")
+        self.assertRaises(KeyError, b.indexof, "ef")
         self.assertRaises(KeyError, b.indexof, None)
         self.assertRaises(KeyError, a.indexof, [0, 1])
-        self.assertRaises(KeyError, b.indexof, ["d", "e"])
+        self.assertRaises(KeyError, b.indexof, ["de", "ef"])
 
     def test_operator_in(self):
         a = Index("A", [10, 20, 30])
-        b = Index("Dim", ["a", "b", "c", "d"])
+        b = Index("B", ["ab", "bc", "cd", "de"])
 
         self.assertTrue(20 in a)
         self.assertFalse(40 in a)
-        self.assertTrue("b" in b)
-        self.assertFalse("e" in b)
+        self.assertTrue("bc" in b)
+        self.assertFalse("ef" in b)
 
         # unlike Index.contains() operator 'in' cannot work with multiple values
         #self.assertRaises(TypeError, a, __contains__, [0, 10])
@@ -78,14 +79,16 @@ class IndexTests(unittest.TestCase):
 
     def test_contains(self):
         a = Index("A", [10, 20, 30])
-        b = Index("Dim", ["a", "b", "c", "d"])
+        b = Index("B", ["ab", "bc", "cd", "de"])
 
-        # a single value
+        # a single value (in this case, operator 'in' is preferred)
         self.assertTrue(a.contains(20))
         self.assertFalse(a.contains(40))
-        self.assertTrue(b.contains("b"))
-        self.assertFalse(b.contains("e"))
+        self.assertTrue(b.contains("bc"))
+        self.assertFalse(b.contains("ef"))
 
         # multiple values returns one-dimensional numpy array of logical values
         self.assertTrue(np.array_equal(a.contains([0, 10, 20, 40]), [False, True, True, False]))
-        self.assertTrue(np.array_equal(b.contains(["a", "e", "b"]), [True, False, True]))
+        self.assertTrue(np.array_equal(b.contains(["ab"]), [True]))
+        self.assertTrue(np.array_equal(b.contains(["ab", "ef", "bc"]), [True, False, True]))
+        self.assertTrue(np.array_equal(b.contains(("ab", "ef", "bc")), [True, False, True]))
