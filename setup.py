@@ -9,7 +9,7 @@ setup(
     packages=['numcube'],
     url='http://github.com/vladimir-kraus/numcube',
     license='MIT',
-    description='...',
+    description='Numcube extends the functionality of numpy multidimensional arrays by adding named and annotated axes.',
     long_description=open('README.md').read(),
     install_requires=[
         'numpy >= 1.8.0'
