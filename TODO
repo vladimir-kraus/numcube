@@ -9,14 +9,8 @@ date.year or date.day
 
 * add pretty print
 
-* group_by where axis is Index does not make sense -> shortcut...
-
 * implement roll, accumulate, nonzero, filled, argmax, where, choose
-
-* tests for first, last, reversed
 
 * explain and test comparisons with NaNs
 
 * add more math functions...
-
-* check whether Index.__contains__ and Index.contains are not duplicating each other
