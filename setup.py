@@ -12,6 +12,7 @@ setup(
     license='MIT',
     description='Numcube extends the functionality of numpy multidimensional arrays by adding named and annotated axes.',
     long_description=open('README.md').read(),
+    include_package_data=True,
     setup_requires=["numpy"],
     install_requires=['numpy',],
     keywords=['cube', 'multidimensional', 'array', 'axis'],
