@@ -30,7 +30,8 @@ class Axes(object):
         """
         # special case with zero axes
         if axes is None:
-            self._axes = tuple()
+            self.axes = tuple()
+            self.dims = tuple()
             return
 
         # special case with a single axis
@@ -48,14 +49,15 @@ class Axes(object):
             unique_names.add(axis.name)
 
         # the sequence of axes must be immutable
-        self._axes = tuple(axes)
+        self.axes = tuple(axes)
+        self.dims = tuple(a.name for a in axes)
 
     def __repr__(self):
-        axes = [str(a) for a in self._axes]
+        axes = [str(a) for a in self.axes]
         return "Axes(" + ', '.join(axes) + ")"
 
     def __len__(self):
-        return len(self._axes)
+        return len(self.axes)
 
     def __getitem__(self, index):
         """Return an axis given by its index.
@@ -63,15 +65,15 @@ class Axes(object):
         :return: an Axis object
         :raise: IndexError if not found
         """
-        return self._axes[index]
+        return self.axes[index]
 
     def axis_by_index(self, index):
-        return self._axes[index]
+        return self.axes[index]
 
     def axis_by_name(self, name):
         """Returns None if not found.
         """
-        return next((axis for axis in self._axes if axis.name == name), None)
+        return next((axis for axis in self.axes if axis.name == name), None)
 
     def axis_and_index(self, axis):
         index = self.index(axis)
@@ -103,7 +105,7 @@ class Axes(object):
          """
         # find by numeric index, normalize negative numbers
         if isinstance(axis, int):
-            axis_count = len(self._axes)
+            axis_count = len(self.axes)
             if 0 <= axis < axis_count:
                 return axis
             if -axis_count <= axis < 0:
@@ -113,14 +115,14 @@ class Axes(object):
         
         # find by name
         if isinstance(axis, str):
-            for i, a in enumerate(self._axes):
+            for i, a in enumerate(self.axes):
                 if a.name == axis:
                     return i
             raise LookupError("invalid axis name: '{}'".format(axis))
         
         # find by object identity
         if is_axis(axis):
-            for i, a in enumerate(self._axes):
+            for i, a in enumerate(self.axes):
                 if a is axis:
                     return i
             raise LookupError("axis not found: {}".format(axis))
@@ -149,7 +151,7 @@ class Axes(object):
 
         front_axes = list()
         back_axes = list()
-        temp_axes = list(self._axes)
+        temp_axes = list(self.axes)
         for axis_id in front:
             index = self.index(axis_id)
             front_axes.append(index)
@@ -173,7 +175,7 @@ class Axes(object):
         :param index: the index of the new axis
         :return: new Axes object
         """
-        axis_list = list(self._axes)
+        axis_list = list(self.axes)
         # need to correctly handle negative values
         # for example: index -1 means that the new axis should be the last axis after the insertion
         if index < 0:
@@ -189,7 +191,7 @@ class Axes(object):
         return self._remove(axis_index)
 
     def _remove(self, axis_index):
-        new_axes = list(self._axes)
+        new_axes = list(self.axes)
         del new_axes[axis_index]
         return Axes(new_axes)
 
@@ -215,7 +217,7 @@ class Axes(object):
         return self._replace(old_axis_index, new_axis)
 
     def _replace(self, old_axis_index, new_axis):
-        new_axes = list(self._axes)
+        new_axes = list(self.axes)
         new_axes[old_axis_index] = new_axis
         return Axes(new_axes)
 

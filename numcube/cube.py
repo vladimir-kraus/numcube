@@ -101,28 +101,13 @@ class Cube(object):
 
     @property
     def axes(self):
-        """Returns cube axes as iterator, which can be converted e.g. to tuple or list.
-        :return: iterator
-        Examples:
-        - for ax in cube.axes: print(ax.name)
-        - tuple(cube.axes)
-        - list(cube.axes)
-        """
-        for axis in self._axes:
-            yield axis
+        """Returns a tuple of Axis objects."""
+        return self._axes.axes
 
     @property
-    def axis_names(self):
-        """Returns axis names as iterator, which can be converted e.g. to tuple or list.
-        To get the name of a specific axis, it is preferred to use cube.axis(index).name
-        rather than for example tuple(cube.axi_names)[index].
-        Examples:
-        - for name in cube.axis_names: print(name)
-        - tuple(cube.axis_names)
-        - list(cube.axis_names)
-        """
-        for axis in self.axes:
-            yield axis.name
+    def dims(self):
+        """Returns a tuple of axis names."""
+        return self._axes.dims
 
     def axis(self, axis):
         """Returns axis by the name or by the index.

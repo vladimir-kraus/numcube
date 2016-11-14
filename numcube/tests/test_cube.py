@@ -165,7 +165,7 @@ class CubeTests(unittest.TestCase):
         d = c[0:2, 0:3]
         self.assertTrue(np.array_equal(d.values, [[0, 1, 2], [4, 5, 6]]))
         self.assertEqual(d.ndim, 2)
-        self.assertEqual(tuple(d.axis_names), ("year", "quarter"))
+        self.assertEqual(tuple(d.dims), ("year", "quarter"))
         
         # indexing - will collapse (i.e. remove) axis
         d = c[0]
@@ -509,17 +509,17 @@ class CubeTests(unittest.TestCase):
         # axes by name
         d = c.rename_axis("year", "Y")
         d = d.rename_axis("quarter", "Q")
-        self.assertEqual(tuple(d.axis_names), ("Y", "Q"))
+        self.assertEqual(tuple(d.dims), ("Y", "Q"))
 
         # axes by index
         d = c.rename_axis(0, "Y")
         d = d.rename_axis(1, "Q")
-        self.assertEqual(tuple(d.axis_names), ("Y", "Q"))
+        self.assertEqual(tuple(d.dims), ("Y", "Q"))
         
         # axes with negative indices
         d = c.rename_axis(-2, "Y")
         d = d.rename_axis(-1, "Q")
-        self.assertEqual(tuple(d.axis_names), ("Y", "Q"))
+        self.assertEqual(tuple(d.dims), ("Y", "Q"))
 
         # invalid new axis name type
         self.assertRaises(TypeError, c.rename_axis, 0, 0.0)
@@ -623,24 +623,24 @@ class CubeTests(unittest.TestCase):
 
         # swap by name
         d = c.swap_axes("year", "quarter")
-        self.assertEqual(tuple(d.axis_names), ("quarter", "year", "weekday"))
+        self.assertEqual(tuple(d.dims), ("quarter", "year", "weekday"))
         self.assertEqual(d.shape, (4, 3, 7))
 
         # swap by index
         d = c.swap_axes(0, 2)
-        self.assertEqual(tuple(d.axis_names), ("weekday", "quarter", "year"))
+        self.assertEqual(tuple(d.dims), ("weekday", "quarter", "year"))
         self.assertEqual(d.shape, (7, 4, 3))
         
         # swap by index and name
         d = c.swap_axes(0, "quarter")
-        self.assertEqual(tuple(d.axis_names), ("quarter", "year", "weekday"))
+        self.assertEqual(tuple(d.dims), ("quarter", "year", "weekday"))
         self.assertEqual(d.shape, (4, 3, 7))
         
         # swap Axis instances
         year_axis = c.axis("year")
         quarter_axis = c.axis("quarter")
         d = c.swap_axes(year_axis, quarter_axis)
-        self.assertEqual(tuple(d.axis_names), ("quarter", "year", "weekday"))
+        self.assertEqual(tuple(d.dims), ("quarter", "year", "weekday"))
         self.assertEqual(d.shape, (4, 3, 7))
         
         # wrong axis results in LookupError
@@ -703,7 +703,7 @@ class CubeTests(unittest.TestCase):
         e = stack([c, d], country_axis)
         self.assertEqual(e.values.shape, (2, 3, 4))
         # the merged axis go first
-        self.assertEqual(tuple(e.axis_names), ("country", "year", "quarter"))
+        self.assertEqual(tuple(e.dims), ("country", "year", "quarter"))
 
         # axis with the same name already exists
         c = year_quarter_cube()
@@ -727,7 +727,7 @@ class CubeTests(unittest.TestCase):
         e = stack([c, d], country_axis, broadcast=True)
         self.assertEqual(e.ndim, 4)
         # broadcast axes go last
-        self.assertEqual(tuple(e.axis_names), ("country", "year", "quarter", "weekday"))
+        self.assertEqual(tuple(e.dims), ("country", "year", "quarter", "weekday"))
         
     def test_combine_axes(self):
         c = year_quarter_weekday_cube()
@@ -737,7 +737,7 @@ class CubeTests(unittest.TestCase):
         self.assertRaises(ValueError, c.combine_axes, ["year", "quarter"], "weekday", "{}-{}")
 
         d = c.combine_axes(["year", "quarter"], "period", "{}-{}")
-        self.assertEqual(tuple(d.axis_names), ("period", "weekday"))
+        self.assertEqual(tuple(d.dims), ("period", "weekday"))
 
     def test_take(self):
         c = year_quarter_cube()
@@ -797,7 +797,7 @@ class CubeTests(unittest.TestCase):
         d = c.compress(0, [True, False, False])
         self.assertTrue(np.array_equal(d.values, [[0, 1, 2, 3]]))
         self.assertEqual(d.ndim, 2)
-        self.assertEqual(tuple(d.axis_names), ("year", "quarter"))
+        self.assertEqual(tuple(d.dims), ("year", "quarter"))
 
         e = c.compress("quarter", [True, False, True, False])
         self.assertTrue(np.array_equal(e.values, [[0, 2], [4, 6], [8, 10]]))
@@ -806,14 +806,14 @@ class CubeTests(unittest.TestCase):
         e = c.compress("quarter", np.arange(1, 4) <= 1)
         self.assertTrue(np.array_equal(d.values, [[0, 1, 2, 3]]))
         self.assertEqual(d.ndim, 2)
-        self.assertEqual(tuple(d.axis_names), ("year", "quarter"))
+        self.assertEqual(d.dims, ("year", "quarter"))
 
         # ints instead of bools; 0 = False, other = True
         # similarly for other types; Python bool conversion is used
         d = c.compress(0, [1, 0, 0])
         self.assertTrue(np.array_equal(d.values, [[0, 1, 2, 3]]))
         self.assertEqual(d.ndim, 2)
-        self.assertEqual(tuple(d.axis_names), ("year", "quarter"))
+        self.assertEqual(d.dims, ("year", "quarter"))
 
         # wrong length of bool collection - too short ...
         d = c.compress(0, [True, False])  # unspecified means False
@@ -831,7 +831,7 @@ class CubeTests(unittest.TestCase):
         # insert as the first axis
         d = c.insert_axis(countries, 0)
         self.assertEqual(d.ndim, 3)
-        self.assertEqual(tuple(d.axis_names), ("country", "year", "quarter"))
+        self.assertEqual(tuple(d.dims), ("country", "year", "quarter"))
         self.assertEqual(d.shape, (2, 3, 4))
         # the values in each sub-cube must be equal to the original cube
         self.assertTrue((d.take("country", 0) == c).all())
@@ -840,7 +840,7 @@ class CubeTests(unittest.TestCase):
         # append as the last axis
         d = c.insert_axis(countries, -1)
         self.assertEqual(d.ndim, 3)
-        self.assertEqual(tuple(d.axis_names), ("year", "quarter", "country"))
+        self.assertEqual(tuple(d.dims), ("year", "quarter", "country"))
         self.assertEqual(d.shape, (3, 4, 2))
         # the values in each sub-cube must be equal to the original cube
         self.assertTrue((d.take("country", 0) == c).all())
@@ -848,14 +848,14 @@ class CubeTests(unittest.TestCase):
 
     def test_replace_axis(self):
         c = year_quarter_cube()
-        self.assertEqual(tuple(c.axis_names), ("year", "quarter"))
+        self.assertEqual(c.dims, ("year", "quarter"))
         ax = Axis("Y", [2000, 2010, 2020])
         d = c.replace_axis("year", ax)
         e = c.replace_axis(0, ax)
         f = c.replace_axis(c.axis("year"), ax)
-        self.assertEqual(tuple(d.axis_names), ("Y", "quarter"))
-        self.assertEqual(tuple(d.axis_names), tuple(e.axis_names))
-        self.assertEqual(tuple(d.axis_names), tuple(f.axis_names))
+        self.assertEqual(d.dims, ("Y", "quarter"))
+        self.assertEqual(d.dims, e.dims)
+        self.assertEqual(d.dims, f.dims)
         self.assertRaises(NonUniqueDimNamesError, c.replace_axis, "year", Axis("quarter", [1, 2, 3]))
         self.assertRaises(InvalidAxisLengthError, c.replace_axis, "year", Axis("Y", [2010, 2020]))
         self.assertRaises(InvalidAxisLengthError, c.replace_axis, "year", Axis("Y", [2010, 2020, 2030, 2040]))
