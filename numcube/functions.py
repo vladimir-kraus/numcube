@@ -1,5 +1,3 @@
-
-
 def apply(cube, func, *args):
     return cube.apply(func, *args)
 
@@ -9,8 +7,10 @@ def reduce(cube, func, axis=None, keep=None, group=None, sort_grp=True):
 
 
 def intersect(cubes):
-    pass
+    # TODO
+    raise NotImplementedError
 
 
 def envelope(cubes):
-    pass
+    # TODO
+    raise NotImplementedError

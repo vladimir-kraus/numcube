@@ -24,7 +24,3 @@ if __name__ == "__main__":
     print("Testing in {}".format(path))
     test_suite = unittest.defaultTestLoader.discover(path, pattern="*.py")
     unittest.TextTestRunner(verbosity=2).run(test_suite)
-
-
-
-

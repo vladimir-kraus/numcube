@@ -1095,4 +1095,3 @@ def _align_broadcast_and_concatenate(cube_list, axis_list, main_axis, broadcast)
 
 def is_cube(obj):
     return isinstance(obj, Cube)
-

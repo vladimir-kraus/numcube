@@ -67,4 +67,4 @@ class MultiAxis(object):
         :param new_name: str
         :return: new axis (instance of actual derived type)
         """
-        return self.__class__(new_name, self._values)		
+        return self.__class__(new_name, self._values)

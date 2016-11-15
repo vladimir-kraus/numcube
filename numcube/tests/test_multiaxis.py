@@ -11,4 +11,3 @@ class MultiAxisTests(unittest.TestCase):
         a = MultiAxis(values)
         self.assertEqual(a.name, ("A", "B", "C"))
         self.assertEqual(len(a), 2)
-
