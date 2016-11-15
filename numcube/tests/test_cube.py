@@ -27,18 +27,30 @@ def year_quarter_weekday_cube():
 class CubeTests(unittest.TestCase):
 
     def test_empty_cube(self):
-        # TODO C = Cube([], [])
-        pass
+
+        c = Cube([], Axis("x", []))
+        self.assertEqual(c.ndim, 1)
+        self.assertEqual(c.dims, ("x",))
+        self.assertEqual(c.size, 0)
+
+        c = Cube(np.empty((0, 0)), [Axis("x", []), Axis("y", [])])
+        self.assertEqual(c.ndim, 2)
+        self.assertEqual(c.dims, ("x", "y"))
+        self.assertEqual(c.size, 0)
 
     def test_create_scalar(self):
 
         c = Cube(1, None)
         self.assertEqual(c.ndim, 0)
-        self.assertEqual(c.values.ndim, 0)
+        self.assertEqual(c.size, 1)
+
+        c = Cube(None, None)
+        self.assertEqual(c.ndim, 0)
+        self.assertEqual(c.size, 1)
 
         c = Cube(1, [])
         self.assertEqual(c.ndim, 0)
-        self.assertEqual(c.values.ndim, 0)
+        self.assertEqual(c.size, 1)
 
     def test_create_cube(self):
     
@@ -92,6 +104,7 @@ class CubeTests(unittest.TestCase):
 
         # number of dimensions (axes)
         self.assertEqual(c.ndim, 2)
+        self.assertEqual(c.dims, ("year", "quarter"))
 
         # get axis by index, by name and by axis object
         axis1 = c.axis(0)
@@ -316,16 +329,19 @@ class CubeTests(unittest.TestCase):
         # transpose by axis indices
         d = c.transpose([1, 0, 2])
 
-        self.assertEqual(d.values.shape, (4, 3, 7))
+        self.assertEqual(d.shape, (4, 3, 7))
+        self.assertEqual(d.dims, ("quarter", "year", "weekday"))
 
         # check that original cube has not been changed
-        self.assertEqual(c.values.shape, (3, 4, 7))
+        self.assertEqual(c.shape, (3, 4, 7))
+        self.assertEqual(c.dims, ("year", "quarter", "weekday"))
 
         # compare with numpy transpose
         self.assertTrue(np.array_equal(d.values, c.values.transpose([1, 0, 2])))
 
         # transpose by axis names
         e = c.transpose(["quarter", "year", "weekday"])
+        self.assertEqual(e.dims, ("quarter", "year", "weekday"))
         self.assertTrue(np.array_equal(d.values, e.values))
         
         # transpose axes specified by negative indices
