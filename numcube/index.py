@@ -25,8 +25,8 @@ class Index(Axis):
         if len(self._indices) != len(self._values):
             raise ValueError('Index cannot have duplicate values')
         
-        self._vectorized_index = np.vectorize(self._indices.__getitem__, otypes=[np.int])
-        self._vectorized_contains = np.vectorize(self._indices.__contains__, otypes=[np.bool])
+        self._vectorized_index = np.vectorize(self._indices.__getitem__, otypes=[int])
+        self._vectorized_contains = np.vectorize(self._indices.__contains__, otypes=[bool])
 
     def __contains__(self, item):
         """Implementation of 'in' operator.

@@ -673,7 +673,7 @@ class Cube(object):
         new_values = new_values.reshape(axis_sizes)
 
         new_axis_values = list()
-        indices = np.zeros(count)
+        indices = np.zeros(count, int)
 
         for pos in range(size):
             current_values = [array[indices[k]] for k, array in enumerate(array_list)]
@@ -791,7 +791,7 @@ class Cube(object):
         slices[axis_index] = slc
         new_axis = axis[slc]
         new_axes = self._axes.replace(axis_index, new_axis)
-        return self.__class__(self.values[slices], new_axes)
+        return self.__class__(self.values[tuple(slices)], new_axes)
 
     def first(self, axis, n=1):
         """Returns the subsection of the cube which corresponds to the first n values on the specified axis.
