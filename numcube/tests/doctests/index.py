@@ -21,7 +21,7 @@ True
 Checking whether multiple values exist in the index returns an array of bool values.
 
 >>> materials.contains(["glass", "unknown"])
-array([ True, False], dtype=bool)
+array([ True, False])
 
 Finding index of a values
 -------------------------

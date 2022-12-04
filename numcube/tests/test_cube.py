@@ -469,8 +469,8 @@ class CubeTests(unittest.TestCase):
             self.assertTrue(np.array_equal(op(c, d).values, op(c.values, d)))
             self.assertTrue(np.array_equal(op(d, c).values, op(d, c.values)))
 
-        # oprations with numpy array
-        d = (np.arange(12).reshape(3, 4) / 6 + 1).astype(np.int)  # +1 to prevent division by zero error
+        # operations with numpy array
+        d = (np.arange(12).reshape(3, 4) / 6 + 1).astype(int)  # +1 to prevent division by zero error
         for op in ops:
             self.assertTrue(np.array_equal(op(c, d).values, op(c.values, d)))
             self.assertTrue(np.array_equal(op(d, c).values, op(d, c.values)))

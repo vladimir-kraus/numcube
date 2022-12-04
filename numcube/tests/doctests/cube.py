@@ -100,7 +100,7 @@ Cube([[0 2 4]
 Cube([ 3 12], (Index('X', ['x1' 'x2']),))
 
 >>> C.mean("X")  # doctest: +NORMALIZE_WHITESPACE
-Cube([ 1.5  2.5  3.5], (Index('Y', ['y1' 'y2' 'y3']),))
+Cube([1.5 2.5 3.5], (Index('Y', ['y1' 'y2' 'y3']),))
 
 >>> C.mean()
 2.5
